@@ -100,6 +100,8 @@ The following example projects are supported:
 - samples/bluetooth/beacon
 - samples/bluetooth/broadcaster
 - samples/bluetooth/central
+- samples/bluetooth/peripheral_hr
+- samples/bluetooth/peripheral_ht
 - samples/bluetooth/central_hr
 - samples/bluetooth/central_ht
 - samples/bluetooth/central_multilink
