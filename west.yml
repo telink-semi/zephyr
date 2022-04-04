@@ -132,8 +132,8 @@ manifest:
       groups:
         - hal
     - name: hal_telink
-      url: https://github.com/telink-semi/hal_telink
-      revision: tl_v1.0.0
+      url: https://github.com/yurvyn/hal_telink
+      revision: telink_b91_ble_sdk
       path: modules/hal/telink
       groups:
         - hal
