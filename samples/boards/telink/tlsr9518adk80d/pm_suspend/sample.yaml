@@ -1,0 +1,8 @@
+sample:
+  name: Low Power State Sample for Telink B91 Series
+common:
+  tags: power
+tests:
+  sample.boards.telink.tlsr9518adk80d.pm_suspend:
+    build_only: true
+    platform_allow: tlsr9518adk80d
