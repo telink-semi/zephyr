@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 Nordic Semiconductor ASA
+ * Copyright (c) 2021 Telink Semiconductor
  *
  * SPDX-License-Identifier: Apache-2.0
  */
