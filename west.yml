@@ -133,7 +133,7 @@ manifest:
         - hal
     - name: hal_telink
       url: https://github.com/yurvyn/hal_telink
-      revision: telink_b91_ble_sdk
+      revision: telink_b91_ble_pm
       path: modules/hal/telink
       groups:
         - hal
