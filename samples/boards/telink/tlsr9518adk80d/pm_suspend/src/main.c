@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Telink Semiconductor
+ * Copyright (c) 2022 Telink Semiconductor
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -20,7 +20,6 @@ void entry_point(int unused1, int unused2, int unused3)
 		k_sleep(K_SECONDS(SLEEP_S));
 		printk("WakeUp system time: %lli ms\n", k_uptime_get());
 	}
-	/* thread terminates at end of entry point function */
 }
 
 
