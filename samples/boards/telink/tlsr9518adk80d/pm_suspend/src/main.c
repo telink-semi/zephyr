@@ -7,10 +7,9 @@
 #include <stdio.h>
 #include <zephyr.h>
 
-#define SLEEP_S 2U
-
-#define STACK_SIZE 500
-#define PRIORITY 5
+#define SLEEP_S     (2u)
+#define PRIORITY    (5u)
+#define STACK_SIZE  (500u)
 
 void entry_point(int unused1, int unused2, int unused3)
 {
@@ -21,7 +20,6 @@ void entry_point(int unused1, int unused2, int unused3)
 		printk("WakeUp system time: %lli ms\n", k_uptime_get());
 	}
 }
-
 
 K_THREAD_DEFINE(tid, STACK_SIZE,
 		entry_point, NULL, NULL, NULL,

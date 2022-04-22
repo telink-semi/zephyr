@@ -5,14 +5,9 @@
  */
 
 #include <zephyr.h>
-
-#include <soc.h>
-#include <init.h>
-#include <pm.h>
-#include <arch/riscv/arch.h>
+#include <pm/pm.h>
 
 #include <stimer.h>
-#include <pm/pm.h>
 #include <ext_driver/ext_pm.h>
 
 #include <logging/log.h>
@@ -88,7 +83,7 @@ __weak void pm_state_set(enum pm_state state, uint8_t substate_id)
 			k_cpu_idle();
 		} else if (wakeup_time > current_time) {
 			/* Enter suspend mode */
-			cpu_sleep_wakeup_32k_rc(SUSPEND_MODE, PM_WAKEUP_TIMER | PM_WAKEUP_PAD,
+			cpu_sleep_wakeup_32k_rc(SUSPEND_MODE, PM_WAKEUP_TIMER,
 									stimer_get_tick() + stimer_sleep_ticks);
 
 			/* Update Machine Timer value after resume since the timer does not tick during suspend */
