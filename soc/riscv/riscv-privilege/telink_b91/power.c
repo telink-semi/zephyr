@@ -96,7 +96,7 @@ __weak void pm_state_set(enum pm_state state, uint8_t substate_id)
 	case PM_STATE_SOFT_OFF:
 		if (wakeup_time > current_time) {
 			cpu_sleep_wakeup_32k_rc(DEEPSLEEP_MODE, PM_WAKEUP_TIMER | PM_WAKEUP_PAD,
-			stimer_get_tick() + stimer_sleep_ticks);
+									stimer_get_tick() + stimer_sleep_ticks);
 		} else {
 			LOG_DBG("Sleep Time = 0 or less\n");
 		}
