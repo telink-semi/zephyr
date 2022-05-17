@@ -5,8 +5,9 @@
  */
 
 #include "analog.h"
-#include <zephyr/drivers/pinctrl.h>
-#include <zephyr/dt-bindings/pinctrl/b91-pinctrl.h>
+#include <drivers/pinctrl.h>
+#include <dt-bindings/pinctrl/b91-pinctrl.h>
+#include <pm/device.h>
 
 #define DT_DRV_COMPAT telink_b91_pinctrl
 
@@ -76,7 +77,37 @@ static int pinctrl_b91_init(const struct device *dev)
 	return 0;
 }
 
+#if defined(CONFIG_BOARD_TLSR9518ADK80D_RETENTION) && defined(CONFIG_PM_DEVICE)
+static int pinctrl_b91_pm_action(const struct device *dev,
+				 enum pm_device_action action)
+{
+	ARG_UNUSED(dev);
+
+	extern bool b91_deep_sleep_retention;
+
+	switch (action) {
+	case PM_DEVICE_ACTION_RESUME:
+		if (b91_deep_sleep_retention) {
+			/* set pad_mul_sel register value from dts */
+			reg_gpio_pad_mul_sel |= DT_INST_PROP(0, pad_mul_sel);
+		}
+		break;
+
+	case PM_DEVICE_ACTION_SUSPEND:
+		break;
+
+	default:
+		return -ENOTSUP;
+	}
+
+	return 0;
+}
+
+PM_DEVICE_DEFINE(pinctrl_b91_pm, pinctrl_b91_pm_action);
+DEVICE_DEFINE(pinctrl_b91, "pinctrl_b91", pinctrl_b91_init, PM_DEVICE_GET(pinctrl_b91_pm), NULL, NULL, PRE_KERNEL_1, CONFIG_KERNEL_INIT_PRIORITY_DEFAULT, NULL);
+#else
 SYS_INIT(pinctrl_b91_init, PRE_KERNEL_1, CONFIG_KERNEL_INIT_PRIORITY_DEFAULT);
+#endif
 
 /* Act as GPIO function disable */
 static inline void pinctrl_b91_gpio_function_disable(uint32_t pin)

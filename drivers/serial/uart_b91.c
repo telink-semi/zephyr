@@ -7,9 +7,10 @@
 #include "analog.h"
 #include "clock.h"
 
-#include <zephyr/device.h>
-#include <zephyr/drivers/uart.h>
-#include <zephyr/drivers/pinctrl.h>
+#include <device.h>
+#include <drivers/uart.h>
+#include <drivers/pinctrl.h>
+#include <pm/device.h>
 
 
 /* Driver dts compatibility: telink,b91_uart */
@@ -34,10 +35,6 @@
 #define UART_STOP_BIT_1    ((uint8_t)0u)
 #define UART_STOP_BIT_1P5  BIT(4)
 #define UART_STOP_BIT_2    BIT(5)
-
-/* TX RX reset bits */
-#define UART_RX_RESET_BIT BIT(6)
-#define UART_TX_RESET_BIT BIT(7)
 
 
 /* B91 UART registers structure */
@@ -101,6 +98,12 @@ enum {
 enum {
 	UART_IRQ_STATUS         = BIT(3),
 	UART_RX_ERR_STATUS      = BIT(7),
+	UART_RX_RESET_BIT       = BIT(6),
+	UART_TX_RESET_BIT       = BIT(7),
+};
+
+enum {
+	UART_TXRX_STATUS_TX_DONE = BIT(0)
 };
 
 
@@ -338,7 +341,7 @@ static void uart_b91_poll_out(const struct device *dev, uint8_t c)
 	struct uart_b91_data *data = dev->data;
 
 	while (uart_b91_get_tx_bufcnt(uart) >= UART_TX_BUF_CNT) {
-	};
+	}
 
 	uart->data_buf[data->tx_byte_index] = c;
 	data->tx_byte_index = (data->tx_byte_index + 1) % ARRAY_SIZE(uart->data_buf);
@@ -519,6 +522,48 @@ static void uart_b91_irq_callback_set(const struct device *dev,
 
 #endif /* CONFIG_UART_INTERRUPT_DRIVEN */
 
+#if defined(CONFIG_PM_DEVICE)
+
+static int uart_b91_pm_action(const struct device *dev,
+			      enum pm_device_action action)
+{
+	volatile struct uart_b91_t *uart = GET_UART(dev);
+	struct uart_b91_data *data = dev->data;
+	const struct uart_b91_config *cfg = dev->config;
+
+	switch (action) {
+	case PM_DEVICE_ACTION_RESUME:
+		/* init uart and reset TX/RX byte index */
+#if defined(CONFIG_BOARD_TLSR9518ADK80D_RETENTION)
+		{
+			extern bool b91_deep_sleep_retention;
+			if (b91_deep_sleep_retention) {
+				uart_b91_driver_init(dev);
+			}
+		}
+#endif
+		data->tx_byte_index = 0;
+		data->rx_byte_index = 0;
+		uart->status |= UART_RX_RESET_BIT | UART_TX_RESET_BIT;
+		break;
+
+	case PM_DEVICE_ACTION_SUSPEND:
+		/* wait for TX done before entering suspend mode */
+		while (!(uart->txrx_status & UART_TXRX_STATUS_TX_DONE)) {
+		}
+		;
+		pinctrl_apply_state(cfg->pcfg, PINCTRL_STATE_SLEEP);
+		break;
+
+	default:
+		return -ENOTSUP;
+	}
+
+	return 0;
+}
+
+#endif /* CONFIG_PM_DEVICE */
+
 static const struct uart_driver_api uart_b91_driver_api = {
 	.poll_in = uart_b91_poll_in,
 	.poll_out = uart_b91_poll_out,
@@ -546,6 +591,8 @@ static const struct uart_driver_api uart_b91_driver_api = {
 
 #define UART_B91_INIT(n)							    \
 										    \
+	PM_DEVICE_DT_INST_DEFINE(n, uart_b91_pm_action);			    \
+										    \
 	static void uart_b91_irq_connect_##n(void);				    \
 										    \
 	PINCTRL_DT_INST_DEFINE(n);						    \
@@ -561,7 +608,7 @@ static const struct uart_driver_api uart_b91_driver_api = {
 	static struct uart_b91_data uart_b91_data_##n;				    \
 										    \
 	DEVICE_DT_INST_DEFINE(n, uart_b91_driver_init,				    \
-			      NULL,						    \
+			      PM_DEVICE_DT_INST_GET(n),				    \
 			      &uart_b91_data_##n,				    \
 			      &uart_b91_cfg_##n,				    \
 			      PRE_KERNEL_1,					    \

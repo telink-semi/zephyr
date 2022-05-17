@@ -1,0 +1,44 @@
+/*
+ * Copyright (c) 2021 Telink Semiconductor
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/dts-v1/;
+
+#include "tlsr9518adk80d.dtsi"
+
+/ {
+	soc {
+
+		/delete-node/ ram_ilm;
+
+		ram_ilm_boot: memory@0 {
+			compatible = "mmio-sram";
+		};
+
+		ram_ilm_retention: memory@200 {
+			compatible = "mmio-sram";
+		};
+
+		ram_ilm_nonretention: memory@10000 {
+			ompatible = "mmio-sram";
+		};
+	};
+
+	chosen {
+		zephyr,sram = &ram_ilm_retention;
+	};
+};
+
+&ram_ilm_boot {
+	reg = <0x00000000 0x00000200>;
+};
+
+&ram_ilm_retention {
+	reg = <0x00000200 0x0000FE00>;
+};
+
+&ram_ilm_nonretention {
+	reg = <0x00010000 0x00010000>;
+};
