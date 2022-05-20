@@ -279,7 +279,21 @@ It is also possible to use the west flash command, but additional steps are requ
 Debugging
 =========
 
-Supporting UART debug and OpenOCD+GDB.
+Supporting UART debug and OpenOCD+GDB. west debug command also supported. You may run it in a simle way, like:
+
+.. code-block:: console
+
+   west debug
+
+Or with additional arguments, like:
+
+.. code-block:: console
+
+   west debug --gdb-port=<port_number> --gdb-ex=<additional_ex_arguments>
+
+Example:
+   west debug --gdb-port=1111 --gdb-ex="-ex monitor reset halt -ex b main -ex continue"
+
 
 References
 **********
