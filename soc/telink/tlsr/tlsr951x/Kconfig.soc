@@ -18,3 +18,6 @@ config SOC_SERIES
 
 config SOC
 	default "tlsr9518" if SOC_TLSR9518
+
+config PM_DEVICE
+	default y if PM
