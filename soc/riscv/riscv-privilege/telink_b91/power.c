@@ -13,6 +13,14 @@
 #include <logging/log.h>
 LOG_MODULE_DECLARE(soc, CONFIG_SOC_LOG_LEVEL);
 
+static uint32_t tl_sleep_tick = 0;
+
+#define mticks_to_systicks(mticks)      (((mticks) * SYSTEM_TIMER_TICK_1S) / (sys_clock_hw_cycles_per_sec() >> CONFIG_RISCV_MACHINE_TIMER_SYSTEM_CLOCK_DIVIDER))
+#define systicks_to_mticks(sticks)      (((uint64_t)(sticks) * (sys_clock_hw_cycles_per_sec() >> CONFIG_RISCV_MACHINE_TIMER_SYSTEM_CLOCK_DIVIDER)) / SYSTEM_TIMER_TICK_1S)
+
+#define SYSTICKS_MAX_SLEEP              0xe0000000
+#define SYSTICKS_MIN_SLEEP              18352
+
 
 /**
  * @brief This define converts Machine Timer ticks to B91 System Timer ticks.
@@ -25,10 +33,7 @@ LOG_MODULE_DECLARE(soc, CONFIG_SOC_LOG_LEVEL);
  */
 static uint64_t get_mtime_compare(void)
 {
-	volatile uint32_t *r = (uint32_t *)RISCV_MTIMECMP_BASE;
-	uint64_t time = (((uint64_t)r[1]) << 32) | r[0];
-
-	return time;
+	return *(volatile uint64_t *)(RISCV_MTIMECMP_BASE + (_current_cpu->id * sizeof(uint64_t)));
 }
 
 /**
@@ -36,10 +41,15 @@ static uint64_t get_mtime_compare(void)
  */
 static uint64_t get_mtime(void)
 {
-	volatile uint32_t *r = (uint32_t *)RISCV_MTIME_BASE;
-	uint64_t time = (((uint64_t)r[1]) << 32) | r[0];
+	const volatile uint32_t *const rl = (const volatile uint32_t *const)RISCV_MTIME_BASE;
+	const volatile uint32_t *const rh = (const volatile uint32_t *const)(RISCV_MTIME_BASE + sizeof(uint32_t));
+	uint32_t mtime_l, mtime_h;
 
-	return time;
+	do{
+		mtime_h = *rh;
+		mtime_l = *rl;
+	} while(mtime_h != *rh);
+	return (((uint64_t)mtime_h) << 32) | mtime_l;
 }
 
 /**
@@ -47,12 +57,25 @@ static uint64_t get_mtime(void)
  */
 static void set_mtime(uint64_t time)
 {
-	volatile uint32_t *r = (uint32_t *)RISCV_MTIME_BASE;
+	volatile uint32_t *const rl = (volatile uint32_t *const)RISCV_MTIME_BASE;
+	volatile uint32_t *const rh = (volatile uint32_t *const)(RISCV_MTIME_BASE + sizeof(uint32_t));
 
-	irq_disable(RISCV_MACHINE_TIMER_IRQ);
-	r[0] = (uint32_t)time;
-	r[1] = (uint32_t)(time >> 32);
-	irq_enable(RISCV_MACHINE_TIMER_IRQ);
+	*rl = 0;
+	*rh = (uint32_t)(time >> 32);
+	*rl = (uint32_t)time;
+}
+
+/**
+ * @brief Set Machine Timer Compare Register value.
+ */
+static void set_mtime_compare(uint64_t time_cmp)
+{
+	volatile uint32_t *const rl = (volatile uint32_t *const)(RISCV_MTIMECMP_BASE + (_current_cpu->id * sizeof(uint64_t)));
+	volatile uint32_t *const rh = (volatile uint32_t *const)(RISCV_MTIMECMP_BASE + (_current_cpu->id * sizeof(uint64_t)) + sizeof(uint32_t));
+
+	*rh = (uint32_t)-1;
+	*rl = (uint32_t)(time_cmp);
+	*rh = (uint32_t)(time_cmp >> 32);
 }
 
 /**
@@ -61,7 +84,7 @@ static void set_mtime(uint64_t time)
 __weak void pm_state_set(enum pm_state state, uint8_t substate_id)
 {
 	ARG_UNUSED(substate_id);
-
+	tl_sleep_tick = stimer_get_tick();
 	uint64_t current_time = get_mtime();
 	uint64_t wakeup_time = get_mtime_compare();
 	uint64_t stimer_sleep_ticks = (wakeup_time - current_time) * MTIME_TO_STIME_SCALE;
@@ -87,7 +110,6 @@ __weak void pm_state_set(enum pm_state state, uint8_t substate_id)
 									stimer_get_tick() + stimer_sleep_ticks);
 
 			/* Update Machine Timer value after resume since the timer does not tick during suspend */
-			set_mtime(get_mtime_compare() + 1);
 		} else {
 			LOG_DBG("Sleep Time = 0 or less\n");
 		}
@@ -106,6 +128,8 @@ __weak void pm_state_set(enum pm_state state, uint8_t substate_id)
 		LOG_DBG("Unsupported power state %u", state);
 		break;
 	}
+	current_time += systicks_to_mticks(stimer_get_tick() - tl_sleep_tick);
+	set_mtime(current_time);
 }
 
 /**
