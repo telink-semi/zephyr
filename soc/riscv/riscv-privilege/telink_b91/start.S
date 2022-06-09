@@ -30,7 +30,40 @@ entry:
 	.align 2
 
 start:
+#if defined(CONFIG_MCUBOOT)
+	/* get reset reason */
+    lui     t0, 0x80140
+    li      t1, 0xffbbffff
+    sw      t1, 0x1e0(t0)       // 0xffbbffff->0x801401e0 (reset register)
 
+    lui     t0, 0x80140
+    li      t1, 0xffbbffff
+    sw      t1, 0x1e4(t0)       // 0xffbbffff->0x801401e4 (clock enable register)
+
+    lui     t0, 0x80140
+    li      t1, 0x64
+    sb      t1, 0x180(t0)       // an_rst_reason->reg_ana_addr
+
+    lui     t0, 0x80140
+    li      t1, 0x01
+    sb      t1, 0x183(t0)       // 1 byte->reg_ana_len
+
+    lui     t0, 0x80140
+    li      t1, 0x40
+    sb      t1, 0x182(t0)       // FLD_ANA_CYC->reg_ana_ctrl
+
+wait_rst_reason:
+    lui     t0, 0x80140
+    lb      t1, 0x182(t0)
+    and     t1, t1, 0x80
+    bnez    t1, wait_rst_reason // while FLD_ANA_BUSY in reg_ana_ctrl
+
+    lui     t0, 0x80140
+    lb      t1, 0x184(t0)       // reg_ana_data->t1 (so reset reason in t1)
+
+    and     t1, t1, 0x02
+    bnez    t1, retention_area
+#endif
 	/* Enable I/D-Cache */
 	csrr   t0,  NDS_MCACHE_CTL
 	ori    t0,  t0,  1        #/I-Cache
@@ -78,5 +111,10 @@ _RAMCODE_INIT_BEGIN:
 
 _START:
 	j __start
+
+#if defined(CONFIG_MCUBOOT)
+retention_area:
+	tail (CONFIG_FLASH_BASE_ADDRESS + 0x10200)
+#endif
 
 	.option pop
