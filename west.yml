@@ -132,8 +132,8 @@ manifest:
       groups:
         - hal
     - name: hal_telink
-      url: https://github.com/yurvyn/hal_telink
-      revision: telink_b91_ble_pm_external_sleep
+      url: hhttps://github.com/rikorsev/hal_telink
+      revision: telink_b91_ble_pm
       path: modules/hal/telink
       groups:
         - hal

@@ -36,11 +36,6 @@
 #define UART_STOP_BIT_1P5  BIT(4)
 #define UART_STOP_BIT_2    BIT(5)
 
-/* TX RX reset bits */
-#define UART_RX_RESET_BIT BIT(6)
-#define UART_TX_RESET_BIT BIT(7)
-
-
 /* B91 UART registers structure */
 struct uart_b91_t {
 	uint8_t data_buf[UART_DATA_SIZE];
