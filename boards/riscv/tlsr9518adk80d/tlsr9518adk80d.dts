@@ -140,6 +140,11 @@
 	pinctrl-names = "default";
 };
 
+&adc {
+	status = "okay";
+	vref = "ADC_VREF_1P2V";
+};
+
 &flash_mspi {
 	partitions {
 		compatible = "fixed-partitions";
