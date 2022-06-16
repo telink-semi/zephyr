@@ -107,7 +107,7 @@ __weak void pm_state_set(enum pm_state state, uint8_t substate_id)
 		} else if (wakeup_time > current_time) {
 			/* Enter suspend mode */
 			cpu_sleep_wakeup_32k_rc(SUSPEND_MODE, PM_WAKEUP_TIMER,
-									stimer_get_tick() + stimer_sleep_ticks);
+									tl_sleep_tick + stimer_sleep_ticks);
 
 			/* Update Machine Timer value after resume since the timer does not tick during suspend */
 		} else {
@@ -118,7 +118,7 @@ __weak void pm_state_set(enum pm_state state, uint8_t substate_id)
 	case PM_STATE_SOFT_OFF:
 		if (wakeup_time > current_time) {
 			cpu_sleep_wakeup_32k_rc(DEEPSLEEP_MODE, PM_WAKEUP_TIMER | PM_WAKEUP_PAD,
-									stimer_get_tick() + stimer_sleep_ticks);
+									tl_sleep_tick + stimer_sleep_ticks);
 		} else {
 			LOG_DBG("Sleep Time = 0 or less\n");
 		}
