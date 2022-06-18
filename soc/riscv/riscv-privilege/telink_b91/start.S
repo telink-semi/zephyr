@@ -41,8 +41,8 @@ start:
     sw      t1, 0x1e4(t0)       // 0xffbbffff->0x801401e4 (clock enable register)
 
     lui     t0, 0x80140
-    li      t1, 0x64
-    sb      t1, 0x180(t0)       // an_rst_reason->reg_ana_addr
+    li      t1, 0x39
+    sb      t1, 0x180(t0)       // afe_0x39->reg_ana_addr
 
     lui     t0, 0x80140
     li      t1, 0x01
@@ -61,8 +61,14 @@ wait_rst_reason:
     lui     t0, 0x80140
     lb      t1, 0x184(t0)       // reg_ana_data->t1 (so reset reason in t1)
 
-    and     t1, t1, 0x02
-    bnez    t1, retention_area
+    /*
+        Check value of retention registr 0x39, that contains reset reason.
+        - 0x00 - Power on or hard reset
+        - 0x01 - Deepsleep wakeup
+        - 0x03 - Soft reset
+    */
+    li      t0, 0x01
+    beq     t0, t1, retention_area
 #endif
 	/* Enable I/D-Cache */
 	csrr   t0,  NDS_MCACHE_CTL

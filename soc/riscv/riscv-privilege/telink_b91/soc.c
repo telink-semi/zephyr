@@ -6,11 +6,14 @@
 
 #include "sys.h"
 #include "clock.h"
+#include "analog.h"
+#include "pm.h"
 #include <zephyr/device.h>
 
 /* Software reset defines */
 #define reg_reset                   REG_ADDR8(0x1401ef)
 #define SOFT_RESET                  0x20u
+#define SOFT_RESET_FLAG             0x02u
 
 /* List of supported CCLK frequencies */
 #define CLK_16MHZ                   16000000u
@@ -120,6 +123,13 @@ void sys_arch_reboot(int type)
 {
 	ARG_UNUSED(type);
 
+	/* Read retention registr and set reset flag to it */
+	int regvalue = analog_read_reg8(PM_ANA_REG_POWER_ON_CLR_BUF0) | SOFT_RESET_FLAG;
+
+	/* Write updated data to retention registr back */
+	analog_write_reg8(PM_ANA_REG_POWER_ON_CLR_BUF0, regvalue);
+
+	/* Perform soft reset */
 	reg_reset = SOFT_RESET;
 }
 
