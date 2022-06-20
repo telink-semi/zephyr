@@ -87,6 +87,10 @@ __weak void pm_state_set(enum pm_state state, uint8_t substate_id)
 	tl_sleep_tick = stimer_get_tick();
 	uint64_t current_time = get_mtime();
 	uint64_t wakeup_time = get_mtime_compare();
+	if (wakeup_time <= current_time) {
+		LOG_DBG("Sleep Time = 0 or less\n");
+		return;
+	}
 	uint64_t stimer_sleep_ticks = (wakeup_time - current_time) * MTIME_TO_STIME_SCALE;
 
 	switch (state) {
@@ -104,25 +108,19 @@ __weak void pm_state_set(enum pm_state state, uint8_t substate_id)
 			 * cpu_sleep_wakeup_32k_rc(SUSPEND_MODE, PM_WAKEUP_PAD, 0);
 			 */
 			k_cpu_idle();
-		} else if (wakeup_time > current_time) {
+		} else {
 			/* Enter suspend mode */
 			cpu_sleep_wakeup_32k_rc(SUSPEND_MODE, PM_WAKEUP_TIMER,
 									tl_sleep_tick + stimer_sleep_ticks);
 
 			/* Update Machine Timer value after resume since the timer does not tick during suspend */
-		} else {
-			LOG_DBG("Sleep Time = 0 or less\n");
 		}
 		break;
 
 	case PM_STATE_SOFT_OFF:
-		if (wakeup_time > current_time) {
-			cpu_sleep_wakeup_32k_rc(DEEPSLEEP_MODE, PM_WAKEUP_TIMER | PM_WAKEUP_PAD,
-									tl_sleep_tick + stimer_sleep_ticks);
-		} else {
-			LOG_DBG("Sleep Time = 0 or less\n");
-		}
-		break;
+		cpu_sleep_wakeup_32k_rc(DEEPSLEEP_MODE, PM_WAKEUP_TIMER | PM_WAKEUP_PAD,
+								tl_sleep_tick + stimer_sleep_ticks);
+
 
 	default:
 		LOG_DBG("Unsupported power state %u", state);
