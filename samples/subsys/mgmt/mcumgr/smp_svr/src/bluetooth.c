@@ -10,6 +10,8 @@
 #include <zephyr/bluetooth/gatt.h>
 #include <zephyr/mgmt/mcumgr/smp_bt.h>
 
+#include "common.h"
+
 #define LOG_LEVEL LOG_LEVEL_DBG
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(smp_bt_sample);
@@ -57,6 +59,10 @@ static void connected(struct bt_conn *conn, uint8_t err)
 		LOG_ERR("Connection failed (err 0x%02x)", err);
 	} else {
 		LOG_INF("Connected");
+
+		#ifdef CONFIG_PM
+			register_mcumgr_groups();
+		#endif
 	}
 }
 

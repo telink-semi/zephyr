@@ -6,3 +6,4 @@
 
 void start_smp_bluetooth(void);
 void start_smp_udp(void);
+void register_mcumgr_groups(void);
