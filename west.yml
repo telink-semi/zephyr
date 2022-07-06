@@ -132,7 +132,7 @@ manifest:
       groups:
         - hal
     - name: hal_telink
-      url: hhttps://github.com/rikorsev/hal_telink
+      url: https://github.com/rikorsev/hal_telink
       revision: telink_b91_ble_pm
       path: modules/hal/telink
       submodules: true
