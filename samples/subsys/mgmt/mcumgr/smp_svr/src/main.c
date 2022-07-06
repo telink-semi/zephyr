@@ -10,15 +10,6 @@
 #include <zephyr/usb/usb_device.h>
 #include <drivers/gpio.h>
 
-/* The devicetree node identifier for the "led0" alias. */
-#define LED_NODE DT_ALIAS(led0)
-
-/*
- * A build error on this line means your board is unsupported.
- * See the sample documentation for information on how to fix this.
- */
-static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED_NODE, gpios);
-
 #ifdef CONFIG_MCUMGR_CMD_FS_MGMT
 #include <zephyr/device.h>
 #include <zephyr/fs/fs.h>
@@ -70,12 +61,6 @@ static struct fs_mount_t littlefs_mnt = {
 };
 #endif
 
-static void gpio_init(void)
-{
-	__ASSERT(device_is_ready(led.port), "Device is not ready");
-	__ASSERT(gpio_pin_configure_dt(&led, GPIO_OUTPUT_ACTIVE) == 0, "Fail to config gpio");
-}
-
 void main(void)
 {
 	int rc = STATS_INIT_AND_REG(smp_svr_stats, STATS_SIZE_32,
@@ -125,14 +110,10 @@ void main(void)
 	 */
 	LOG_INF("build time: " __DATE__ " " __TIME__);
 
-	/* Enable LED */
-	gpio_init();
-
 	/* The system work queue handles all incoming mcumgr requests.  Let the
 	 * main thread idle while the mcumgr server runs.
 	 */
 	while (1) {
-		__ASSERT(gpio_pin_toggle_dt(&led) == 0, "Fail to toggle LED");
 		k_sleep(K_MSEC(1000));
 		STATS_INC(smp_svr_stats, ticks);
 	}
