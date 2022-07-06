@@ -78,6 +78,36 @@ static void set_mtime_compare(uint64_t time_cmp)
 	*rh = (uint32_t)(time_cmp >> 32);
 }
 
+static void prepare_core_suspend(void)
+{
+	//switch off gpio
+	reg_gpio_pa_gpio = 0x7f;
+	reg_gpio_pb_gpio = 0xff;
+	reg_gpio_pc_gpio = 0xff;
+	reg_gpio_pd_gpio = 0xff;
+	reg_gpio_pe_gpio = 0xff;
+
+	//output disable
+	reg_gpio_pa_oen = 0xff;
+	reg_gpio_pb_oen = 0xff;
+	reg_gpio_pc_oen = 0xff;
+	reg_gpio_pd_oen = 0xff;
+	reg_gpio_pe_oen = 0xff;
+
+	//set low level
+	reg_gpio_pa_out = 0x00;
+	reg_gpio_pb_out = 0x00;
+	reg_gpio_pc_out = 0x00;
+	reg_gpio_pd_out = 0x00;
+	reg_gpio_pe_out = 0x00;
+
+	//disable input
+	reg_gpio_pa_ie = 0x80;
+	reg_gpio_pb_ie = 0x00;
+	analog_write_reg8(areg_gpio_pc_ie, 0);
+	analog_write_reg8(areg_gpio_pd_ie, 0);
+	reg_gpio_pe_ie = 0x00;
+}
 /**
  * @brief PM state set API implementation.
  */
@@ -110,6 +140,8 @@ __weak void pm_state_set(enum pm_state state, uint8_t substate_id)
 			k_cpu_idle();
 		} else {
 			/* Enter suspend mode */
+			//comment this function for the known gpio state during SUSPEND
+			//prepare_core_suspend();
 			cpu_sleep_wakeup_32k_rc(SUSPEND_MODE, PM_WAKEUP_TIMER,
 									tl_sleep_tick + stimer_sleep_ticks);
 
