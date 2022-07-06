@@ -23,26 +23,13 @@ static const struct bt_data ad[] = {
 		      0xd3, 0x4c, 0xb7, 0x1d, 0x1d, 0xdc, 0x53, 0x8d),
 };
 
-struct bt_le_adv_param adv_param = {
-        .id = BT_ID_DEFAULT,
-        .sid = 0,
-        .secondary_max_skip = 0,
-        .options = (BT_LE_ADV_OPT_CONNECTABLE |
-                BT_LE_ADV_OPT_USE_NAME),
-        .interval_min = 1600, /* 20 ms */
-        .interval_max = 1600, /* 20 ms */
-        .peer = NULL,
-    };
-
-
-
 static void advertise(struct k_work *work)
 {
 	int rc;
 
 	bt_le_adv_stop();
 
-	rc = bt_le_adv_start(&adv_param, ad, ARRAY_SIZE(ad), NULL, 0);
+	rc = bt_le_adv_start(BT_LE_ADV_CONN_NAME, ad, ARRAY_SIZE(ad), NULL, 0);
 	if (rc) {
 		LOG_ERR("Advertising failed to start (rc %d)", rc);
 		return;
