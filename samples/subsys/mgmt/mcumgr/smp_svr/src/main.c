@@ -76,31 +76,6 @@ static void gpio_init(void)
 	__ASSERT(gpio_pin_configure_dt(&led, GPIO_OUTPUT_ACTIVE) == 0, "Fail to config gpio");
 }
 
-void register_mcumgr_groups(void)
-{
-	/* Register the built-in mcumgr command handlers. */
-	#ifdef CONFIG_MCUMGR_CMD_FS_MGMT
-		int rc = fs_mount(&littlefs_mnt);
-		if (rc < 0) {
-			LOG_ERR("Error mounting littlefs [%d]", rc);
-		}
-
-		fs_mgmt_register_group();
-	#endif
-	#ifdef CONFIG_MCUMGR_CMD_OS_MGMT
-		os_mgmt_register_group();
-	#endif
-	#ifdef CONFIG_MCUMGR_CMD_IMG_MGMT
-		img_mgmt_register_group();
-	#endif
-	#ifdef CONFIG_MCUMGR_CMD_STAT_MGMT
-		stat_mgmt_register_group();
-	#endif
-	#ifdef CONFIG_MCUMGR_CMD_SHELL_MGMT
-		shell_mgmt_register_group();
-	#endif
-}
-
 void main(void)
 {
 	int rc = STATS_INIT_AND_REG(smp_svr_stats, STATS_SIZE_32,
@@ -110,16 +85,33 @@ void main(void)
 		LOG_ERR("Error initializing stats system [%d]", rc);
 	}
 
-	#ifdef CONFIG_MCUMGR_SMP_BT
-		start_smp_bluetooth();
-	#endif
-	#ifdef CONFIG_MCUMGR_SMP_UDP
-		start_smp_udp();
-	#endif
+	/* Register the built-in mcumgr command handlers. */
+#ifdef CONFIG_MCUMGR_CMD_FS_MGMT
+	rc = fs_mount(&littlefs_mnt);
+	if (rc < 0) {
+		LOG_ERR("Error mounting littlefs [%d]", rc);
+	}
 
-	#if !(CONFIG_PM && CONFIG_MCUMGR_SMP_BT)
-		register_mcumgr_groups();
-	#endif
+	fs_mgmt_register_group();
+#endif
+#ifdef CONFIG_MCUMGR_CMD_OS_MGMT
+	os_mgmt_register_group();
+#endif
+#ifdef CONFIG_MCUMGR_CMD_IMG_MGMT
+	img_mgmt_register_group();
+#endif
+#ifdef CONFIG_MCUMGR_CMD_STAT_MGMT
+	stat_mgmt_register_group();
+#endif
+#ifdef CONFIG_MCUMGR_CMD_SHELL_MGMT
+	shell_mgmt_register_group();
+#endif
+#ifdef CONFIG_MCUMGR_SMP_BT
+	start_smp_bluetooth();
+#endif
+#ifdef CONFIG_MCUMGR_SMP_UDP
+	start_smp_udp();
+#endif
 
 	if (IS_ENABLED(CONFIG_USB_DEVICE_STACK)) {
 		rc = usb_enable(NULL);
