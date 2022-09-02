@@ -13,6 +13,9 @@
 /* Zephyr Device Tree headers */
 #include <zephyr/dt-bindings/adc/b91-adc.h>
 
+/* Zephyr Power Management policy headers */
+#include <zephyr/pm/policy.h>
+
 /* Zephyr Logging headers */
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(adc_b91, CONFIG_ADC_LOG_LEVEL);
@@ -34,6 +37,9 @@ struct b91_adc_data {
 	uint8_t resolution_divider;
 	struct k_sem acq_sem;
 	struct k_thread thread;
+#ifdef CONFIG_PM
+	atomic_t current_pm_lock;
+#endif
 
 	K_THREAD_STACK_MEMBER(stack, CONFIG_ADC_B91_ACQUISITION_THREAD_STACK_SIZE);
 };
@@ -42,6 +48,24 @@ struct b91_adc_cfg {
 	uint32_t sample_freq;
 	uint16_t vref_internal_mv;
 };
+
+/* ADC local functions */
+
+#ifdef CONFIG_PM
+static void adc_b91_pm_policy_state_lock_get(struct b91_adc_data *data)
+{
+	if (atomic_test_and_set_bit(&data->current_pm_lock, 0) == 0) {
+		pm_policy_state_lock_get(PM_STATE_SUSPEND_TO_IDLE, PM_ALL_SUBSTATES);
+	}
+}
+
+static void adc_b91_pm_policy_state_lock_put(struct b91_adc_data *data)
+{
+	if (atomic_test_and_clear_bit(&data->current_pm_lock, 0) == 1) {
+		pm_policy_state_lock_put(PM_STATE_SUSPEND_TO_IDLE, PM_ALL_SUBSTATES);
+	}
+}
+#endif
 
 /* Validate ADC data buffer size */
 static int adc_b91_validate_buffer_size(const struct adc_sequence *sequence)
@@ -155,6 +179,9 @@ static void adc_context_start_sampling(struct adc_context *ctx)
 
 	data->repeat_buffer = data->buffer;
 
+#ifdef CONFIG_PM
+	adc_b91_pm_policy_state_lock_get(data);
+#endif
 	adc_power_on();
 
 	k_sem_give(&data->acq_sem);
@@ -246,6 +273,9 @@ static void adc_b91_acquisition_thread(const struct device *dev)
 		/* Power off ADC */
 		adc_power_off();
 
+#ifdef CONFIG_PM
+		adc_b91_pm_policy_state_lock_put(data);
+#endif
 		/* Release ADC context */
 		adc_context_on_sampling_done(&data->ctx, dev);
 	}
