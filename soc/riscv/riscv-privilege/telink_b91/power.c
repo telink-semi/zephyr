@@ -90,11 +90,6 @@ __weak void pm_state_set(enum pm_state state, uint8_t substate_id)
 		LOG_DBG("Sleep Time = 0 or less\n");
 		return;
 	}
-#ifdef CONFIG_PM_DEVICE
-	if (pm_device_is_any_busy()) {
-		return;
-	}
-#endif /* CONFIG_PM_DEVICE */
 
 	uint64_t stimer_sleep_ticks = mticks_to_systicks(wakeup_time - current_time);
 

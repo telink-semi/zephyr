@@ -26,6 +26,7 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #endif
 
 #include <zephyr/pm/device.h>
+#include <zephyr/pm/policy.h>
 
 #include "ieee802154_b91.h"
 
@@ -203,7 +204,13 @@ static bool b91_is_data_request(const uint8_t *buf, uint8_t size,
 static void b91_disable_pm(const struct device *dev)
 {
 #ifdef CONFIG_PM_DEVICE
-	pm_device_busy_set(dev);
+	struct b91_data *b91 = dev->data;
+
+	if (atomic_test_and_set_bit(&b91->current_pm_lock, 0) == 0) {
+		pm_policy_state_lock_get(PM_STATE_SUSPEND_TO_IDLE, PM_ALL_SUBSTATES);
+	}
+#else
+	ARG_UNUSED(dev);
 #endif /* CONFIG_PM_DEVICE */
 }
 
@@ -211,7 +218,13 @@ static void b91_disable_pm(const struct device *dev)
 static void b91_enable_pm(const struct device *dev)
 {
 #ifdef CONFIG_PM_DEVICE
-	pm_device_busy_clear(dev);
+	struct b91_data *b91 = dev->data;
+
+	if (atomic_test_and_clear_bit(&b91->current_pm_lock, 0) == 1) {
+		pm_policy_state_lock_put(PM_STATE_SUSPEND_TO_IDLE, PM_ALL_SUBSTATES);
+	}
+#else
+	ARG_UNUSED(dev);
 #endif /* CONFIG_PM_DEVICE */
 }
 
