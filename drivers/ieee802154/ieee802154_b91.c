@@ -604,8 +604,9 @@ static int b91_init(const struct device *dev)
 
 	/* init IRQs */
 	IRQ_CONNECT(DT_INST_IRQN(0), DT_INST_IRQ(0, priority), b91_rf_isr, 0, 0);
-	riscv_plic_irq_enable(DT_INST_IRQN(0));
-	riscv_plic_set_priority(DT_INST_IRQN(0), DT_INST_IRQ(0, priority));
+	riscv_plic_irq_enable(DT_INST_IRQN(0) - CONFIG_2ND_LVL_ISR_TBL_OFFSET);
+	riscv_plic_set_priority(DT_INST_IRQN(0) - CONFIG_2ND_LVL_ISR_TBL_OFFSET,
+				DT_INST_IRQ(0, priority));
 	rf_set_irq_mask(FLD_RF_IRQ_RX | FLD_RF_IRQ_TX);
 
 	/* init data variables */
@@ -730,7 +731,7 @@ static int b91_start(const struct device *dev)
 		rf_set_txmode();
 		rf_set_rxmode();
 		delay_us(CONFIG_IEEE802154_B91_SET_TXRX_DELAY_US);
-		riscv_plic_irq_enable(DT_INST_IRQN(0));
+		riscv_plic_irq_enable(DT_INST_IRQN(0) - CONFIG_2ND_LVL_ISR_TBL_OFFSET);
 		data.is_started = true;
 	}
 
@@ -747,7 +748,7 @@ static int b91_stop(const struct device *dev)
 				data.ack_sending = false;
 			}
 		}
-		riscv_plic_irq_disable(DT_INST_IRQN(0));
+		riscv_plic_irq_disable(DT_INST_IRQN(0) - CONFIG_2ND_LVL_ISR_TBL_OFFSET);
 		rf_set_tx_rx_off();
 		delay_us(CONFIG_IEEE802154_B91_SET_TXRX_DELAY_US);
 		data.is_started = false;
@@ -847,7 +848,7 @@ static int b91_configure(const struct device *dev,
 		}
 		break;
 	case IEEE802154_CONFIG_ACK_FPB:
-		riscv_plic_irq_disable(DT_INST_IRQN(0));
+		riscv_plic_irq_disable(DT_INST_IRQN(0) - CONFIG_2ND_LVL_ISR_TBL_OFFSET);
 		if (config->ack_fpb.addr) {
 			if (config->ack_fpb.enabled) {
 				b91_src_match_table_add(b91->src_match_table,
@@ -862,7 +863,7 @@ static int b91_configure(const struct device *dev,
 		} else {
 			result = -ENOTSUP;
 		}
-		riscv_plic_irq_enable(DT_INST_IRQN(0));
+		riscv_plic_irq_enable(DT_INST_IRQN(0) - CONFIG_2ND_LVL_ISR_TBL_OFFSET);
 		break;
 #endif /* CONFIG_OPENTHREAD_FTD */
 	default:
