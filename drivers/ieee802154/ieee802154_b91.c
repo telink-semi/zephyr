@@ -318,14 +318,14 @@ static inline uint8_t *b91_get_mac(const struct device *dev)
 	b91->mac_addr[0] = (b91->mac_addr[0] & ~0x01) | 0x02;
 #else
 	/* Vendor Unique Identifier */
-	b91->mac_addr[0] = 0xC4;
-	b91->mac_addr[1] = 0x19;
-	b91->mac_addr[2] = 0xD1;
-	b91->mac_addr[3] = 0x00;
-
+	b91->mac_addr[3] = 0x38;
+	b91->mac_addr[4] = 0xC1;
+	b91->mac_addr[5] = 0xA4;
+	
 	/* Extended Unique Identifier */
-	b91->mac_addr[4] = CONFIG_IEEE802154_B91_MAC4;
-	b91->mac_addr[5] = CONFIG_IEEE802154_B91_MAC5;
+	b91->mac_addr[0] = 0x00;
+	b91->mac_addr[1] = CONFIG_IEEE802154_B91_MAC4;
+	b91->mac_addr[2] = CONFIG_IEEE802154_B91_MAC5;
 	b91->mac_addr[6] = CONFIG_IEEE802154_B91_MAC6;
 	b91->mac_addr[7] = CONFIG_IEEE802154_B91_MAC7;
 #endif
@@ -491,10 +491,10 @@ static void b91_rf_rx_isr(void)
 		}
 
 		/* run filter (check PAN ID and destination address) */
-		if (b91_run_filter(payload) == false) {
+		/*if (b91_run_filter(payload) == false) {
 			LOG_DBG("Packet received is not addressed to me");
 			goto exit;
-		}
+		}*/
 
 #ifdef CONFIG_OPENTHREAD_FTD
 		bool frame_pending_bit = false;
