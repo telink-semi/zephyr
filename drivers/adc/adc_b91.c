@@ -6,6 +6,7 @@
 
 #define DT_DRV_COMPAT telink_b91_adc
 
+
 /* Local driver headers */
 #define ADC_CONTEXT_USES_KERNEL_TIMER
 #include "adc_context.h"
@@ -19,11 +20,12 @@ LOG_MODULE_REGISTER(adc_b91, CONFIG_ADC_LOG_LEVEL);
 
 /* Telink HAL headers */
 #include <adc.h>
-
+#include <zephyr/drivers/pinctrl.h>
 /* ADC B91 defines */
 #define SIGN_BIT_POSITION          (13)
 #define AREG_ADC_DATA_STATUS       (0xf6)
 #define ADC_DATA_READY             BIT(0)
+
 
 /* B91 ADC driver data */
 struct b91_adc_data {
@@ -39,10 +41,10 @@ struct b91_adc_data {
 };
 
 struct b91_adc_cfg {
+	const struct pinctrl_dev_config *pcfg;
 	uint32_t sample_freq;
 	uint16_t vref_internal_mv;
 };
-
 /* Validate ADC data buffer size */
 static int adc_b91_validate_buffer_size(const struct adc_sequence *sequence)
 {
@@ -127,7 +129,7 @@ static adc_input_pin_def_e adc_b91_get_pin(uint8_t dt_pin)
 		adc_pin = NOINPUTN;
 		break;
 	}
-
+	printk("\ndt_pin = %d\n", dt_pin);
 	return adc_pin;
 }
 
@@ -254,6 +256,16 @@ static void adc_b91_acquisition_thread(const struct device *dev)
 /* ADC Driver initialization */
 static int adc_b91_init(const struct device *dev)
 {
+	// const struct b91_adc_cfg *const cfg = dev->config;
+	const struct b91_adc_cfg *cfg = dev->config;
+	int ret;
+
+	ret = pinctrl_apply_state(cfg->pcfg, PINCTRL_STATE_DEFAULT);
+	if (ret != 0) {
+		#error pinctrl_apply_state
+		LOG_ERR("B91 ADC pinctrl setup failed (%d)", ret);
+		return ret;
+	}
 	struct b91_adc_data *data = dev->data;
 
 	k_sem_init(&data->acq_sem, 0, 1);
@@ -443,7 +455,10 @@ static struct b91_adc_data data_0 = {
 	ADC_CONTEXT_INIT_SYNC(data_0, ctx),
 };
 
+PINCTRL_DT_INST_DEFINE(0);
+
 static const struct b91_adc_cfg cfg_0 = {
+	.pcfg = PINCTRL_DT_INST_DEV_CONFIG_GET(0),
 	.sample_freq = DT_INST_PROP(0, sample_freq),
 	.vref_internal_mv = DT_INST_PROP(0, vref_internal_mv),
 };
@@ -457,8 +472,38 @@ static const struct adc_driver_api adc_b91_driver_api = {
 	.ref_internal = cfg_0.vref_internal_mv,
 };
 
-DEVICE_DT_INST_DEFINE(0, adc_b91_init, NULL,
-		      &data_0,  &cfg_0,
-		      POST_KERNEL,
-		      CONFIG_ADC_INIT_PRIORITY,
-		      &adc_b91_driver_api);
+// PINCTRL_DT_INST_DEFINE(0);
+
+// static const struct adc_b91_config adc_b91_dev_cfg_0 = {
+// 	.pcfg = PINCTRL_DT_INST_DEV_CONFIG_GET(0),
+// };
+
+// DEVICE_DT_INST_DEFINE(0, adc_b91_init, NULL,
+// 		      &data_0,
+// 			  &cfg_0,
+// 		      POST_KERNEL,
+// 		      CONFIG_ADC_INIT_PRIORITY,
+// 		      &adc_b91_driver_api);
+
+/* I2C driver registration */
+#define ADC_B91_INIT(inst)					      \
+								      \
+	PINCTRL_DT_INST_DEFINE(inst);				      \
+								      \
+	static struct b91_adc_data b91_adc_data_##inst;		      \
+								      \
+	static struct b91_adc_cfg b91_adc_cfg_##inst = {	      \
+		.pcfg = PINCTRL_DT_INST_DEV_CONFIG_GET(inst),	      \
+		.sample_freq = DT_INST_PROP(inst, sample_freq),		  \
+		.vref_internal_mv = DT_INST_PROP(inst, vref_internal_mv)\
+	};							      \
+								      \
+	DEVICE_DT_INST_DEFINE(inst, adc_b91_init,		      \
+				  NULL,				      \
+				  &b91_adc_data_##inst,		      \
+				  &b91_adc_cfg_##inst,		      \
+				  POST_KERNEL,			      \
+				  CONFIG_ADC_INIT_PRIORITY,	      \
+				  &adc_b91_driver_api);
+
+DT_INST_FOREACH_STATUS_OKAY(ADC_B91_INIT)
