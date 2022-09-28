@@ -5,7 +5,7 @@
  */
 
 #define DT_DRV_COMPAT telink_b91_adc
-
+#define ADC_PINCTRL
 /* Local driver headers */
 #define ADC_CONTEXT_USES_KERNEL_TIMER
 #include "adc_context.h"
@@ -19,12 +19,19 @@ LOG_MODULE_REGISTER(adc_b91, CONFIG_ADC_LOG_LEVEL);
 
 /* Telink HAL headers */
 #include <adc.h>
-
+#ifdef ADC_PINCTRL
+#include <zephyr/drivers/pinctrl.h>
+#endif
 /* ADC B91 defines */
 #define SIGN_BIT_POSITION          (13)
 #define AREG_ADC_DATA_STATUS       (0xf6)
 #define ADC_DATA_READY             BIT(0)
 
+#ifdef ADC_PINCTRL
+struct adc_b91_config {
+	const struct pinctrl_dev_config *pcfg;
+};
+#endif 
 /* B91 ADC driver data */
 struct b91_adc_data {
 	struct adc_context ctx;
@@ -254,6 +261,16 @@ static void adc_b91_acquisition_thread(const struct device *dev)
 /* ADC Driver initialization */
 static int adc_b91_init(const struct device *dev)
 {
+	#ifdef ADC_PINCTRL
+	const struct adc_b91_config *const cfg = dev->config;
+	int ret;
+
+	ret = pinctrl_apply_state(cfg->pcfg, PINCTRL_STATE_DEFAULT);
+	if (ret != 0) {
+		LOG_ERR("XEC ADC pinctrl setup failed (%d)", ret);
+		return ret;
+	}
+	#endif
 	struct b91_adc_data *data = dev->data;
 
 	k_sem_init(&data->acq_sem, 0, 1);
@@ -457,8 +474,21 @@ static const struct adc_driver_api adc_b91_driver_api = {
 	.ref_internal = cfg_0.vref_internal_mv,
 };
 
+#ifdef ADC_PINCTRL
+PINCTRL_DT_INST_DEFINE(0);
+
+static struct adc_b91_config adc_b91_dev_cfg_0 = {
+	.pcfg = PINCTRL_DT_INST_DEV_CONFIG_GET(0),
+};
+#endif
+
 DEVICE_DT_INST_DEFINE(0, adc_b91_init, NULL,
-		      &data_0,  &cfg_0,
+		      &data_0,
+			  #ifdef ADC_PINCTRL
+			  &adc_b91_dev_cfg_0,
+			  #else
+			  &cfg_0,
+			  #endif
 		      POST_KERNEL,
 		      CONFIG_ADC_INIT_PRIORITY,
 		      &adc_b91_driver_api);
