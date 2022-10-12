@@ -752,9 +752,14 @@ static void b91_iface_init(struct net_if *iface)
 static enum ieee802154_hw_caps b91_get_capabilities(const struct device *dev)
 {
 	ARG_UNUSED(dev);
+	enum ieee802154_hw_caps caps = IEEE802154_HW_FCS |
+		IEEE802154_HW_2_4_GHZ | IEEE802154_HW_FILTER |
+		IEEE802154_HW_TX_RX_ACK;
 
-	return IEEE802154_HW_FCS | IEEE802154_HW_2_4_GHZ |
-	       IEEE802154_HW_FILTER | IEEE802154_HW_TX_RX_ACK;
+#ifdef CONFIG_NET_PKT_TXTIME
+	caps |= IEEE802154_HW_TXTIME;
+#endif /* CONFIG_NET_PKT_TXTIME */
+	return caps;
 }
 
 /* API implementation: cca */
@@ -889,7 +894,12 @@ static int b91_tx(const struct device *dev,
 	struct b91_data *b91 = dev->data;
 
 	/* check for supported mode */
+#ifdef CONFIG_NET_PKT_TXTIME
+	if (mode != IEEE802154_TX_MODE_DIRECT &&
+		mode != IEEE802154_TX_MODE_TXTIME_CCA) {
+#else
 	if (mode != IEEE802154_TX_MODE_DIRECT) {
+#endif
 		LOG_WRN("TX mode %d not supported", mode);
 		return -ENOTSUP;
 	}
@@ -900,6 +910,17 @@ static int b91_tx(const struct device *dev,
 			rf_set_rxmode();
 		}
 	}
+
+#ifdef CONFIG_NET_PKT_TXTIME
+	if (mode == IEEE802154_TX_MODE_TXTIME_CCA) {
+		uint64_t tx_at = net_pkt_txtime(pkt) / NSEC_PER_USEC;
+		uint64_t now;
+		do {
+			now = k_ticks_to_us_floor64(k_uptime_ticks());
+		} while (now < tx_at);
+		//LOG_WRN("IEEE802154_TX_MODE_TXTIME_CCA %llu %llu", tx_at, now);
+	}
+#endif
 
 	/* prepare tx buffer */
 	b91_set_tx_payload(dev, frag->data, frag->len);
