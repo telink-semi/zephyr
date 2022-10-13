@@ -449,7 +449,7 @@ ALWAYS_INLINE b91_set_tx_payload(const struct device *dev, uint8_t *payload, uin
 
 /* Handle acknowledge packet */
 static void
-ALWAYS_INLINE b91_handle_ack(const struct device *dev, const void *buf, size_t buf_len)
+ALWAYS_INLINE b91_handle_ack(const struct device *dev, const void *buf, size_t buf_len, uint64_t rx_time)
 {
 	struct b91_data *b91 = dev->data;
 	struct net_pkt *ack_pkt = net_pkt_alloc_with_buffer(
@@ -465,6 +465,13 @@ ALWAYS_INLINE b91_handle_ack(const struct device *dev, const void *buf, size_t b
 			break;
 		}
 		b91_update_rssi_and_lqi(dev, ack_pkt);
+#ifdef CONFIG_NET_PKT_TIMESTAMP
+		struct net_ptp_time timestamp = {
+			.second = rx_time / USEC_PER_SEC,
+			.nanosecond = (rx_time % USEC_PER_SEC) * NSEC_PER_USEC
+		};
+		net_pkt_set_timestamp(ack_pkt, &timestamp);
+#endif
 		net_pkt_cursor_init(ack_pkt);
 		if (ieee802154_radio_handle_ack(b91->iface, ack_pkt) != NET_OK) {
 			LOG_INF("ACK packet not handled - releasing.");
@@ -503,6 +510,10 @@ static void ALWAYS_INLINE b91_rf_rx_isr(const struct device *dev)
 	struct b91_data *b91 = dev->data;
 	int status = -EINVAL;
 	struct net_pkt *pkt = NULL;
+
+#ifdef CONFIG_NET_PKT_TIMESTAMP
+	uint64_t rx_time = k_ticks_to_us_floor64(k_uptime_ticks());
+#endif /* CONFIG_NET_PKT_TIMESTAMP */
 
 	dma_chn_dis(DMA1);
 	rf_clr_irq_status(FLD_RF_IRQ_RX);
@@ -554,7 +565,11 @@ static void ALWAYS_INLINE b91_rf_rx_isr(const struct device *dev)
 		}
 		if (frame.general.type == IEEE802154_FRAME_FCF_TYPE_ACK) {
 			if (b91->ack_handler_en) {
-				b91_handle_ack(dev, payload, length);
+#ifdef CONFIG_NET_PKT_TIMESTAMP
+				b91_handle_ack(dev, payload, length, rx_time);
+#else
+				b91_handle_ack(dev, payload, length, 0);
+#endif /* CONFIG_NET_PKT_TIMESTAMP */
 			}
 			break;
 		}
@@ -643,6 +658,13 @@ static void ALWAYS_INLINE b91_rf_rx_isr(const struct device *dev)
 			break;
 		}
 		b91_update_rssi_and_lqi(dev, pkt);
+#ifdef CONFIG_NET_PKT_TIMESTAMP
+		struct net_ptp_time timestamp = {
+			.second = rx_time / USEC_PER_SEC,
+			.nanosecond = (rx_time % USEC_PER_SEC) * NSEC_PER_USEC
+		};
+		net_pkt_set_timestamp(pkt, &timestamp);
+#endif
 		status = net_recv_data(b91->iface, pkt);
 		if (status < 0) {
 			LOG_ERR("RCV Packet dropped by NET stack: %d", status);
