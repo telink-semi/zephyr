@@ -933,17 +933,6 @@ static int b91_tx(const struct device *dev,
 		}
 	}
 
-#ifdef CONFIG_NET_PKT_TXTIME
-	if (mode == IEEE802154_TX_MODE_TXTIME_CCA) {
-		uint64_t tx_at = net_pkt_txtime(pkt) / NSEC_PER_USEC;
-		uint64_t now;
-		do {
-			now = k_ticks_to_us_floor64(k_uptime_ticks());
-		} while (now < tx_at);
-		//LOG_WRN("IEEE802154_TX_MODE_TXTIME_CCA %llu %llu", tx_at, now);
-	}
-#endif
-
 	/* prepare tx buffer */
 	b91_set_tx_payload(dev, frag->data, frag->len);
 
@@ -954,6 +943,16 @@ static int b91_tx(const struct device *dev,
 	/* start transmission */
 	rf_set_txmode();
 	delay_us(CONFIG_IEEE802154_B91_SET_TXRX_DELAY_US);
+
+#ifdef CONFIG_NET_PKT_TXTIME
+	if (mode == IEEE802154_TX_MODE_TXTIME_CCA) {
+		uint64_t tx_at = k_ns_to_ticks_near64(net_pkt_txtime(pkt));
+
+		while (k_uptime_ticks() < tx_at) {
+		}
+	}
+#endif
+
 	rf_tx_pkt(b91->tx_buffer);
 	if (b91->event_handler) {
 		b91->event_handler(dev, IEEE802154_EVENT_TX_STARTED, (void *)frag);
