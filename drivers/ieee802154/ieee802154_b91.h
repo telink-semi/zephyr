@@ -38,6 +38,10 @@
 #define B91_LOGIC_CHANNEL_TO_PHYSICAL(p)    (((p) - 10) * 5)
 #define B91_ACK_IE_MAX_SIZE					(16)
 
+#define ZB_RADIO_TIMESTAMP_GET(p)   		((p[rf_zigbee_dma_rx_offset_time_stamp(p)])   		| \
+											 (p[rf_zigbee_dma_rx_offset_time_stamp(p)+1] << 8)	| \
+											 (p[rf_zigbee_dma_rx_offset_time_stamp(p)+2] << 16)	| \
+											 (p[rf_zigbee_dma_rx_offset_time_stamp(p)+3] << 24))
 
 /* TX power lookup table */
 #define B91_TX_POWER_MIN                    (-30)

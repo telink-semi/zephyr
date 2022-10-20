@@ -513,6 +513,10 @@ static void ALWAYS_INLINE b91_rf_rx_isr(const struct device *dev)
 
 #ifdef CONFIG_NET_PKT_TIMESTAMP
 	uint64_t rx_time = k_ticks_to_us_floor64(k_uptime_ticks());
+	uint32_t rx_timestamp = ZB_RADIO_TIMESTAMP_GET(b91->rx_buffer);
+	uint32_t rx_time_16M = clock_time();
+	uint32_t delta_time = (rx_time_16M - rx_timestamp) / 16;
+	rx_time = rx_time - delta_time;
 #endif /* CONFIG_NET_PKT_TIMESTAMP */
 
 	dma_chn_dis(DMA1);
