@@ -1052,6 +1052,14 @@ static int b91_configure(const struct device *dev,
 	case IEEE802154_CONFIG_EVENT_HANDLER:
 		b91->event_handler = config->event_handler;
 		break;
+#ifdef CONFIG_IEEE802154_2015
+	case IEEE802154_CONFIG_MAC_KEYS:
+		LOG_WRN("MAC keys");
+		break;
+	case IEEE802154_CONFIG_FRAME_COUNTER:
+		LOG_WRN("MAC FC %08x", config->frame_counter);
+		break;
+#endif /* CONFIG_IEEE802154_2015 */
 	default:
 		LOG_WRN("Unhandled cfg %d", type);
 		result = -ENOTSUP;
