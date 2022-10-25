@@ -786,6 +786,9 @@ static enum ieee802154_hw_caps b91_get_capabilities(const struct device *dev)
 #if defined(CONFIG_NET_PKT_TIMESTAMP) && defined(CONFIG_NET_PKT_TXTIME)
 	caps |= IEEE802154_HW_TXTIME;
 #endif /* CONFIG_NET_PKT_TIMESTAMP && CONFIG_NET_PKT_TXTIME */
+#ifdef CONFIG_IEEE802154_2015
+	caps |= IEEE802154_HW_TX_SEC;
+#endif /* CONFIG_IEEE802154_2015 */
 	return caps;
 }
 
