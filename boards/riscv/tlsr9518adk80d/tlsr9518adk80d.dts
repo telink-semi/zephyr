@@ -94,7 +94,7 @@
 };
 
 &flash {
-	reg = <0x20000000 0x100000>;
+	reg = <0x20000000 0x200000>;
 
 	partitions {
 		compatible = "fixed-partitions";
@@ -107,11 +107,7 @@
 		};
 		slot0_partition: partition@10000 {
 			label = "image-0";
-			reg = <0x10000 0x70000>;
-		};
-		slot1_partition: partition@80000 {
-			label = "image-1";
-			reg = <0x80000 0x70000>;
+			reg = <0x10000 0xE0000>;
 		};
 		scratch_partition: partition@f0000 {
 			label = "image-scratch";
@@ -121,6 +117,10 @@
 			label = "storage";
 			reg = <0xf4000 0x0000b000>;
 		/* region <0xff000 0x1000> is reserved for Telink B91 SDK's data */
+		};
+		slot1_partition: partition@100000 {
+			label = "image-1";
+			reg = <0x100000 0xE0000>;
 		};
 	};
 };
