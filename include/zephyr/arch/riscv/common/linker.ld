@@ -253,7 +253,9 @@ SECTIONS
 		  __bss_end = ALIGN(4);
 	}  GROUP_DATA_LINK_IN(RAMABLE_REGION, RAMABLE_REGION)
 
+#ifndef CONFIG_SOC_SERIES_RISCV_TELINK_B91
 #include <zephyr/linker/common-noinit.ld>
+#endif
 
     SECTION_DATA_PROLOGUE(_DATA_SECTION_NAME,,)
 	{
