@@ -113,9 +113,13 @@
 			label = "image-scratch";
 			reg = <0xf0000 0x4000>;
 		};
-		storage_partition: partition@f4000 {
+		factory_partition: partition@f4000 {
+			label = "factory-data";
+			reg = <0xf4000 0x1000>;
+		};
+		storage_partition: partition@f5000 {
 			label = "storage";
-			reg = <0xf4000 0x0000b000>;
+			reg = <0xf5000 0xa000>;
 		/* region <0xff000 0x1000> is reserved for Telink B91 SDK's data */
 		};
 		slot1_partition: partition@100000 {
