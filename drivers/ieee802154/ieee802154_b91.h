@@ -7,6 +7,8 @@
 #ifndef ZEPHYR_DRIVERS_IEEE802154_IEEE802154_B91_H_
 #define ZEPHYR_DRIVERS_IEEE802154_IEEE802154_B91_H_
 
+#include <drivers/ieee802154/b91.h>
+
 /* Timeouts */
 #define B91_TX_WAIT_TIME_MS                 (10)
 #define B91_ACK_WAIT_TIME_MS                (10)
@@ -128,6 +130,7 @@ struct b91_data {
 	uint8_t filter_short_addr[IEEE802154_FRAME_LENGTH_ADDR_SHORT];
 	uint8_t filter_ieee_addr[IEEE802154_FRAME_LENGTH_ADDR_EXT];
 	bool is_started;
+	bool is_ready;
 	volatile bool ack_handler_en;
 	uint16_t current_channel;
 	int16_t current_dbm;

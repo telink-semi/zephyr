@@ -720,7 +720,7 @@ static void __GENERIC_SECTION(.ram_code) b91_rf_isr(const struct device *dev)
 }
 
 /* Driver initialization */
-static int b91_init(const struct device *dev)
+int b91_init(const struct device *dev)
 {
 	struct b91_data *b91 = dev->data;
 
@@ -737,8 +737,13 @@ static int b91_init(const struct device *dev)
 	rf_set_rxmode();
 
 	/* init IRQs */
+#if CONFIG_DYNAMIC_INTERRUPTS
+	irq_connect_dynamic(DT_INST_IRQN(0), DT_INST_IRQ(0, priority), b91_rf_isr,
+		DEVICE_DT_INST_GET(0), 0);
+#else
 	IRQ_CONNECT(DT_INST_IRQN(0), DT_INST_IRQ(0, priority), b91_rf_isr,
 		DEVICE_DT_INST_GET(0), 0);
+#endif
 	riscv_plic_irq_enable(DT_INST_IRQN(0) - CONFIG_2ND_LVL_ISR_TBL_OFFSET);
 	riscv_plic_set_priority(DT_INST_IRQN(0) - CONFIG_2ND_LVL_ISR_TBL_OFFSET,
 		DT_INST_IRQ(0, priority));
@@ -750,6 +755,7 @@ static int b91_init(const struct device *dev)
 	b91->ack_sending = false;
 	b91->current_channel = 0xFFFF;
 	b91->current_dbm = 0x7FFF;
+	b91->is_ready = true;
 #ifdef CONFIG_OPENTHREAD_FTD
 	b91_src_match_table_clean(b91->src_match_table);
 	b91->src_match_table->enabled = true;
@@ -759,6 +765,13 @@ static int b91_init(const struct device *dev)
 #endif /* CONFIG_OPENTHREAD_LINK_METRICS_SUBJECT */
 	b91->event_handler = NULL;
 	return 0;
+}
+
+void b91_deinit(const struct device *dev)
+{
+	struct b91_data *b91 = dev->data;
+
+	b91->is_ready = false;
 }
 
 /* API implementation: iface_init */
@@ -792,9 +805,14 @@ static enum ieee802154_hw_caps b91_get_capabilities(const struct device *dev)
 /* API implementation: cca */
 static int b91_cca(const struct device *dev)
 {
-	ARG_UNUSED(dev);
+	struct b91_data *b91 = dev->data;
 
 	unsigned int t1 = stimer_get_tick();
+
+	if(!b91->is_ready)
+	{
+		return -EAGAIN;
+	}
 
 	while (!clock_time_exceed(t1, B91_CCA_TIME_MAX_US)) {
 		if (rf_get_rssi() < CONFIG_IEEE802154_B91_CCA_RSSI_THRESHOLD) {
@@ -809,6 +827,11 @@ static int b91_cca(const struct device *dev)
 static int b91_set_channel(const struct device *dev, uint16_t channel)
 {
 	struct b91_data *b91 = dev->data;
+
+	if(!b91->is_ready)
+	{
+		return -EAGAIN;
+	}
 
 	if (channel < 11 || channel > 26) {
 		return -EINVAL;
@@ -850,6 +873,11 @@ static int b91_set_txpower(const struct device *dev, int16_t dbm)
 {
 	struct b91_data *b91 = dev->data;
 
+	if(!b91->is_ready)
+	{
+		return -EAGAIN;
+	}
+
 	/* check for supported Min/Max range */
 	if (dbm < B91_TX_POWER_MIN) {
 		dbm = B91_TX_POWER_MIN;
@@ -871,6 +899,11 @@ static int b91_start(const struct device *dev)
 {
 	struct b91_data *b91 = dev->data;
 
+	if(!b91->is_ready)
+	{
+		return -EAGAIN;
+	}
+
 	b91_disable_pm(dev);
 	/* check if RF is already started */
 	if (!b91->is_started) {
@@ -888,6 +921,11 @@ static int b91_start(const struct device *dev)
 static int b91_stop(const struct device *dev)
 {
 	struct b91_data *b91 = dev->data;
+
+	if(!b91->is_ready)
+	{
+		return -EAGAIN;
+	}
 
 	/* check if RF is already stopped */
 	if (b91->is_started) {
@@ -919,6 +957,11 @@ static int b91_tx(const struct device *dev,
 
 	int status = 0;
 	struct b91_data *b91 = dev->data;
+
+	if(!b91->is_ready)
+	{
+		return -EAGAIN;
+	}
 
 	/* check for supported mode */
 #if defined(CONFIG_NET_PKT_TIMESTAMP) && defined(CONFIG_NET_PKT_TXTIME)
