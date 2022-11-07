@@ -5,6 +5,7 @@
  */
 
 #include <zephyr/dt-bindings/pinctrl/b91-pinctrl.h>
+#include <zephyr/dt-bindings/adc/b91-adc.h>
 
 &pinctrl {
 	/* Set pad-mul-sel register value.
@@ -67,5 +68,15 @@
 	};
 	i2c_sda_pe3_default: i2c_sda_pe3_default {
 		pinmux = <B91_PINMUX_SET(B91_PORT_E, B91_PIN_3, B91_FUNC_A)>;
+	};
+
+	/* Define ADC pins */
+
+	adc_pb0_default: adc_pb0_default {
+		pinmux = <B91_PINMUX_SET(B91_PORT_B, DT_ADC_GPIO_PB0, B91_FUNC_A)>;
+	};
+
+	adc_vbat_default: adc_vbat_default {
+		pinmux = <B91_PINMUX_SET(B91_PORT_B, DT_ADC_VBAT, B91_FUNC_A)>;
 	};
 };

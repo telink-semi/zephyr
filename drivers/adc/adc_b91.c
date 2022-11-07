@@ -19,6 +19,7 @@ LOG_MODULE_REGISTER(adc_b91, CONFIG_ADC_LOG_LEVEL);
 
 /* Telink HAL headers */
 #include <adc.h>
+#include <zephyr/drivers/pinctrl.h>
 
 /* ADC B91 defines */
 #define SIGN_BIT_POSITION          (13)
@@ -41,6 +42,7 @@ struct b91_adc_data {
 struct b91_adc_cfg {
 	uint32_t sample_freq;
 	uint16_t vref_internal_mv;
+	const struct pinctrl_dev_config *pcfg;
 };
 
 /* Validate ADC data buffer size */
@@ -255,6 +257,15 @@ static void adc_b91_acquisition_thread(const struct device *dev)
 static int adc_b91_init(const struct device *dev)
 {
 	struct b91_adc_data *data = dev->data;
+	const struct b91_adc_cfg *config = dev->config;
+	int err;
+
+	/* Configure dt provided device signals when available */
+	err = pinctrl_apply_state(config->pcfg, PINCTRL_STATE_DEFAULT);
+	if (err < 0) {
+		LOG_ERR("ADC pinctrl setup failed (%d)", err);
+		return err;
+	}
 
 	k_sem_init(&data->acq_sem, 0, 1);
 
@@ -443,9 +454,12 @@ static struct b91_adc_data data_0 = {
 	ADC_CONTEXT_INIT_SYNC(data_0, ctx),
 };
 
+PINCTRL_DT_INST_DEFINE(0);
+
 static const struct b91_adc_cfg cfg_0 = {
 	.sample_freq = DT_INST_PROP(0, sample_freq),
 	.vref_internal_mv = DT_INST_PROP(0, vref_internal_mv),
+	.pcfg = PINCTRL_DT_INST_DEV_CONFIG_GET(0),
 };
 
 static const struct adc_driver_api adc_b91_driver_api = {
