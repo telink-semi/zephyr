@@ -39,9 +39,14 @@ static struct b91_src_match_table src_match_table;
 #endif /* CONFIG_OPENTHREAD_FTD */
 
 #ifdef CONFIG_OPENTHREAD_LINK_METRICS_SUBJECT
-/* B91 radio source match table structure */
+/* B91 radio ACK table structure */
 static struct b91_enh_ack_table enh_ack_table;
 #endif /* CONFIG_OPENTHREAD_LINK_METRICS_SUBJECT */
+
+#ifdef CONFIG_IEEE802154_2015
+/* mac keys data */
+static struct b91_mac_keys mac_keys;
+#endif /* CONFIG_IEEE802154_2015 */
 
 /* B91 data structure */
 static struct  b91_data data = {
@@ -51,6 +56,10 @@ static struct  b91_data data = {
 #ifdef CONFIG_OPENTHREAD_LINK_METRICS_SUBJECT
 	.enh_ack_table = &enh_ack_table,
 #endif /* CONFIG_OPENTHREAD_LINK_METRICS_SUBJECT */
+#ifdef CONFIG_IEEE802154_2015
+/* mac keys data */
+	.mac_keys = &mac_keys,
+#endif /* CONFIG_IEEE802154_2015 */
 };
 
 #ifdef CONFIG_OPENTHREAD_FTD
@@ -254,6 +263,16 @@ static void b91_enh_ack_table_remove(
 }
 
 #endif /* CONFIG_OPENTHREAD_LINK_METRICS_SUBJECT */
+
+#ifdef CONFIG_IEEE802154_2015
+
+/* Clean mac keys data */
+static void b91_mac_keys_data_clean(struct b91_mac_keys *mac_keys)
+{
+	memset(mac_keys, 0, sizeof(struct b91_mac_keys));
+}
+
+#endif /* CONFIG_IEEE802154_2015 */
 
 /* Disable power management by device */
 static void b91_disable_pm(const struct device *dev)
@@ -758,6 +777,9 @@ static int b91_init(const struct device *dev)
 	b91_enh_ack_table_clean(b91->enh_ack_table);
 #endif /* CONFIG_OPENTHREAD_LINK_METRICS_SUBJECT */
 	b91->event_handler = NULL;
+#ifdef CONFIG_IEEE802154_2015
+	b91_mac_keys_data_clean(b91->mac_keys);
+#endif /* CONFIG_IEEE802154_2015 */
 	return 0;
 }
 
@@ -1057,10 +1079,28 @@ static int b91_configure(const struct device *dev,
 		break;
 #ifdef CONFIG_IEEE802154_2015
 	case IEEE802154_CONFIG_MAC_KEYS:
-		LOG_WRN("MAC keys");
+		{
+			uint32_t cnt = b91->mac_keys->frame_cnt;
+
+			b91_mac_keys_data_clean(b91->mac_keys);
+			b91->mac_keys->frame_cnt = cnt;
+			for (size_t i = 0; config->mac_keys[i].key_value; i++) {
+				if (i < B91_MAC_KEYS_ITEMS) {
+					memcpy(b91->mac_keys->item[i].key,
+						config->mac_keys[i].key_value, B91_MAC_KEY_LENGTH);
+					b91->mac_keys->item[i].frame_cnt_local =
+					config->mac_keys[i].frame_counter_per_key;
+					b91->mac_keys->item[i].key_id =
+						config->mac_keys[i].key_index;
+				} else {
+					LOG_WRN("can't save key id %u",
+						config->mac_keys[i].key_index);
+				}
+			}
+		}
 		break;
 	case IEEE802154_CONFIG_FRAME_COUNTER:
-		LOG_WRN("MAC FC %08x", config->frame_counter);
+		b91->mac_keys->frame_cnt = config->frame_counter;
 		break;
 #endif /* CONFIG_IEEE802154_2015 */
 	default:
