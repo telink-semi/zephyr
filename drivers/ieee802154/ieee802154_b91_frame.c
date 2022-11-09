@@ -10,6 +10,8 @@
 #include <string.h>
 #include <zephyr/toolchain/common.h>
 
+#include <mbedtls/ccm.h>
+
 
 /* frame control field byte 0 */
 #define IEEE802154_FRAME_FCF_TYPE_MASK             (0x07)
@@ -97,6 +99,10 @@
 #define IEEE802154_FRAME_LENGTH_SEC_HEADER_MODE_2  (9)
 #define IEEE802154_FRAME_LENGTH_SEC_HEADER_MODE_3  (13)
 #define IEEE802154_FRAME_LENGTH_IE_HEADER          (2)
+
+/* cryptography definitions */
+#define IEEE802154_CRYPTO_LENGTH_NONCE             (13)
+#define IEEE802154_CRYPTO_LENGTH_AES_BLOCK         (16)
 
 
 /* ieee802154_frame structure */
@@ -592,6 +598,94 @@ ALWAYS_INLINE b91_ieee802154_frame_build(const struct ieee802154_frame *frame,
 		}
 		result = true;
 	} while (0);
+
+	return result;
+}
+
+
+static void ieee802154_b91_crypto_nonce(
+	const uint8_t ext_addr[IEEE802154_FRAME_LENGTH_ADDR_EXT],
+	uint32_t frame_cnt, uint8_t sec_level,
+	uint8_t nonce[IEEE802154_CRYPTO_LENGTH_NONCE])
+{
+
+	if (ext_addr && nonce) {
+		memcpy(nonce, ext_addr, IEEE802154_FRAME_LENGTH_ADDR_EXT);
+		nonce[IEEE802154_FRAME_LENGTH_ADDR_EXT] = frame_cnt >> 24;
+		nonce[IEEE802154_FRAME_LENGTH_ADDR_EXT + 1] = frame_cnt >> 16;
+		nonce[IEEE802154_FRAME_LENGTH_ADDR_EXT + 2] = frame_cnt >> 8;
+		nonce[IEEE802154_FRAME_LENGTH_ADDR_EXT + 3] = frame_cnt;
+		nonce[IEEE802154_FRAME_LENGTH_ADDR_EXT + 4] = sec_level;
+	}
+}
+
+static bool ieee802154_b91_crypto_encrypt(
+	const uint8_t key[IEEE802154_CRYPTO_LENGTH_AES_BLOCK],
+	const uint8_t ext_addr[IEEE802154_FRAME_LENGTH_ADDR_EXT],
+	uint32_t frame_cnt, uint8_t frame_sec_level,
+	const uint8_t *frame_open, size_t frame_open_len,
+	const uint8_t *frame_plain, size_t frame_plain_len,
+	uint8_t *frame_cipher,
+	uint8_t *frame_mic, size_t frame_mic_len)
+{
+	bool result = false;
+
+	if (key && ext_addr &&
+		frame_open && frame_open_len &&
+		frame_mic && frame_mic_len) {
+
+		uint8_t nonce[IEEE802154_CRYPTO_LENGTH_NONCE];
+
+		ieee802154_b91_crypto_nonce(ext_addr, frame_cnt, frame_sec_level, nonce);
+
+		mbedtls_ccm_context ctx;
+
+		mbedtls_ccm_init(&ctx);
+		if (!mbedtls_ccm_setkey(&ctx, MBEDTLS_CIPHER_ID_AES, key,
+				IEEE802154_CRYPTO_LENGTH_AES_BLOCK * 8)) {
+			if (!mbedtls_ccm_encrypt_and_tag(&ctx, frame_plain_len,
+					nonce, sizeof(nonce),
+					frame_open, frame_open_len,
+					frame_plain, frame_cipher, frame_mic, frame_mic_len)) {
+				result = true;
+			}
+		}
+	}
+
+	return result;
+}
+
+static bool ieee802154_b91_crypto_decrypt(
+	const uint8_t key[IEEE802154_CRYPTO_LENGTH_AES_BLOCK],
+	const uint8_t ext_addr[IEEE802154_FRAME_LENGTH_ADDR_EXT],
+	uint32_t frame_cnt, uint8_t frame_sec_level,
+	const uint8_t *frame_open, size_t frame_open_len,
+	const uint8_t *frame_cipher, size_t frame_cipher_len,
+	const uint8_t *frame_mic, size_t frame_mic_len,
+	uint8_t *frame_plain)
+{
+	bool result = false;
+
+	if (key && ext_addr &&
+		frame_open && frame_open_len) {
+
+		uint8_t nonce[IEEE802154_CRYPTO_LENGTH_NONCE];
+
+		ieee802154_b91_crypto_nonce(ext_addr, frame_cnt, frame_sec_level, nonce);
+
+		mbedtls_ccm_context ctx;
+
+		mbedtls_ccm_init(&ctx);
+		if (!mbedtls_ccm_setkey(&ctx, MBEDTLS_CIPHER_ID_AES, key,
+				IEEE802154_CRYPTO_LENGTH_AES_BLOCK * 8)) {
+			if (!mbedtls_ccm_auth_decrypt(&ctx, frame_cipher_len,
+					nonce, sizeof(nonce),
+					frame_open, frame_open_len,
+					frame_cipher, frame_plain, frame_mic, frame_mic_len)) {
+				result = true;
+			}
+		}
+	}
 
 	return result;
 }
