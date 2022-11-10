@@ -114,6 +114,8 @@ struct ieee802154_frame {
 		bool ack_req;
 		bool fp_bit;
 	} general;
+	const uint8_t *header;
+	size_t header_len;
 	const uint8_t *sn;
 	const uint8_t *dst_panid;
 	const uint8_t *dst_addr;
@@ -123,10 +125,9 @@ struct ieee802154_frame {
 	bool src_addr_ext;
 	const uint8_t *sec_header;
 	size_t sec_header_len;
-	const uint8_t *ie_header;
-	size_t ie_header_len;
-	const uint8_t *data;
-	size_t data_len;
+	const uint8_t *payload;
+	size_t payload_len;
+	bool payload_ie;
 };
 
 
@@ -134,8 +135,8 @@ struct ieee802154_frame {
  * Check if FCF describes destination PANID
  * fcf should be valid and contains at lest 2 bytes
  */
-static bool
-ALWAYS_INLINE ieee802154_frame_has_dest_panid(const uint8_t fcf[2])
+ALWAYS_INLINE static bool
+ieee802154_frame_has_dest_panid(const uint8_t fcf[2])
 {
 	bool result = true;
 	const uint8_t frame_ver_t = (fcf[1] & IEEE802154_FRAME_FCF_VER_MASK) >>
@@ -184,8 +185,8 @@ ALWAYS_INLINE ieee802154_frame_has_dest_panid(const uint8_t fcf[2])
  * return PANID compression bit
  * frame should be valid
  */
-static bool
-ALWAYS_INLINE ieee802154_frame_panid_compression(const struct ieee802154_frame *frame)
+ALWAYS_INLINE static bool
+ieee802154_frame_panid_compression(const struct ieee802154_frame *frame)
 {
 	bool result = false;
 
@@ -226,8 +227,8 @@ ALWAYS_INLINE ieee802154_frame_panid_compression(const struct ieee802154_frame *
  * Parse IEEE802154 buffer
  * buf & frame should be valid
  */
-static void
-ALWAYS_INLINE b91_ieee802154_frame_parse(const uint8_t *buf, size_t bul_len,
+ALWAYS_INLINE static void
+b91_ieee802154_frame_parse(const uint8_t *buf, size_t bul_len,
 	struct ieee802154_frame *frame)
 {
 	size_t pos = 0; /* current buffer position */
@@ -249,12 +250,15 @@ ALWAYS_INLINE b91_ieee802154_frame_parse(const uint8_t *buf, size_t bul_len,
 			frame->general.fp_bit = false;
 		}
 		frame->general.valid = true;
+		frame->header = buf;
 	} else {
 		frame->general.valid = false;
 		frame->general.ver = IEEE802154_FRAME_FCF_VER_2003;
 		frame->general.type = IEEE802154_FRAME_FCF_TYPE_BEACON;
 		frame->general.ack_req = false;
 		frame->general.fp_bit = false;
+		frame->header = NULL;
+		frame->header_len = 0;
 	}
 	pos += IEEE802154_FRAME_LENGTH_FCF;	/* FCF[2] */
 	/* at sequence number */
@@ -427,50 +431,17 @@ ALWAYS_INLINE b91_ieee802154_frame_parse(const uint8_t *buf, size_t bul_len,
 	} else {
 		frame->sec_header = NULL;
 	}
-	/* at IE header */
-	bool ie_error = false;
-
-	if (frame->general.valid &&
-		(buf[1] & IEEE802154_FRAME_FCF_IE_MASK) == IEEE802154_FRAME_FCF_IE_ON) {
-		frame->ie_header = NULL;
-		frame->ie_header_len = 0;
-		ie_error = true;
-		while (bul_len >= pos + frame->ie_header_len) {
-			if (frame->ie_header == NULL) {
-				frame->ie_header = &buf[pos];
-			}
-			uint8_t ie_type =
-				((buf[pos + frame->ie_header_len + 1] &
-					IEEE802154_FRAME_IE_HEADER_TYPE_H_MASK)
-					<< IEEE802154_FRAME_IE_HEADER_TYPE_H_OFS) |
-				((buf[pos + frame->ie_header_len] &
-					IEEE802154_FRAME_IE_HEADER_TYPE_L_MASK)
-					>> IEEE802154_FRAME_IE_HEADER_TYPE_L_OFS);
-
-			frame->ie_header_len += IEEE802154_FRAME_LENGTH_IE_HEADER +
-				(buf[pos + frame->ie_header_len] &
-				IEEE802154_FRAME_IE_HEADER_LEN_MASK);
-			if (ie_type == IEEE802154_FRAME_IE_HEADER_TYPE_TERM) {
-				ie_error = false;
-				break;
-			}
-		}
-	} else {
-		frame->ie_header = NULL;
-	}
-	if (ie_error) {
-		frame->ie_header_len = bul_len - pos;
-		pos = bul_len;
-	} else if (frame->ie_header) {
-		pos += frame->ie_header_len;
-	}
+	frame->header_len = pos;
 	/* at payload */
 	if (pos < bul_len) {
-		frame->data = &buf[pos];
-		frame->data_len = bul_len - pos;
+		frame->payload = &buf[pos];
+		frame->payload_len = bul_len - pos;
+		frame->payload_ie = (buf[1] & IEEE802154_FRAME_FCF_IE_MASK) ==
+			IEEE802154_FRAME_FCF_IE_ON;
 	} else {
-		frame->data = NULL;
-		frame->data_len = 0;
+		frame->payload = NULL;
+		frame->payload_len = 0;
+		frame->payload_ie = false;
 	}
 }
 
@@ -478,8 +449,8 @@ ALWAYS_INLINE b91_ieee802154_frame_parse(const uint8_t *buf, size_t bul_len,
  * Create ACK buffer
  * frame & buf should be valid
  */
-static bool
-ALWAYS_INLINE b91_ieee802154_frame_build(const struct ieee802154_frame *frame,
+ALWAYS_INLINE static bool
+b91_ieee802154_frame_build(const struct ieee802154_frame *frame,
 	uint8_t *buf, size_t bul_len, size_t *o_len)
 {
 	bool result = false;
@@ -580,24 +551,48 @@ ALWAYS_INLINE b91_ieee802154_frame_build(const struct ieee802154_frame *frame,
 			*o_len += frame->sec_header_len;
 		}
 
-		if (frame->ie_header != NULL) {
+		if (frame->payload != NULL) {
 
-			if (bul_len < *o_len + frame->ie_header_len) {
+			if (bul_len < *o_len + frame->payload_len) {
 				break;
 			}
-			buf[1] |= IEEE802154_FRAME_FCF_IE_ON;
-			memcpy(&buf[*o_len], frame->ie_header, frame->ie_header_len);
-			*o_len += frame->ie_header_len;
-		}
-		if (frame->data != NULL) {
-			if (bul_len < *o_len + frame->data_len) {
-				break;
+			memcpy(&buf[*o_len], frame->payload, frame->payload_len);
+			*o_len += frame->payload_len;
+			if (frame->payload_ie) {
+				buf[1] |= IEEE802154_FRAME_FCF_IE_ON;
 			}
-			memcpy(&buf[*o_len], frame->data, frame->data_len);
-			*o_len += frame->data_len;
 		}
+
 		result = true;
 	} while (0);
+
+	return result;
+}
+
+ALWAYS_INLINE static const uint8_t *
+b91_ieee802154_get_data(const uint8_t *payload,
+	size_t payload_len)
+{
+	const uint8_t *result = NULL;
+	size_t pos = 0; /* current buffer position */
+
+	while (payload && payload_len >= pos + 1) {
+
+		uint8_t ie_type =
+			((payload[pos + 1] & IEEE802154_FRAME_IE_HEADER_TYPE_H_MASK) <<
+				IEEE802154_FRAME_IE_HEADER_TYPE_H_OFS) |
+			((payload[pos] & IEEE802154_FRAME_IE_HEADER_TYPE_L_MASK) >>
+				IEEE802154_FRAME_IE_HEADER_TYPE_L_OFS);
+
+		pos += IEEE802154_FRAME_LENGTH_IE_HEADER +
+			(payload[pos] & IEEE802154_FRAME_IE_HEADER_LEN_MASK);
+		if (ie_type == IEEE802154_FRAME_IE_HEADER_TYPE_TERM) {
+			if (pos < payload_len) {
+				result = &payload[pos];
+			}
+			break;
+		}
+	}
 
 	return result;
 }

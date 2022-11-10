@@ -154,9 +154,14 @@ ALWAYS_INLINE b91_require_pending_bit(const struct ieee802154_frame *frame)
 	if (frame->general.valid) {
 		if (frame->general.type == IEEE802154_FRAME_FCF_TYPE_DATA) {
 			result = true;
-		} else if (frame->general.type == IEEE802154_FRAME_FCF_TYPE_CMD && frame->data) {
+		} else if (frame->general.type == IEEE802154_FRAME_FCF_TYPE_CMD) {
+			const uint8_t *cmd_id = NULL;
+
 			if (frame->sec_header == NULL) {
-				if (frame->data[0] == B91_CMD_ID_DATA_REQ) {
+				cmd_id = frame->payload_ie ?
+					b91_ieee802154_get_data(frame->payload,
+					frame->payload_len) : frame->payload;
+				if (cmd_id && *cmd_id == B91_CMD_ID_DATA_REQ) {
 					result = true;
 				}
 			} else {
@@ -166,7 +171,10 @@ ALWAYS_INLINE b91_require_pending_bit(const struct ieee802154_frame *frame)
 				case IEEE802154_FRAME_SECCTRL_SEC_LEVEL_1:
 				case IEEE802154_FRAME_SECCTRL_SEC_LEVEL_2:
 				case IEEE802154_FRAME_SECCTRL_SEC_LEVEL_3:
-					if (frame->data[0] == B91_CMD_ID_DATA_REQ) {
+					cmd_id = frame->payload_ie ?
+						b91_ieee802154_get_data(frame->payload,
+						frame->payload_len) : frame->payload;
+					if (cmd_id && *cmd_id == B91_CMD_ID_DATA_REQ) {
 						result = true;
 					}
 					break;
@@ -270,6 +278,20 @@ static void b91_enh_ack_table_remove(
 static void b91_mac_keys_data_clean(struct b91_mac_keys *mac_keys)
 {
 	memset(mac_keys, 0, sizeof(struct b91_mac_keys));
+}
+
+static const uint8_t *b91_mac_keys_get(const struct b91_mac_keys *mac_keys, uint8_t key_id)
+{
+	const uint8_t *result = NULL;
+
+	if (key_id) {
+		for (size_t i = 0; i < B91_MAC_KEYS_ITEMS; i++) {
+			if (mac_keys->item[i].key_id == key_id) {
+				result = mac_keys->item[i].key;
+			}
+		}
+	}
+	return result;
 }
 
 #endif /* CONFIG_IEEE802154_2015 */
@@ -652,8 +674,9 @@ static void ALWAYS_INLINE b91_rf_rx_isr(const struct device *dev)
 					NULL,
 				.dst_addr = enh_ack ? frame.src_addr : NULL,
 				.dst_addr_ext = enh_ack ? frame.src_addr_ext : false,
-				.ie_header = ack_ie_header,
-				.ie_header_len = ack_ie_header_len
+				.payload = ack_ie_header,
+				.payload_len = ack_ie_header_len,
+				.payload_ie = true
 			};
 			b91_send_ack(dev, &ack_frame);
 		}
@@ -963,8 +986,136 @@ static int b91_tx(const struct device *dev,
 		}
 	}
 
+	uint8_t tx_data[frag->len];
+
+	memcpy(tx_data, frag->data, frag->len);
+
+	LOG_WRN("tx+\n");
+#if 0
+	struct ieee802154_frame frame;
+
+	b91_ieee802154_frame_parse(tx_data, sizeof(tx_data), &frame);
+#if 0
+	do {
+
+		if (!frame.general.valid) {
+			LOG_WRN("invalid frame\n");
+			break;
+		}
+
+		if (!frame.sec_header) {
+			break;
+		}
+
+		uint8_t *frame_cnt =
+			(uint8_t *)&frame.sec_header[IEEE802154_FRAME_LENGTH_SEC_HEADER];
+
+		frame_cnt[0] = b91->mac_keys->frame_cnt;
+		frame_cnt[1] = b91->mac_keys->frame_cnt >> 8;
+		frame_cnt[2] = b91->mac_keys->frame_cnt >> 16;
+		frame_cnt[3] = b91->mac_keys->frame_cnt >> 24;
+
+		const uint8_t sec_level =
+				frame.sec_header[0] & IEEE802154_FRAME_SECCTRL_SEC_LEVEL_MASK;
+
+		if (sec_level == IEEE802154_FRAME_SECCTRL_SEC_LEVEL_0) {
+			break;
+		}
+
+		if (!frame.src_addr_ext) {
+			LOG_WRN("no extended source address for security frame");
+			break;
+		}
+
+		const uint8_t *key = NULL;
+
+		switch (frame.sec_header[0] & IEEE802154_FRAME_SECCTRL_KEY_ID_MODE_MASK) {
+		case IEEE802154_FRAME_SECCTRL_KEY_ID_MODE_1:
+			key = b91_mac_keys_get(b91->mac_keys,
+				frame.sec_header[IEEE802154_FRAME_LENGTH_SEC_HEADER_MODE_1]);
+			break;
+		case IEEE802154_FRAME_SECCTRL_KEY_ID_MODE_2:
+			key = b91_mac_keys_get(b91->mac_keys,
+				frame.sec_header[IEEE802154_FRAME_LENGTH_SEC_HEADER_MODE_2]);
+			break;
+		case IEEE802154_FRAME_SECCTRL_KEY_ID_MODE_3:
+			key = b91_mac_keys_get(b91->mac_keys,
+				frame.sec_header[IEEE802154_FRAME_LENGTH_SEC_HEADER_MODE_3]);
+			break;
+		default:
+			break;
+		}
+
+		if (!key) {
+			LOG_WRN("security key not found");
+			break;
+		}
+
+		uint8_t src_addr[IEEE802154_FRAME_LENGTH_ADDR_EXT];
+		const uint8_t tag_size[] = {4, 8, 16};
+
+		sys_memcpy_swap(src_addr, frame.src_addr, IEEE802154_FRAME_LENGTH_ADDR_EXT);
+#if 0
+		switch (sec_level) {
+		case IEEE802154_FRAME_SECCTRL_SEC_LEVEL_5:
+		case IEEE802154_FRAME_SECCTRL_SEC_LEVEL_6:
+		case IEEE802154_FRAME_SECCTRL_SEC_LEVEL_7:
+			do {
+#if 0
+				size_t tag_len =
+					tag_size[sec_level - IEEE802154_FRAME_SECCTRL_SEC_LEVEL_5];
+				const uint8_t *open_data = frame.header;
+				size_t open_data_len = frame.header_len;
+				uint8_t *private_data = (uint8_t *)frame.payload;
+				size_t private_data_len = frame.payload_len;
+
+				if (private_data_len < tag_len) {
+					LOG_WRN("invalid payload length");
+					break;
+				}
+
+				private_data_len -= tag_len;
+				uint8_t *tag = &private_data[private_data_len];
+
+				if (frame.general.ver < IEEE802154_FRAME_FCF_VER_2015 &&
+					frame.general.type == IEEE802154_FRAME_FCF_TYPE_CMD) {
+					/* command id should be open */
+					if (private_data_len) {
+						open_data_len += 1;
+						private_data += 1;
+						private_data_len -= 1;
+					} else {
+						LOG_WRN("invalid payload length (no CID)");
+						break;
+					}
+				}
+
+				LOG_WRN("encrypt");
+
+				if (!ieee802154_b91_crypto_encrypt(key, src_addr,
+						b91->mac_keys->frame_cnt,
+						sec_level,
+						open_data, open_data_len,
+						private_data, private_data_len,
+						private_data, tag, tag_len)) {
+					LOG_WRN("encrypt failed %u", sec_level);
+				}
+#endif
+			} while (0);
+			break;
+		default:
+			LOG_WRN("unsupported security level %u", sec_level);
+			break;
+		}
+#endif
+	} while (0);
+#endif
+#endif
+
+	LOG_WRN("tx-\n");
+
 	/* prepare tx buffer */
-	b91_set_tx_payload(dev, frag->data, frag->len);
+	b91_set_tx_payload(dev, tx_data, sizeof(tx_data));
 
 	/* reset semaphores */
 	k_sem_reset(&b91->tx_wait);
