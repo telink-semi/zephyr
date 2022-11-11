@@ -38,7 +38,9 @@
 #define B91_LOGIC_CHANNEL_TO_PHYSICAL(p)    (((p) - 10) * 5)
 #define B91_ACK_IE_MAX_SIZE                 (16)
 #define B91_MAC_KEYS_ITEMS                  (3)
-#define B91_MAC_KEY_LENGTH                  (16)
+#ifndef IEEE802154_CRYPTO_LENGTH_AES_BLOCK
+#define IEEE802154_CRYPTO_LENGTH_AES_BLOCK  (16)
+#endif
 
 #define ZB_RADIO_TIMESTAMP_GET(p)           (uint32_t)(    \
 	(p[rf_zigbee_dma_rx_offset_time_stamp(p)])           | \
@@ -123,7 +125,7 @@ struct b91_enh_ack_table {
 struct b91_mac_keys {
 	struct {
 		uint8_t key_id;
-		uint8_t key[B91_MAC_KEY_LENGTH];
+		uint8_t key[IEEE802154_CRYPTO_LENGTH_AES_BLOCK];
 		uint32_t frame_cnt;
 		bool frame_cnt_local;
 	} item[B91_MAC_KEYS_ITEMS];

@@ -9,7 +9,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <zephyr/toolchain/common.h>
-
+#include <zephyr/sys/byteorder.h>
 #include <mbedtls/ccm.h>
 
 
@@ -102,7 +102,9 @@
 
 /* cryptography definitions */
 #define IEEE802154_CRYPTO_LENGTH_NONCE             (13)
+#ifndef IEEE802154_CRYPTO_LENGTH_AES_BLOCK
 #define IEEE802154_CRYPTO_LENGTH_AES_BLOCK         (16)
+#endif
 
 
 /* ieee802154_frame structure */
@@ -605,7 +607,7 @@ static void ieee802154_b91_crypto_nonce(
 {
 
 	if (ext_addr && nonce) {
-		memcpy(nonce, ext_addr, IEEE802154_FRAME_LENGTH_ADDR_EXT);
+		sys_memcpy_swap(nonce, ext_addr, IEEE802154_FRAME_LENGTH_ADDR_EXT);
 		nonce[IEEE802154_FRAME_LENGTH_ADDR_EXT] = frame_cnt >> 24;
 		nonce[IEEE802154_FRAME_LENGTH_ADDR_EXT + 1] = frame_cnt >> 16;
 		nonce[IEEE802154_FRAME_LENGTH_ADDR_EXT + 2] = frame_cnt >> 8;

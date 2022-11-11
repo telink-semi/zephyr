@@ -157,7 +157,7 @@ ALWAYS_INLINE b91_require_pending_bit(const struct ieee802154_frame *frame)
 		} else if (frame->general.type == IEEE802154_FRAME_FCF_TYPE_CMD) {
 			if (!frame->sec_header ||
 				frame->general.ver < IEEE802154_FRAME_FCF_VER_2015 ||
-				frame->sec_header[0] & IEEE802154_FRAME_SECCTRL_SEC_LEVEL_MASK <
+				(frame->sec_header[0] & IEEE802154_FRAME_SECCTRL_SEC_LEVEL_MASK) <
 					IEEE802154_FRAME_SECCTRL_SEC_LEVEL_4) {
 				const uint8_t *cmd_id = frame->payload_ie ?
 					b91_ieee802154_get_data(frame->payload,
@@ -273,10 +273,46 @@ static const uint8_t *b91_mac_keys_get(const struct b91_mac_keys *mac_keys, uint
 		for (size_t i = 0; i < B91_MAC_KEYS_ITEMS; i++) {
 			if (mac_keys->item[i].key_id == key_id) {
 				result = mac_keys->item[i].key;
+				break;
 			}
 		}
 	}
 	return result;
+}
+
+static uint32_t b91_mac_keys_frame_cnt_get(const struct b91_mac_keys *mac_keys, uint8_t key_id)
+{
+	uint32_t result = 0;
+
+	if (key_id) {
+		for (size_t i = 0; i < B91_MAC_KEYS_ITEMS; i++) {
+			if (mac_keys->item[i].key_id == key_id) {
+				if (mac_keys->item[i].frame_cnt_local) {
+					result = mac_keys->item[i].frame_cnt;
+				} else {
+					result = mac_keys->frame_cnt;
+				}
+				break;
+			}
+		}
+	}
+	return result;
+}
+
+static void b91_mac_keys_frame_cnt_inc(struct b91_mac_keys *mac_keys, uint8_t key_id)
+{
+	if (key_id) {
+		for (size_t i = 0; i < B91_MAC_KEYS_ITEMS; i++) {
+			if (mac_keys->item[i].key_id == key_id) {
+				if (mac_keys->item[i].frame_cnt_local) {
+					mac_keys->item[i].frame_cnt++;
+				} else {
+					mac_keys->frame_cnt++;
+				}
+				break;
+			}
+		}
+	}
 }
 
 #endif /* CONFIG_IEEE802154_2015 */
@@ -971,13 +1007,12 @@ static int b91_tx(const struct device *dev,
 		}
 	}
 
-	uint8_t tx_data[frag->len];
-
-	memcpy(tx_data, frag->data, frag->len);
+#ifdef CONFIG_IEEE802154_2015
 
 	struct ieee802154_frame frame;
+	uint8_t key_id = 0;
 
-	b91_ieee802154_frame_parse(tx_data, sizeof(tx_data), &frame);
+	b91_ieee802154_frame_parse(frag->data, frag->len, &frame);
 
 	do {
 
@@ -1005,39 +1040,37 @@ static int b91_tx(const struct device *dev,
 			break;
 		}
 
-		if (!frame.src_addr_ext) {
-			LOG_WRN("no extended source address for security frame");
+		const uint8_t *src_addr = frame.src_addr_ext ? frame.src_addr :
+			b91->filter_ieee_addr;
+
+		if (!src_addr) {
+			LOG_WRN("no extended source address");
 			break;
 		}
 
-		const uint8_t *key = NULL;
-
 		switch (frame.sec_header[0] & IEEE802154_FRAME_SECCTRL_KEY_ID_MODE_MASK) {
 		case IEEE802154_FRAME_SECCTRL_KEY_ID_MODE_1:
-			key = b91_mac_keys_get(b91->mac_keys,
-				frame.sec_header[IEEE802154_FRAME_LENGTH_SEC_HEADER_MODE_1]);
+			key_id = frame.sec_header[IEEE802154_FRAME_LENGTH_SEC_HEADER_MODE_1];
 			break;
 		case IEEE802154_FRAME_SECCTRL_KEY_ID_MODE_2:
-			key = b91_mac_keys_get(b91->mac_keys,
-				frame.sec_header[IEEE802154_FRAME_LENGTH_SEC_HEADER_MODE_2]);
+			key_id = frame.sec_header[IEEE802154_FRAME_LENGTH_SEC_HEADER_MODE_2];
 			break;
 		case IEEE802154_FRAME_SECCTRL_KEY_ID_MODE_3:
-			key = b91_mac_keys_get(b91->mac_keys,
-				frame.sec_header[IEEE802154_FRAME_LENGTH_SEC_HEADER_MODE_3]);
+			key_id = frame.sec_header[IEEE802154_FRAME_LENGTH_SEC_HEADER_MODE_3];
 			break;
 		default:
 			break;
 		}
 
+		const uint8_t *key = b91_mac_keys_get(b91->mac_keys, key_id);
+
 		if (!key) {
+			key_id = 0;
 			LOG_WRN("security key not found");
 			break;
 		}
 
-		uint8_t src_addr[IEEE802154_FRAME_LENGTH_ADDR_EXT];
 		const uint8_t tag_size[] = {4, 8, 16};
-
-		sys_memcpy_swap(src_addr, frame.src_addr, IEEE802154_FRAME_LENGTH_ADDR_EXT);
 
 		switch (sec_level) {
 		case IEEE802154_FRAME_SECCTRL_SEC_LEVEL_5:
@@ -1053,6 +1086,7 @@ static int b91_tx(const struct device *dev,
 				size_t private_data_len = frame.payload_len;
 
 				if (private_data_len < tag_len) {
+					key_id = 0;
 					LOG_WRN("invalid payload length");
 					break;
 				}
@@ -1068,33 +1102,37 @@ static int b91_tx(const struct device *dev,
 						private_data += 1;
 						private_data_len -= 1;
 					} else {
+						key_id = 0;
 						LOG_WRN("invalid payload length (no CID)");
 						break;
 					}
 				}
 
-				LOG_WRN("encrypt");
-
 				if (!ieee802154_b91_crypto_encrypt(key, src_addr,
-						b91->mac_keys->frame_cnt,
+						b91_mac_keys_frame_cnt_get(b91->mac_keys, key_id),
 						sec_level,
 						open_data, open_data_len,
 						private_data, private_data_len,
 						private_data, tag, tag_len)) {
+					key_id = 0;
 					LOG_WRN("encrypt failed %u", sec_level);
 				}
 
 			} while (0);
 			break;
 		default:
+			key_id = 0;
 			LOG_WRN("unsupported security level %u", sec_level);
 			break;
 		}
 
 	} while (0);
 
+#endif /* CONFIG_IEEE802154_2015 */
+
 	/* prepare tx buffer */
-	b91_set_tx_payload(dev, tx_data, sizeof(tx_data));
+	b91_set_tx_payload(dev, frag->data, frag->len);
+
 
 	/* reset semaphores */
 	k_sem_reset(&b91->tx_wait);
@@ -1130,6 +1168,10 @@ static int b91_tx(const struct device *dev,
 		b91->ack_handler_en = true;
 		if (k_sem_take(&b91->ack_wait, K_MSEC(B91_ACK_WAIT_TIME_MS)) != 0) {
 			status = -ENOMSG;
+		} else {
+#ifdef CONFIG_IEEE802154_2015
+			b91_mac_keys_frame_cnt_inc(b91->mac_keys, key_id);
+#endif /* CONFIG_IEEE802154_2015 */
 		}
 		b91->ack_handler_en = false;
 	}
@@ -1217,7 +1259,8 @@ static int b91_configure(const struct device *dev,
 			for (size_t i = 0; config->mac_keys[i].key_value; i++) {
 				if (i < B91_MAC_KEYS_ITEMS) {
 					memcpy(b91->mac_keys->item[i].key,
-						config->mac_keys[i].key_value, B91_MAC_KEY_LENGTH);
+						config->mac_keys[i].key_value,
+						IEEE802154_CRYPTO_LENGTH_AES_BLOCK);
 					b91->mac_keys->item[i].frame_cnt_local =
 					config->mac_keys[i].frame_counter_per_key;
 					b91->mac_keys->item[i].key_id =
