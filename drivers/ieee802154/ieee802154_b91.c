@@ -155,34 +155,19 @@ ALWAYS_INLINE b91_require_pending_bit(const struct ieee802154_frame *frame)
 		if (frame->general.type == IEEE802154_FRAME_FCF_TYPE_DATA) {
 			result = true;
 		} else if (frame->general.type == IEEE802154_FRAME_FCF_TYPE_CMD) {
-			const uint8_t *cmd_id = NULL;
-
-			if (frame->sec_header == NULL) {
-				cmd_id = frame->payload_ie ?
+			if (!frame->sec_header ||
+				frame->general.ver < IEEE802154_FRAME_FCF_VER_2015 ||
+				frame->sec_header[0] & IEEE802154_FRAME_SECCTRL_SEC_LEVEL_MASK <
+					IEEE802154_FRAME_SECCTRL_SEC_LEVEL_4) {
+				const uint8_t *cmd_id = frame->payload_ie ?
 					b91_ieee802154_get_data(frame->payload,
 					frame->payload_len) : frame->payload;
 				if (cmd_id && *cmd_id == B91_CMD_ID_DATA_REQ) {
 					result = true;
 				}
 			} else {
-				switch (frame->sec_header[0] &
-					IEEE802154_FRAME_SECCTRL_SEC_LEVEL_MASK) {
-				case IEEE802154_FRAME_SECCTRL_SEC_LEVEL_0:
-				case IEEE802154_FRAME_SECCTRL_SEC_LEVEL_1:
-				case IEEE802154_FRAME_SECCTRL_SEC_LEVEL_2:
-				case IEEE802154_FRAME_SECCTRL_SEC_LEVEL_3:
-					cmd_id = frame->payload_ie ?
-						b91_ieee802154_get_data(frame->payload,
-						frame->payload_len) : frame->payload;
-					if (cmd_id && *cmd_id == B91_CMD_ID_DATA_REQ) {
-						result = true;
-					}
-					break;
-				default:
-					/* TODO: temporary solution. need to decrypt payload */
-					result = true;
-					break;
-				}
+				/* TODO: temporary solution. need to decrypt payload */
+				result = true;
 			}
 		}
 	}
@@ -990,12 +975,10 @@ static int b91_tx(const struct device *dev,
 
 	memcpy(tx_data, frag->data, frag->len);
 
-	LOG_WRN("tx+\n");
-#if 0
 	struct ieee802154_frame frame;
 
 	b91_ieee802154_frame_parse(tx_data, sizeof(tx_data), &frame);
-#if 0
+
 	do {
 
 		if (!frame.general.valid) {
@@ -1055,13 +1038,13 @@ static int b91_tx(const struct device *dev,
 		const uint8_t tag_size[] = {4, 8, 16};
 
 		sys_memcpy_swap(src_addr, frame.src_addr, IEEE802154_FRAME_LENGTH_ADDR_EXT);
-#if 0
+
 		switch (sec_level) {
 		case IEEE802154_FRAME_SECCTRL_SEC_LEVEL_5:
 		case IEEE802154_FRAME_SECCTRL_SEC_LEVEL_6:
 		case IEEE802154_FRAME_SECCTRL_SEC_LEVEL_7:
 			do {
-#if 0
+
 				size_t tag_len =
 					tag_size[sec_level - IEEE802154_FRAME_SECCTRL_SEC_LEVEL_5];
 				const uint8_t *open_data = frame.header;
@@ -1100,19 +1083,15 @@ static int b91_tx(const struct device *dev,
 						private_data, tag, tag_len)) {
 					LOG_WRN("encrypt failed %u", sec_level);
 				}
-#endif
+
 			} while (0);
 			break;
 		default:
 			LOG_WRN("unsupported security level %u", sec_level);
 			break;
 		}
-#endif
-	} while (0);
-#endif
-#endif
 
-	LOG_WRN("tx-\n");
+	} while (0);
 
 	/* prepare tx buffer */
 	b91_set_tx_payload(dev, tx_data, sizeof(tx_data));
