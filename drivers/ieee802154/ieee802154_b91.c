@@ -555,9 +555,41 @@ ALWAYS_INLINE b91_send_ack(const struct device *dev, const struct ieee802154_fra
 	uint8_t ack_buf[64];
 	size_t ack_len;
 
+#ifdef CONFIG_IEEE802154_2015
+	if (frame->sec_header) {
+		uint8_t *frame_cnt =
+		(uint8_t *)&frame->sec_header[IEEE802154_FRAME_LENGTH_SEC_HEADER];
+
+		frame_cnt[0] = b91->mac_keys->frame_cnt;
+		frame_cnt[1] = b91->mac_keys->frame_cnt >> 8;
+		frame_cnt[2] = b91->mac_keys->frame_cnt >> 16;
+		frame_cnt[3] = b91->mac_keys->frame_cnt >> 24;
+	}
+#endif
+
 	if (b91_ieee802154_frame_build(frame, ack_buf, sizeof(ack_buf), &ack_len)) {
 		b91->ack_sending = true;
 		k_sem_reset(&b91->tx_wait);
+
+#ifdef CONFIG_IEEE802154_2015
+	if (frame->sec_header) {
+
+		const uint8_t *key = b91_mac_keys_get(b91->mac_keys, 1);
+		const uint8_t *src_addr = frame->src_addr_ext ? frame->src_addr :
+			b91->filter_ieee_addr;
+
+		if (!ieee802154_b91_crypto_encrypt(key, src_addr,
+			b91_mac_keys_frame_cnt_get(b91->mac_keys, 1),
+			IEEE802154_FRAME_SECCTRL_SEC_LEVEL_5,
+			ack_buf, ack_len - 4,
+			NULL, 0,
+			NULL,
+			&ack_buf[ack_len - 4], 4)) {
+			LOG_WRN("encrypt ack failed");
+		}
+	}
+#endif /* CONFIG_IEEE802154_2015 */
+
 		b91_set_tx_payload(dev, ack_buf, ack_len);
 		rf_set_txmode();
 		delay_us(CONFIG_IEEE802154_B91_SET_TXRX_DELAY_US);
@@ -695,8 +727,23 @@ static void ALWAYS_INLINE b91_rf_rx_isr(const struct device *dev)
 					NULL,
 				.dst_addr = enh_ack ? frame.src_addr : NULL,
 				.dst_addr_ext = enh_ack ? frame.src_addr_ext : false,
+#ifdef CONFIG_IEEE802154_2015
+				.src_addr = ack_ie_header ?
+					b91->filter_ieee_addr : NULL,
+				.src_addr_ext = ack_ie_header,
+				.sec_header = ack_ie_header ?
+					(uint8_t []){0x0d, 0x00, 0x00, 0x00, 0x00, 0x01} : NULL,
+				.sec_header_len = ack_ie_header ?
+					IEEE802154_FRAME_LENGTH_SEC_HEADER +
+					IEEE802154_FRAME_LENGTH_SEC_HEADER_MODE_1 : 0,
+#endif /* CONFIG_IEEE802154_2015 */
 				.payload = ack_ie_header,
+#ifdef CONFIG_IEEE802154_2015
+				.payload_len = ack_ie_header ?
+					ack_ie_header_len + 4 : ack_ie_header_len,
+#else
 				.payload_len = ack_ie_header_len,
+#endif /* CONFIG_IEEE802154_2015 */
 				.payload_ie = true
 			};
 			b91_send_ack(dev, &ack_frame);
