@@ -600,7 +600,8 @@ b91_ieee802154_get_data(const uint8_t *payload,
 }
 
 
-static void ieee802154_b91_crypto_nonce(
+ALWAYS_INLINE static void
+ieee802154_b91_crypto_nonce(
 	const uint8_t ext_addr[IEEE802154_FRAME_LENGTH_ADDR_EXT],
 	uint32_t frame_cnt, uint8_t sec_level,
 	uint8_t nonce[IEEE802154_CRYPTO_LENGTH_NONCE])
@@ -616,7 +617,8 @@ static void ieee802154_b91_crypto_nonce(
 	}
 }
 
-static bool ieee802154_b91_crypto_encrypt(
+ALWAYS_INLINE static bool
+ieee802154_b91_crypto_encrypt(
 	const uint8_t key[IEEE802154_CRYPTO_LENGTH_AES_BLOCK],
 	const uint8_t ext_addr[IEEE802154_FRAME_LENGTH_ADDR_EXT],
 	uint32_t frame_cnt, uint8_t frame_sec_level,
@@ -652,7 +654,8 @@ static bool ieee802154_b91_crypto_encrypt(
 	return result;
 }
 
-static bool ieee802154_b91_crypto_decrypt(
+ALWAYS_INLINE static bool
+ieee802154_b91_crypto_decrypt(
 	const uint8_t key[IEEE802154_CRYPTO_LENGTH_AES_BLOCK],
 	const uint8_t ext_addr[IEEE802154_FRAME_LENGTH_ADDR_EXT],
 	uint32_t frame_cnt, uint8_t frame_sec_level,
