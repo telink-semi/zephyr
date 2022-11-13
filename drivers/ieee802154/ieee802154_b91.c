@@ -567,7 +567,7 @@ ALWAYS_INLINE b91_send_ack(const struct device *dev, struct ieee802154_frame *fr
 	};
 	uint8_t payload[frame->payload_len + 4];
 
-	if (frame->src_addr && frame->src_addr_ext) {
+	if (frame->general.ver == IEEE802154_FRAME_FCF_VER_2015) {
 		key = b91_mac_keys_get(b91->mac_keys, 1);
 		if (key && frame->payload) {
 			memcpy(payload, frame->payload, frame->payload_len);
@@ -580,10 +580,14 @@ ALWAYS_INLINE b91_send_ack(const struct device *dev, struct ieee802154_frame *fr
 #endif /* CONFIG_IEEE802154_2015 */
 
 	if (b91_ieee802154_frame_build(frame, ack_buf, sizeof(ack_buf), &ack_len)) {
+
+		b91->ack_sending = true;
+		k_sem_reset(&b91->tx_wait);
+		rf_set_txmode();
 #ifdef CONFIG_IEEE802154_2015
 		if (frame->sec_header) {
-			if (ieee802154_b91_crypto_encrypt(key, frame->src_addr,
-				b91_mac_keys_frame_cnt_get(b91->mac_keys, 1),
+			if (ieee802154_b91_crypto_encrypt(key, b91->filter_ieee_addr,
+				frame_cnt,
 				IEEE802154_FRAME_SECCTRL_SEC_LEVEL_5,
 				ack_buf, ack_len - 4,
 				NULL, 0,
@@ -593,13 +597,13 @@ ALWAYS_INLINE b91_send_ack(const struct device *dev, struct ieee802154_frame *fr
 			} else {
 				LOG_WRN("encrypt ack failed");
 			}
+		} else {
+			delay_us(CONFIG_IEEE802154_B91_SET_TXRX_DELAY_US);
 		}
-#endif /* CONFIG_IEEE802154_2015 */
-		b91->ack_sending = true;
-		k_sem_reset(&b91->tx_wait);
-		b91_set_tx_payload(dev, ack_buf, ack_len);
-		rf_set_txmode();
+#else
 		delay_us(CONFIG_IEEE802154_B91_SET_TXRX_DELAY_US);
+#endif /* CONFIG_IEEE802154_2015 */
+		b91_set_tx_payload(dev, ack_buf, ack_len);
 		rf_tx_pkt(b91->tx_buffer);
 	} else {
 		LOG_ERR("Failed to create ACK.");
@@ -734,8 +738,6 @@ static void ALWAYS_INLINE b91_rf_rx_isr(const struct device *dev)
 					NULL,
 				.dst_addr = enh_ack ? frame.src_addr : NULL,
 				.dst_addr_ext = enh_ack ? frame.src_addr_ext : false,
-				.src_addr = enh_ack ? b91->filter_ieee_addr : NULL,
-				.src_addr_ext = enh_ack,
 				.payload = ack_ie_header,
 				.payload_len = ack_ie_header_len,
 				.payload_ie = true
