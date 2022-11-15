@@ -600,21 +600,159 @@ b91_ieee802154_get_data(const uint8_t *payload,
 }
 
 
-ALWAYS_INLINE static void
-ieee802154_b91_crypto_nonce(
-	const uint8_t ext_addr[IEEE802154_FRAME_LENGTH_ADDR_EXT],
-	uint32_t frame_cnt, uint8_t sec_level,
-	uint8_t nonce[IEEE802154_CRYPTO_LENGTH_NONCE])
-{
+/*
+ * Cryptography functionality
+ */
 
-	if (ext_addr && nonce) {
-		sys_memcpy_swap(nonce, ext_addr, IEEE802154_FRAME_LENGTH_ADDR_EXT);
-		nonce[IEEE802154_FRAME_LENGTH_ADDR_EXT] = frame_cnt >> 24;
-		nonce[IEEE802154_FRAME_LENGTH_ADDR_EXT + 1] = frame_cnt >> 16;
-		nonce[IEEE802154_FRAME_LENGTH_ADDR_EXT + 2] = frame_cnt >> 8;
-		nonce[IEEE802154_FRAME_LENGTH_ADDR_EXT + 3] = frame_cnt;
-		nonce[IEEE802154_FRAME_LENGTH_ADDR_EXT + 4] = sec_level;
+#include <aes.h>
+
+
+ALWAYS_INLINE static void
+ieee802154_b91_crypto_ecb(
+	const uint8_t key[IEEE802154_CRYPTO_LENGTH_AES_BLOCK],
+	const uint8_t inp[IEEE802154_CRYPTO_LENGTH_AES_BLOCK],
+	uint8_t out[IEEE802154_CRYPTO_LENGTH_AES_BLOCK])
+{
+	(void)aes_encrypt((uint8_t *)key, (uint8_t *)inp, out);
+}
+
+
+struct ieee802154_crypto_ctx {
+	const uint8_t *key;
+
+	uint8_t blk[IEEE802154_CRYPTO_LENGTH_AES_BLOCK];
+	uint8_t blk_len;
+	uint8_t ctr[IEEE802154_CRYPTO_LENGTH_AES_BLOCK];
+	uint8_t ctr_pad[IEEE802154_CRYPTO_LENGTH_AES_BLOCK];
+	uint8_t nonce[IEEE802154_CRYPTO_LENGTH_NONCE];
+
+	uint8_t open_len;
+	uint8_t priv_len;
+	uint8_t tag_len;
+};
+
+
+ALWAYS_INLINE static void
+ieee802154_b91_crypto_key(struct ieee802154_crypto_ctx *ctx,
+	const uint8_t key[IEEE802154_CRYPTO_LENGTH_AES_BLOCK])
+{
+	ctx->key = key;
+}
+
+ALWAYS_INLINE static void
+ieee802154_b91_crypto_nonce(struct ieee802154_crypto_ctx *ctx,
+	const uint8_t ext_addr[IEEE802154_FRAME_LENGTH_ADDR_EXT],
+	uint32_t frame_cnt, uint8_t sec_level)
+{
+	sys_memcpy_swap(ctx->nonce, ext_addr, IEEE802154_FRAME_LENGTH_ADDR_EXT);
+	ctx->nonce[IEEE802154_FRAME_LENGTH_ADDR_EXT] = frame_cnt >> 24;
+	ctx->nonce[IEEE802154_FRAME_LENGTH_ADDR_EXT + 1] = frame_cnt >> 16;
+	ctx->nonce[IEEE802154_FRAME_LENGTH_ADDR_EXT + 2] = frame_cnt >> 8;
+	ctx->nonce[IEEE802154_FRAME_LENGTH_ADDR_EXT + 3] = frame_cnt;
+	ctx->nonce[IEEE802154_FRAME_LENGTH_ADDR_EXT + 4] = sec_level;
+}
+
+ALWAYS_INLINE static void
+ieee802154_b91_crypto_start(struct ieee802154_crypto_ctx *ctx,
+	uint8_t open_len, uint8_t priv_len, uint8_t tag_len)
+{
+	ctx->open_len = open_len;
+	ctx->priv_len = priv_len;
+	ctx->tag_len = tag_len;
+
+	ctx->blk[0] = ((uint8_t)((open_len != 0) << 6) | (uint8_t)(((tag_len - 2) >> 1) << 3) | 1);
+	memcpy(&ctx->blk[1], ctx->nonce, sizeof(ctx->nonce));
+	for (uint8_t i = sizeof(ctx->blk) - 1; i > sizeof(ctx->nonce); i--) {
+		ctx->blk[i] = priv_len & 0xff;
+		priv_len >>= 8;
 	}
+	ieee802154_b91_crypto_ecb(ctx->key, ctx->blk, ctx->blk);
+	ctx->blk_len = 0;
+	ctx->blk[ctx->blk_len++] ^= open_len >> 8;
+	ctx->blk[ctx->blk_len++] ^= open_len;
+	ctx->ctr[0] = 1;
+	memcpy(&ctx->ctr[1], ctx->nonce, sizeof(ctx->nonce));
+	memset(&ctx->ctr[sizeof(ctx->nonce) + 1], 0, sizeof(ctx->ctr) - sizeof(ctx->nonce) - 1);
+}
+
+ALWAYS_INLINE static void
+ieee802154_b91_crypto_header(struct ieee802154_crypto_ctx *ctx, const uint8_t *open)
+{
+	for (uint8_t i = 0; i < ctx->open_len; i++) {
+		if (ctx->blk_len == sizeof(ctx->blk)) {
+			ieee802154_b91_crypto_ecb(ctx->key, ctx->blk, ctx->blk);
+			ctx->blk_len = 0;
+		}
+		ctx->blk[ctx->blk_len++] ^= open[i];
+	}
+	if (ctx->blk_len) {
+		ieee802154_b91_crypto_ecb(ctx->key, ctx->blk, ctx->blk);
+	}
+	ctx->blk_len = 0;
+}
+
+ALWAYS_INLINE static void
+ieee802154_b91_crypto_payload(struct ieee802154_crypto_ctx *ctx,
+	bool encrypt, uint8_t *plain, uint8_t *cipher)
+{
+	if (!plain || !cipher) {
+		return;
+	}
+	uint8_t ctr_len = sizeof(ctx->ctr_pad);
+
+	for (uint8_t i = 0; i < ctx->priv_len; i++) {
+		if (ctr_len == sizeof(ctx->ctr)) {
+			for (uint8_t j = sizeof(ctx->ctr) - 1; j > sizeof(ctx->nonce); j--) {
+				if (++ctx->ctr[j]) {
+					break;
+				}
+			}
+			ieee802154_b91_crypto_ecb(ctx->key, ctx->ctr, ctx->ctr_pad);
+			ctr_len = 0;
+		}
+		uint8_t byte;
+
+		if (encrypt) {
+			byte = plain[i];
+			cipher[i] = byte ^ ctx->ctr_pad[ctr_len++];
+		} else {
+			byte = cipher[i] ^ ctx->ctr_pad[ctr_len++];
+			plain[i] = byte;
+		}
+		if (ctx->blk_len == sizeof(ctx->blk)) {
+			ieee802154_b91_crypto_ecb(ctx->key, ctx->blk, ctx->blk);
+			ctx->blk_len = 0;
+		}
+		ctx->blk[ctx->blk_len++] ^= byte;
+	}
+	if (ctx->blk_len) {
+		ieee802154_b91_crypto_ecb(ctx->key, ctx->blk, ctx->blk);
+	}
+	memset(&ctx->ctr[sizeof(ctx->nonce) + 1], 0, sizeof(ctx->ctr) - sizeof(ctx->nonce) - 1);
+}
+
+ALWAYS_INLINE static void
+ieee802154_b91_crypto_finish(struct ieee802154_crypto_ctx *ctx, uint8_t *tag)
+{
+	ieee802154_b91_crypto_ecb(ctx->key, ctx->ctr, ctx->ctr_pad);
+	for (uint8_t i = 0; i < ctx->tag_len; i++) {
+		tag[i] = ctx->blk[i] ^ ctx->ctr_pad[i];
+	}
+}
+
+ALWAYS_INLINE static bool
+ieee802154_b91_crypto_check(struct ieee802154_crypto_ctx *ctx, const uint8_t *tag)
+{
+	bool result = true;
+
+	ieee802154_b91_crypto_ecb(ctx->key, ctx->ctr, ctx->ctr_pad);
+	for (uint8_t i = 0; i < ctx->tag_len; i++) {
+		if (tag[i] != (ctx->blk[i] ^ ctx->ctr_pad[i])) {
+			result = false;
+			break;
+		}
+	}
+	return result;
 }
 
 ALWAYS_INLINE static bool
@@ -622,10 +760,10 @@ ieee802154_b91_crypto_encrypt(
 	const uint8_t key[IEEE802154_CRYPTO_LENGTH_AES_BLOCK],
 	const uint8_t ext_addr[IEEE802154_FRAME_LENGTH_ADDR_EXT],
 	uint32_t frame_cnt, uint8_t frame_sec_level,
-	const uint8_t *frame_open, size_t frame_open_len,
-	const uint8_t *frame_plain, size_t frame_plain_len,
+	const uint8_t *frame_open, uint8_t frame_open_len,
+	const uint8_t *frame_plain, uint8_t frame_plain_len,
 	uint8_t *frame_cipher,
-	uint8_t *frame_mic, size_t frame_mic_len)
+	uint8_t *frame_mic, uint8_t frame_mic_len)
 {
 	bool result = false;
 
@@ -633,22 +771,15 @@ ieee802154_b91_crypto_encrypt(
 		frame_open && frame_open_len &&
 		frame_mic && frame_mic_len) {
 
-		uint8_t nonce[IEEE802154_CRYPTO_LENGTH_NONCE];
+		struct ieee802154_crypto_ctx ctx;
 
-		ieee802154_b91_crypto_nonce(ext_addr, frame_cnt, frame_sec_level, nonce);
-
-		mbedtls_ccm_context ctx;
-
-		mbedtls_ccm_init(&ctx);
-		if (!mbedtls_ccm_setkey(&ctx, MBEDTLS_CIPHER_ID_AES, key,
-				IEEE802154_CRYPTO_LENGTH_AES_BLOCK * 8)) {
-			if (!mbedtls_ccm_encrypt_and_tag(&ctx, frame_plain_len,
-					nonce, sizeof(nonce),
-					frame_open, frame_open_len,
-					frame_plain, frame_cipher, frame_mic, frame_mic_len)) {
-				result = true;
-			}
-		}
+		ieee802154_b91_crypto_key(&ctx, key);
+		ieee802154_b91_crypto_nonce(&ctx, ext_addr, frame_cnt, frame_sec_level);
+		ieee802154_b91_crypto_start(&ctx, frame_open_len, frame_plain_len, frame_mic_len);
+		ieee802154_b91_crypto_header(&ctx, frame_open);
+		ieee802154_b91_crypto_payload(&ctx, true, (uint8_t *)frame_plain, frame_cipher);
+		ieee802154_b91_crypto_finish(&ctx, frame_mic);
+		result = true;
 	}
 
 	return result;
@@ -659,32 +790,25 @@ ieee802154_b91_crypto_decrypt(
 	const uint8_t key[IEEE802154_CRYPTO_LENGTH_AES_BLOCK],
 	const uint8_t ext_addr[IEEE802154_FRAME_LENGTH_ADDR_EXT],
 	uint32_t frame_cnt, uint8_t frame_sec_level,
-	const uint8_t *frame_open, size_t frame_open_len,
-	const uint8_t *frame_cipher, size_t frame_cipher_len,
-	const uint8_t *frame_mic, size_t frame_mic_len,
+	const uint8_t *frame_open, uint8_t frame_open_len,
+	const uint8_t *frame_cipher, uint8_t frame_cipher_len,
+	const uint8_t *frame_mic, uint8_t frame_mic_len,
 	uint8_t *frame_plain)
 {
 	bool result = false;
 
 	if (key && ext_addr &&
-		frame_open && frame_open_len) {
+		frame_open && frame_open_len &&
+		frame_mic && frame_mic_len) {
 
-		uint8_t nonce[IEEE802154_CRYPTO_LENGTH_NONCE];
+		struct ieee802154_crypto_ctx ctx;
 
-		ieee802154_b91_crypto_nonce(ext_addr, frame_cnt, frame_sec_level, nonce);
-
-		mbedtls_ccm_context ctx;
-
-		mbedtls_ccm_init(&ctx);
-		if (!mbedtls_ccm_setkey(&ctx, MBEDTLS_CIPHER_ID_AES, key,
-				IEEE802154_CRYPTO_LENGTH_AES_BLOCK * 8)) {
-			if (!mbedtls_ccm_auth_decrypt(&ctx, frame_cipher_len,
-					nonce, sizeof(nonce),
-					frame_open, frame_open_len,
-					frame_cipher, frame_plain, frame_mic, frame_mic_len)) {
-				result = true;
-			}
-		}
+		ieee802154_b91_crypto_key(&ctx, key);
+		ieee802154_b91_crypto_nonce(&ctx, ext_addr, frame_cnt, frame_sec_level);
+		ieee802154_b91_crypto_start(&ctx, frame_open_len, frame_cipher_len, frame_mic_len);
+		ieee802154_b91_crypto_header(&ctx, frame_open);
+		ieee802154_b91_crypto_payload(&ctx, false, frame_plain, (uint8_t *)frame_cipher);
+		result = ieee802154_b91_crypto_check(&ctx, frame_mic);
 	}
 
 	return result;
