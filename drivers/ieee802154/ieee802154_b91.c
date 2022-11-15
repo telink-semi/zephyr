@@ -1237,13 +1237,14 @@ static int b91_tx(const struct device *dev,
 		b91->ack_handler_en = true;
 		if (k_sem_take(&b91->ack_wait, K_MSEC(B91_ACK_WAIT_TIME_MS)) != 0) {
 			status = -ENOMSG;
-		} else {
-#ifdef CONFIG_IEEE802154_2015
-			b91_mac_keys_frame_cnt_inc(b91->mac_keys, key_id);
-#endif /* CONFIG_IEEE802154_2015 */
 		}
 		b91->ack_handler_en = false;
 	}
+#ifdef CONFIG_IEEE802154_2015
+	if (!status) {
+		b91_mac_keys_frame_cnt_inc(b91->mac_keys, key_id);
+	}
+#endif /* CONFIG_IEEE802154_2015 */
 
 	return status;
 }
