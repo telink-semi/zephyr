@@ -3,6 +3,10 @@
 
 if SOC_SERIES_TLSR951X
 
+config SYS_CLOCK_EXISTS
+	bool
+	default y
+
 config SYS_CLOCK_HW_CYCLES_PER_SEC
 	int
 	default 32000
@@ -22,6 +26,10 @@ config NUM_IRQS
 config 2ND_LVL_ISR_TBL_OFFSET
 	int
 	default 12
+
+config HAS_PM
+	bool
+	default y
 
 config PINCTRL
 	default y
