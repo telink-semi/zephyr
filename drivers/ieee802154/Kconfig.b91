@@ -43,6 +43,12 @@ config IEEE802154_B91_DELAY_TRX_ACC
 	  Accuracy of the clock used for scheduling radio delayed operations (delayed transmission
 	  or delayed reception), in ppm.
 
+config IEEE802154_B91_CUSTOM_RF_POWER
+	int "OpenThread custom radio power"
+	default 0
+	help
+	  Set desired radio transmit power using OpenThread in range of (0 ... 23)
+
 if ! IEEE802154_B91_RANDOM_MAC
 
 config IEEE802154_B91_MAC4
