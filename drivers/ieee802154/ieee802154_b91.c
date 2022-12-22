@@ -881,6 +881,12 @@ void b91_deinit(const struct device *dev)
 	struct b91_data *b91 = dev->data;
 
 	b91->is_ready = false;
+
+	/* Reset Radio */
+	rf_radio_reset();
+
+	/* Reset DMA */
+	rf_reset_dma();
 }
 
 /* API implementation: iface_init */
