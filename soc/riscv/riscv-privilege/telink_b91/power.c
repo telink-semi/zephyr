@@ -96,7 +96,7 @@ __weak void pm_state_set(enum pm_state state, uint8_t substate_id)
 			if (stimer_sleep_ticks > SYSTICKS_MAX_SLEEP) {
 				stimer_sleep_ticks = SYSTICKS_MAX_SLEEP;
 			}
-			cpu_sleep_wakeup_32k_rc(SUSPEND_MODE, PM_WAKEUP_TIMER,
+			cpu_sleep_wakeup_32k_rc(SUSPEND_MODE, PM_WAKEUP_TIMER | PM_WAKEUP_PAD,
 						tl_sleep_tick + stimer_sleep_ticks);
 			current_time += systicks_to_mticks(stimer_get_tick() - tl_sleep_tick);
 			set_mtime(current_time);
