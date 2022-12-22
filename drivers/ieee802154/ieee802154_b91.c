@@ -24,6 +24,11 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #include <zephyr/irq.h>
 #if defined(CONFIG_NET_L2_OPENTHREAD)
 #include <zephyr/net/openthread.h>
+#include <openthread/platform/radio.h>
+
+#ifndef OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER
+#define OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER CONFIG_IEEE802154_B91_CUSTOM_RF_POWER
+#endif
 #endif
 
 #include <zephyr/pm/device.h>
@@ -1004,6 +1009,10 @@ static int b91_set_txpower(const struct device *dev, int16_t dbm)
 	}
 
 	if (b91->current_dbm != dbm) {
+		#ifdef CONFIG_NET_L2_OPENTHREAD
+		otPlatRadioSetTransmitPower(NULL, CONFIG_IEEE802154_B91_CUSTOM_RF_POWER);
+		#endif
+
 		b91->current_dbm = dbm;
 		/* set TX power */
 		rf_set_power_level(b91_tx_pwr_lt[dbm - B91_TX_POWER_MIN]);
