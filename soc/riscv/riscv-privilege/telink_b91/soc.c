@@ -122,7 +122,9 @@ static int soc_b91_init(const struct device *arg)
 	/* Init Machine Timer source clock: 32 KHz RC */
 	clock_32k_init(CLK_32K_RC);
 	clock_cal_32k_rc();
-
+#if CONFIG_PM
+	gpio_shutdown(GPIO_ALL);
+#endif
 	return 0;
 }
 
