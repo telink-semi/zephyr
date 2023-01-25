@@ -1452,22 +1452,25 @@ static int ieee802154_b91_pm_action(const struct device *dev, enum pm_device_act
 {
 	struct b91_data *b91 = dev->data;
 
-	switch (action) {
-	case PM_DEVICE_ACTION_RESUME:
-		/* restart radio */
-		rf_mode_init();
-		rf_set_zigbee_250K_mode();
-		rf_set_chn(B91_LOGIC_CHANNEL_TO_PHYSICAL(b91->current_channel));
-		rf_set_power_level(b91_tx_pwr_lt[b91->current_dbm - B91_TX_POWER_MIN]);
-		rf_set_txmode();
-		rf_set_rxmode();
-		break;
+	if (b91->is_ready)
+	{
+		switch (action) {
+		case PM_DEVICE_ACTION_RESUME:
+			/* restart radio */
+			rf_mode_init();
+			rf_set_zigbee_250K_mode();
+			rf_set_chn(B91_LOGIC_CHANNEL_TO_PHYSICAL(b91->current_channel));
+			rf_set_power_level(b91_tx_pwr_lt[b91->current_dbm - B91_TX_POWER_MIN]);
+			rf_set_txmode();
+			rf_set_rxmode();
+			break;
 
-	case PM_DEVICE_ACTION_SUSPEND:
-		break;
+		case PM_DEVICE_ACTION_SUSPEND:
+			break;
 
-	default:
-		return -ENOTSUP;
+		default:
+			return -ENOTSUP;
+		}
 	}
 
 	return 0;
