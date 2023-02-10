@@ -129,12 +129,20 @@
 	};
 };
 
+&gpioa {
+	status = "okay";
+};
+
 &gpiob {
 	status = "okay";
 };
 
 &gpioc {
 	interrupts = <37 1>;
+	status = "okay";
+};
+
+&gpioe {
 	status = "okay";
 };
 
