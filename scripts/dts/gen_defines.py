@@ -528,6 +528,10 @@ def write_children(node):
     out_dt_define(f"{node.z_path_id}_FOREACH_CHILD_STATUS_OKAY_VARGS(fn, ...)",
                                                                 functions_args)
 
+    out_dt_define(f"{node.z_path_id}_FOREACH_CHILD_STATUS_OKAY_SEP(fn, sep)",
+            " DT_DEBRACKET_INTERNAL sep ".join(f"fn(DT_{child.z_path_id})"
+            for child in node.children.values() if child.status == "okay"))
+
 
 def write_status(node):
     out_dt_define(f"{node.z_path_id}_STATUS_{str2ident(node.status)}", 1)
