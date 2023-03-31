@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2021 Telink Semiconductor
+ * Copyright (c) 2021-2023 Telink Semiconductor
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
 /**
- * @brief Linker script for the Telink B91 SoC
+ * @brief Linker script for the Telink B9x SoCs
  */
 
 #include <zephyr/devicetree.h>

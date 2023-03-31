@@ -148,3 +148,17 @@ jobs:
                     path: |
                             samples/net/sockets/echo_client/build/zephyr/zephyr.bin
                             samples/net/sockets/echo_client/build/zephyr/zephyr.elf
+
+            - name: Build Telink samples/basic/blinky app
+              run: |
+                    source .venv/bin/activate \
+                    && cd samples/basic/blinky \
+                    && west build -p -b tlsr9528a
+
+            - name: Upload samples/basic/blinky artifacts
+              uses: actions/upload-artifact@v3
+              with:
+                    name: blinky_arfcts
+                    path: |
+                            samples/basic/blinky/build/zephyr/zephyr.bin
+                            samples/basic/blinky/build/zephyr/zephyr.elf
