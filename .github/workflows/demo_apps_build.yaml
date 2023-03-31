@@ -79,7 +79,7 @@ jobs:
                     && source zephyr-env.sh \
                     && west blobs fetch hal_telink
 
-            - name: Build Telink samples/basic/blinky app
+            - name: Build Telink B91 samples/basic/blinky app
               run: |
                     source .venv/bin/activate \
                     && cd samples/basic/blinky \
@@ -93,7 +93,7 @@ jobs:
                             samples/basic/blinky/build/zephyr/zephyr.bin
                             samples/basic/blinky/build/zephyr/zephyr.elf
 
-            - name: Build Telink samples/bluetooth/peripheral_ht app
+            - name: Build Telink B91 samples/bluetooth/peripheral_ht app
               run: |
                     source .venv/bin/activate \
                     && cd samples/bluetooth/peripheral_ht \
@@ -107,7 +107,7 @@ jobs:
                             samples/bluetooth/peripheral_ht/build/zephyr/zephyr.bin
                             samples/bluetooth/peripheral_ht/build/zephyr/zephyr.elf
 
-            - name: Build Telink samples/net/openthread/coprocessor app
+            - name: Build Telink B91 samples/net/openthread/coprocessor app
               run: |
                     source .venv/bin/activate \
                     && cd samples/net/openthread/coprocessor \
@@ -121,7 +121,7 @@ jobs:
                             samples/net/openthread/coprocessor/build/zephyr/zephyr.bin
                             samples/net/openthread/coprocessor/build/zephyr/zephyr.elf
 
-            - name: Build Telink samples/net/sockets/echo_server app
+            - name: Build Telink B91 samples/net/sockets/echo_server app
               run: |
                     source .venv/bin/activate \
                     && cd samples/net/sockets/echo_server \
@@ -135,7 +135,7 @@ jobs:
                             samples/net/sockets/echo_server/build/zephyr/zephyr.bin
                             samples/net/sockets/echo_server/build/zephyr/zephyr.elf
 
-            - name: Build Telink samples/net/sockets/echo_client app
+            - name: Build Telink B91 samples/net/sockets/echo_client app
               run: |
                     source .venv/bin/activate \
                     && cd samples/net/sockets/echo_client \
@@ -149,7 +149,7 @@ jobs:
                             samples/net/sockets/echo_client/build/zephyr/zephyr.bin
                             samples/net/sockets/echo_client/build/zephyr/zephyr.elf
 
-            - name: Build Telink samples/basic/blinky app
+            - name: Build Telink B92 samples/basic/blinky app
               run: |
                     source .venv/bin/activate \
                     && cd samples/basic/blinky \
