@@ -1462,12 +1462,10 @@ static int ieee802154_b91_pm_action(const struct device *dev, enum pm_device_act
 		switch (action) {
 		case PM_DEVICE_ACTION_RESUME:
 			/* restart radio */
-			rf_mode_init();
 			rf_set_zigbee_250K_mode();
 			rf_set_chn(B91_LOGIC_CHANNEL_TO_PHYSICAL(b91->current_channel));
 			rf_set_power_level(b91_tx_pwr_lt[b91->current_dbm - B91_TX_POWER_MIN]);
-			rf_set_txmode();
-			rf_set_rxmode();
+			rf_set_trx_state(RF_MODE_OFF, B91_LOGIC_CHANNEL_TO_PHYSICAL(b91->current_channel));
 			break;
 
 		case PM_DEVICE_ACTION_SUSPEND:
