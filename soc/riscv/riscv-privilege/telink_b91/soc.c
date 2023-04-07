@@ -24,19 +24,19 @@
 #define CLK_96MHZ                   96000000u
 
 /* Define 48 MHz and 96 MHz CCLK clock options (not present in HAL) */
-#define CCLK_64M_HCLK_32M_PCLK_16M  clock_init(PLL_CLK_192M,	  \
+#define CCLK_64M_HCLK_32M_PCLK_16M  clock_init(PLL_CLK_60M,	  \
 					       PAD_PLL_DIV,	  \
 					       PLL_DIV3_TO_CCLK,  \
 					       CCLK_DIV2_TO_HCLK, \
 					       HCLK_DIV2_TO_PCLK, \
-					       PLL_DIV4_TO_MSPI_CLK)
+					       CCLK_TO_MSPI_CLK)
 
-#define CCLK_96M_HCLK_48M_PCLK_24M  clock_init(PLL_CLK_192M,	  \
+#define CCLK_96M_HCLK_48M_PCLK_24M  clock_init(PLL_CLK_96M,	  \
 					       PAD_PLL_DIV,	  \
 					       PLL_DIV2_TO_CCLK,  \
 					       CCLK_DIV2_TO_HCLK, \
 					       HCLK_DIV2_TO_PCLK, \
-					       PLL_DIV4_TO_MSPI_CLK)
+					       PLL_DIV2_TO_MSPI_CLK)
 
 /* Power Mode value */
 #if DT_ENUM_IDX(DT_NODELABEL(power), power_mode) == 0
