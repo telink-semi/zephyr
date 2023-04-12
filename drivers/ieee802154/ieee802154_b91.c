@@ -988,7 +988,6 @@ static int b91_start(const struct device *dev)
 		riscv_plic_set_priority(DT_INST_IRQN(0) - CONFIG_2ND_LVL_ISR_TBL_OFFSET,
 			DT_INST_IRQ(0, priority));
 #endif /* CONFIG_DYNAMIC_INTERRUPTS */
-		rf_mode_init();
 		rf_set_zigbee_250K_mode();
 		rf_set_tx_dma(1, B91_TRX_LENGTH);
 		rf_set_rx_dma(b91->rx_buffer, 0, B91_TRX_LENGTH);
@@ -1000,8 +999,7 @@ static int b91_start(const struct device *dev)
 		}
 		rf_set_irq_mask(FLD_RF_IRQ_RX | FLD_RF_IRQ_TX);
 		riscv_plic_irq_enable(DT_INST_IRQN(0) - CONFIG_2ND_LVL_ISR_TBL_OFFSET);
-		rf_set_txmode();
-		rf_set_rxmode();
+		rf_set_trx_state(RF_MODE_OFF, B91_LOGIC_CHANNEL_TO_PHYSICAL(b91->current_channel));
 		b91->is_started = true;
 	}
 
