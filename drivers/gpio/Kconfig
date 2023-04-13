@@ -44,7 +44,7 @@ config GPIO_GET_CONFIG
 	  This option enables the support for getting the current configurations
 	  of GPIOs. The driver must implement it to work.
 
-source "drivers/gpio/Kconfig.b91"
+source "drivers/gpio/Kconfig.b9x"
 
 source "drivers/gpio/Kconfig.dw"
 
