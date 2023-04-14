@@ -37,7 +37,6 @@ void main(void)
 		if (ret < 0) {
 			return;
 		}
-		// k_msleep(SLEEP_TIME_MS);
-		delay_ms( 1000 );
+		k_msleep(SLEEP_TIME_MS);
 	}
 }
