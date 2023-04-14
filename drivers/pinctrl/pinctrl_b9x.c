@@ -6,9 +6,13 @@
 
 #include "analog.h"
 #include <zephyr/drivers/pinctrl.h>
+#if CONFIG_SOC_RISCV_TELINK_B91
 #include <zephyr/dt-bindings/pinctrl/b91-pinctrl.h>
+#elif CONFIG_SOC_RISCV_TELINK_B92
+#include <zephyr/dt-bindings/pinctrl/b92-pinctrl.h>
+#endif
 
-#define DT_DRV_COMPAT telink_b91_pinctrl
+#define DT_DRV_COMPAT telink_b9x_pinctrl
 
 /**
  *      GPIO Function Enable Register
@@ -66,7 +70,7 @@
 				       ((pin & 0xf0) ? 1 : 0)))
 
 /* Pinctrl driver initialization */
-static int pinctrl_b91_init(const struct device *dev)
+static int pinctrl_b9x_init(const struct device *dev)
 {
 	ARG_UNUSED(dev);
 
@@ -76,10 +80,10 @@ static int pinctrl_b91_init(const struct device *dev)
 	return 0;
 }
 
-SYS_INIT(pinctrl_b91_init, PRE_KERNEL_1, CONFIG_KERNEL_INIT_PRIORITY_DEFAULT);
+SYS_INIT(pinctrl_b9x_init, PRE_KERNEL_1, CONFIG_KERNEL_INIT_PRIORITY_DEFAULT);
 
 /* Act as GPIO function disable */
-static inline void pinctrl_b91_gpio_function_disable(uint32_t pin)
+static inline void pinctrl_b9x_gpio_function_disable(uint32_t pin)
 {
 	uint8_t bit = pin & 0xff;
 
@@ -87,32 +91,32 @@ static inline void pinctrl_b91_gpio_function_disable(uint32_t pin)
 }
 
 /* Get function value bits start position (offset) */
-static inline int pinctrl_b91_get_offset(uint32_t pin, uint8_t *offset)
+static inline int pinctrl_b9x_get_offset(uint32_t pin, uint8_t *offset)
 {
-	switch (B91_PINMUX_GET_PIN_ID(pin)) {
-	case B91_PIN_0:
-		*offset = B91_PIN_0_FUNC_POS;
+	switch (B9x_PINMUX_GET_PIN_ID(pin)) {
+	case B9x_PIN_0:
+		*offset = B9x_PIN_0_FUNC_POS;
 		break;
-	case B91_PIN_1:
-		*offset = B91_PIN_1_FUNC_POS;
+	case B9x_PIN_1:
+		*offset = B9x_PIN_1_FUNC_POS;
 		break;
-	case B91_PIN_2:
-		*offset = B91_PIN_2_FUNC_POS;
+	case B9x_PIN_2:
+		*offset = B9x_PIN_2_FUNC_POS;
 		break;
-	case B91_PIN_3:
-		*offset = B91_PIN_3_FUNC_POS;
+	case B9x_PIN_3:
+		*offset = B9x_PIN_3_FUNC_POS;
 		break;
-	case B91_PIN_4:
-		*offset = B91_PIN_4_FUNC_POS;
+	case B9x_PIN_4:
+		*offset = B9x_PIN_4_FUNC_POS;
 		break;
-	case B91_PIN_5:
-		*offset = B91_PIN_5_FUNC_POS;
+	case B9x_PIN_5:
+		*offset = B9x_PIN_5_FUNC_POS;
 		break;
-	case B91_PIN_6:
-		*offset = B91_PIN_6_FUNC_POS;
+	case B9x_PIN_6:
+		*offset = B9x_PIN_6_FUNC_POS;
 		break;
-	case B91_PIN_7:
-		*offset = B91_PIN_7_FUNC_POS;
+	case B9x_PIN_7:
+		*offset = B9x_PIN_7_FUNC_POS;
 		break;
 
 	default:
@@ -128,20 +132,20 @@ static int pinctrl_configure_pin(const pinctrl_soc_pin_t *pinctrl)
 	int status;
 	uint8_t mask;
 	uint8_t offset = 0;
-	uint8_t pull = B91_PINMUX_GET_PULL(*pinctrl);
-	uint8_t func = B91_PINMUX_GET_FUNC(*pinctrl);
-	uint32_t pin = B91_PINMUX_GET_PIN(*pinctrl);
+	uint8_t pull = B9x_PINMUX_GET_PULL(*pinctrl);
+	uint8_t func = B9x_PINMUX_GET_FUNC(*pinctrl);
+	uint32_t pin = B9x_PINMUX_GET_PIN(*pinctrl);
 	uint8_t pull_up_en_addr = reg_pull_up_en(pin);
 
 	/* calculate offset and mask for the func and pull values */
-	status = pinctrl_b91_get_offset(pin, &offset);
+	status = pinctrl_b9x_get_offset(pin, &offset);
 	if (status != 0) {
 		return status;
 	}
 	mask = (uint8_t) ~(BIT(offset) | BIT(offset + 1));
 
 	/* disable GPIO function (can be enabled back by GPIO init using GPIO driver) */
-	pinctrl_b91_gpio_function_disable(pin);
+	pinctrl_b9x_gpio_function_disable(pin);
 
 	/* set func value */
 	func = func << offset;
