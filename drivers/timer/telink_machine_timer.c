@@ -13,34 +13,13 @@
 #include <zephyr/spinlock.h>
 #include <zephyr/irq.h>
 
-/* andestech,machine-timer */
-#if DT_HAS_COMPAT_STATUS_OKAY(andestech_machine_timer)
-#define DT_DRV_COMPAT andestech_machine_timer
+/* telink,machine-timer */
+#if DT_HAS_COMPAT_STATUS_OKAY(telink_machine_timer)
+#define DT_DRV_COMPAT telink_machine_timer
 
 #define MTIME_REG	DT_INST_REG_ADDR(0)
 #define MTIMECMP_REG	(DT_INST_REG_ADDR(0) + 8)
 #define TIMER_IRQN	DT_INST_IRQN(0)
-/* neorv32-machine-timer */
-#elif DT_HAS_COMPAT_STATUS_OKAY(neorv32_machine_timer)
-#define DT_DRV_COMPAT neorv32_machine_timer
-
-#define MTIME_REG	DT_INST_REG_ADDR(0)
-#define MTIMECMP_REG	(DT_INST_REG_ADDR(0) + 8)
-#define TIMER_IRQN	DT_INST_IRQN(0)
-/* nuclei,systimer */
-#elif DT_HAS_COMPAT_STATUS_OKAY(nuclei_systimer)
-#define DT_DRV_COMPAT nuclei_systimer
-
-#define MTIME_REG	DT_INST_REG_ADDR(0)
-#define MTIMECMP_REG	(DT_INST_REG_ADDR(0) + 8)
-#define TIMER_IRQN	DT_INST_IRQ_BY_IDX(0, 1, irq)
-/* sifive,clint0 */
-#elif DT_HAS_COMPAT_STATUS_OKAY(sifive_clint0)
-#define DT_DRV_COMPAT sifive_clint0
-
-#define MTIME_REG	(DT_INST_REG_ADDR(0) + 0xbff8U)
-#define MTIMECMP_REG	(DT_INST_REG_ADDR(0) + 0x4000U)
-#define TIMER_IRQN	DT_INST_IRQ_BY_IDX(0, 1, irq)
 #endif
 
 #define CYC_PER_TICK ((uint32_t)((uint64_t) (sys_clock_hw_cycles_per_sec()			 \
@@ -128,15 +107,6 @@ void sys_clock_set_timeout(int32_t ticks, bool idle)
 	ARG_UNUSED(idle);
 
 #if defined(CONFIG_TICKLESS_KERNEL)
-	/* RISCV has no idle handler yet, so if we try to spin on the
-	 * logic below to reset the comparator, we'll always bump it
-	 * forward to the "next tick" due to MIN_DELAY handling and
-	 * the interrupt will never fire!  Just rely on the fact that
-	 * the OS gave us the proper timeout already.
-	 */
-	if (idle) {
-		return;
-	}
 
 	ticks = ticks == K_TICKS_FOREVER ? MAX_TICKS : ticks;
 	ticks = CLAMP(ticks - 1, 0, (int32_t)MAX_TICKS);
