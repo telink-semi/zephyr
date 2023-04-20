@@ -674,6 +674,10 @@ static void ALWAYS_INLINE b91_rf_rx_isr(const struct device *dev)
 			break;
 		}
 		if (frame.general.type == IEEE802154_FRAME_FCF_TYPE_ACK) {
+			if (IS_ENABLED(CONFIG_OPENTHREAD_MTD_SED) &&
+			frame.general.fp_bit == 0) {
+				rf_set_tx_rx_off();
+			}
 			if (b91->ack_handler_en) {
 #if defined(CONFIG_NET_PKT_TIMESTAMP) && defined(CONFIG_NET_PKT_TXTIME)
 				b91_handle_ack(dev, payload, length, rx_time);
@@ -922,8 +926,6 @@ static int b91_set_channel(const struct device *dev, uint16_t channel)
 		b91->current_channel = channel;
 		if (b91->is_started) {
 			rf_set_chn(B91_LOGIC_CHANNEL_TO_PHYSICAL(channel));
-			rf_set_txmode();
-			rf_set_rxmode();
 		}
 	}
 
@@ -992,6 +994,7 @@ static int b91_start(const struct device *dev)
 		rf_set_zigbee_250K_mode();
 		rf_set_tx_dma(1, B91_TRX_LENGTH);
 		rf_set_rx_dma(b91->rx_buffer, 0, B91_TRX_LENGTH);
+		rf_set_tx_rx_off();
 		if (b91->current_channel != B91_TX_CH_NOT_SET) {
 			rf_set_chn(B91_LOGIC_CHANNEL_TO_PHYSICAL(b91->current_channel));
 		}
@@ -1000,8 +1003,6 @@ static int b91_start(const struct device *dev)
 		}
 		rf_set_irq_mask(FLD_RF_IRQ_RX | FLD_RF_IRQ_TX);
 		riscv_plic_irq_enable(DT_INST_IRQN(0) - CONFIG_2ND_LVL_ISR_TBL_OFFSET);
-		rf_set_txmode();
-		rf_set_rxmode();
 		b91->is_started = true;
 	}
 
