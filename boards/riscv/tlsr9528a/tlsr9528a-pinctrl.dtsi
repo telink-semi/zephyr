@@ -107,10 +107,10 @@
 	adc_pb7_default: adc_pb7_default {
 		pinmux = <B9x_PINMUX_SET(B9x_PORT_B, B9x_PIN_7, B92_FUNC_DEFAULT)>;
 	};
-	adc_pd0_default: adc_pd0_default {
-		pinmux = <B9x_PINMUX_SET(B9x_PORT_D, B9x_PIN_0, B92_FUNC_DEFAULT)>;
+	adc_pc4_default: adc_pc4_default {
+		pinmux = <B9x_PINMUX_SET(B9x_PORT_C, B9x_PIN_4, B92_FUNC_DEFAULT)>;
 	};
-	adc_pd1_default: adc_pd1_default {
-		pinmux = <B9x_PINMUX_SET(B9x_PORT_D, B9x_PIN_1, B92_FUNC_DEFAULT)>;
+	adc_pc5_default: adc_pc5_default {
+		pinmux = <B9x_PINMUX_SET(B9x_PORT_C, B9x_PIN_5, B92_FUNC_DEFAULT)>;
 	};
 };

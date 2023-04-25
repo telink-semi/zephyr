@@ -11,7 +11,11 @@
 #include "adc_context.h"
 
 /* Zephyr Device Tree headers */
+#if CONFIG_SOC_RISCV_TELINK_B91
 #include <zephyr/dt-bindings/adc/b9x-adc.h>
+#elif CONFIG_SOC_RISCV_TELINK_B92
+#include <zephyr/dt-bindings/adc/b92-adc.h>
+#endif
 
 /* Zephyr Logging headers */
 #include <zephyr/logging/log.h>
@@ -115,12 +119,21 @@ static adc_input_pin_def_e adc_b9x_get_pin(uint8_t dt_pin)
 	case DT_ADC_GPIO_PB7:
 		adc_pin = ADC_GPIO_PB7;
 		break;
+#if CONFIG_SOC_RISCV_TELINK_B91
 	case DT_ADC_GPIO_PD0:
 		adc_pin = ADC_GPIO_PD0;
 		break;
 	case DT_ADC_GPIO_PD1:
 		adc_pin = ADC_GPIO_PD1;
 		break;
+#elif CONFIG_SOC_RISCV_TELINK_B92
+	case DT_ADC_GPIO_PC4:
+		adc_pin = ADC_GPIO_PC4;
+		break;
+	case DT_ADC_GPIO_PC5:
+		adc_pin = ADC_GPIO_PC5;
+		break;
+#endif
 	case DT_ADC_VBAT:
 		adc_pin = ADC_VBAT;
 		break;
