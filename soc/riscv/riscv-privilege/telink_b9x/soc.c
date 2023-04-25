@@ -7,6 +7,7 @@
 #include <sys.h>
 #include <clock.h>
 #include <gpio.h>
+#include <watchdog.h>
 #include <zephyr/device.h>
 
 
@@ -84,7 +85,7 @@
  *
  * @return 0
  */
-static int soc_b91_init(const struct device *arg)
+static int soc_b9x_init(const struct device *arg)
 {
 	unsigned int cclk = DT_PROP(DT_PATH(cpus, cpu_0), clock_frequency);
 
@@ -133,6 +134,11 @@ static int soc_b91_init(const struct device *arg)
 	clock_32k_init(CLK_32K_RC);
 	clock_cal_32k_rc();
 
+#if CONFIG_SOC_RISCV_TELINK_B92
+	/* Stop 32k watchdog */
+	wd_32k_stop();
+#endif
+
 	return 0;
 }
 
@@ -146,4 +152,4 @@ void sys_arch_reboot(int type)
 	reg_reset = SOFT_RESET;
 }
 
-SYS_INIT(soc_b91_init, PRE_KERNEL_1, 0);
+SYS_INIT(soc_b9x_init, PRE_KERNEL_1, 0);
