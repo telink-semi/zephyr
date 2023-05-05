@@ -502,6 +502,9 @@ static int gpio_b91_pin_interrupt_configure(const struct device *dev,
 			gpio_b91_irq_set(dev, pin, INTR_RISING_EDGE);
 		} else if (trig == GPIO_INT_TRIG_LOW) { /* GPIO interrupt Falling edge */
 			gpio_b91_irq_set(dev, pin, INTR_FALLING_EDGE);
+		} else if (trig == GPIO_INT_TRIG_BOTH) { /* GPIO interrupt Rising and Falling edge */
+			gpio_b91_irq_set(dev, pin, INTR_RISING_EDGE);
+			gpio_b91_irq_set(dev, pin, INTR_FALLING_EDGE);
 		} else {
 			ret_status = -ENOTSUP;
 		}
