@@ -212,7 +212,7 @@ manifest:
       path: modules/lib/open-amp
     - name: openthread
       url: https://github.com/telink-semi/openthread
-      revision: aabbee49c8c9721ed1ca22a7b326ae3a23aaae09
+      revision: dcc1c0292af14fd637f57df12b0475b8f5cfda5b
       path: modules/lib/openthread
     - name: picolibc
       path: modules/lib/picolibc
