@@ -16,6 +16,12 @@ LOG_MODULE_REGISTER(i2c_telink);
 #include "i2c-priv.h"
 #include <zephyr/drivers/pinctrl.h>
 
+#if CONFIG_SOC_RISCV_TELINK_B92
+#define I2C_STRECH_EN       0
+#define I2C_STRECH_DIS      1
+#define I2C_STRECH_MODE     I2C_STRECH_EN
+#endif
+
 /* I2C configuration structure */
 struct i2c_b9x_cfg {
 	uint32_t bitrate;
@@ -67,6 +73,13 @@ static int i2c_b9x_configure(const struct device *dev, uint32_t dev_config)
 	/* init i2c */
 	i2c_master_init();
 	i2c_set_master_clk((unsigned char)(sys_clk.pclk * 1000 * 1000 / (4 * i2c_speed)));
+
+	#ifdef CONFIG_SOC_RISCV_TELINK_B92
+	i2c_master_detect_nack_en();
+	#if(I2C_STRECH_MODE == I2C_STRECH_EN)
+	i2c_master_strech_en();
+	#endif
+	#endif
 
 	return 0;
 }
@@ -143,6 +156,10 @@ static int i2c_b9x_init(const struct device *dev)
 		return status;
 	}
 
+	gpio_function_dis(GPIO_PE1);
+	gpio_function_dis(GPIO_PE3);
+
+	// gpio_set_level(GPIO_PE7, 1); // Red
 	return 0;
 }
 
