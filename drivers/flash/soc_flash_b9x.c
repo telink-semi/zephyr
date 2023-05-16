@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2021 Telink Semiconductor
+ * Copyright (c) 2021-2023 Telink Semiconductor
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#define DT_DRV_COMPAT telink_b91_flash_controller
+#define DT_DRV_COMPAT telink_b9x_flash_controller
 #define FLASH_SIZE   DT_REG_SIZE(DT_INST(0, soc_nv_flash))
 #define FLASH_ORIGIN DT_REG_ADDR(DT_INST(0, soc_nv_flash))
 
@@ -24,19 +24,19 @@
 
 
 /* driver data structure */
-struct flash_b91_data {
+struct flash_b9x_data {
 	struct k_sem write_lock;
 };
 
 /* driver parameters structure */
-static const struct flash_parameters flash_b91_parameters = {
+static const struct flash_parameters flash_b9x_parameters = {
 	.write_block_size = DT_PROP(DT_INST(0, soc_nv_flash), write_block_size),
 	.erase_value = 0xff,
 };
 
 
 /* Check for correct offset and length */
-static bool flash_b91_is_range_valid(off_t offset, size_t len)
+static bool flash_b9x_is_range_valid(off_t offset, size_t len)
 {
 	/* check for min value */
 	if ((offset < 0) || (len < 1)) {
@@ -52,9 +52,9 @@ static bool flash_b91_is_range_valid(off_t offset, size_t len)
 }
 
 /* API implementation: driver initialization */
-static int flash_b91_init(const struct device *dev)
+static int flash_b9x_init(const struct device *dev)
 {
-	struct flash_b91_data *dev_data = dev->data;
+	struct flash_b9x_data *dev_data = dev->data;
 
 	k_sem_init(&dev_data->write_lock, 1, 1);
 
@@ -62,10 +62,10 @@ static int flash_b91_init(const struct device *dev)
 }
 
 /* API implementation: erase */
-static int flash_b91_erase(const struct device *dev, off_t offset, size_t len)
+static int flash_b9x_erase(const struct device *dev, off_t offset, size_t len)
 {
 	int page_nums = len / PAGE_SIZE;
-	struct flash_b91_data *dev_data = dev->data;
+	struct flash_b9x_data *dev_data = dev->data;
 
 	/* return SUCCESS if len equals 0 (required by tests/drivers/flash) */
 	if (!len) {
@@ -73,7 +73,7 @@ static int flash_b91_erase(const struct device *dev, off_t offset, size_t len)
 	}
 
 	/* check for valid range */
-	if (!flash_b91_is_range_valid(offset, len)) {
+	if (!flash_b9x_is_range_valid(offset, len)) {
 		return -EINVAL;
 	}
 
@@ -119,11 +119,11 @@ static int flash_b91_erase(const struct device *dev, off_t offset, size_t len)
 }
 
 /* API implementation: write */
-static int flash_b91_write(const struct device *dev, off_t offset,
+static int flash_b9x_write(const struct device *dev, off_t offset,
 			   const void *data, size_t len)
 {
 	void *buf = NULL;
-	struct flash_b91_data *dev_data = dev->data;
+	struct flash_b9x_data *dev_data = dev->data;
 
 	/* return SUCCESS if len equals 0 (required by tests/drivers/flash) */
 	if (!len) {
@@ -131,7 +131,7 @@ static int flash_b91_write(const struct device *dev, off_t offset,
 	}
 
 	/* check for valid range */
-	if (!flash_b91_is_range_valid(offset, len)) {
+	if (!flash_b9x_is_range_valid(offset, len)) {
 		return -EINVAL;
 	}
 
@@ -172,7 +172,7 @@ static int flash_b91_write(const struct device *dev, off_t offset,
 }
 
 /* API implementation: read */
-static int flash_b91_read(const struct device *dev, off_t offset,
+static int flash_b9x_read(const struct device *dev, off_t offset,
 			  void *data, size_t len)
 {
 	ARG_UNUSED(dev);
@@ -183,7 +183,7 @@ static int flash_b91_read(const struct device *dev, off_t offset,
 	}
 
 	/* check for valid range */
-	if (!flash_b91_is_range_valid(offset, len)) {
+	if (!flash_b9x_is_range_valid(offset, len)) {
 		return -EINVAL;
 	}
 
@@ -195,11 +195,11 @@ static int flash_b91_read(const struct device *dev, off_t offset,
 
 /* API implementation: get_parameters */
 static const struct flash_parameters *
-flash_b91_get_parameters(const struct device *dev)
+flash_b9x_get_parameters(const struct device *dev)
 {
 	ARG_UNUSED(dev);
 
-	return &flash_b91_parameters;
+	return &flash_b9x_parameters;
 }
 
 /* API implementation: page_layout */
@@ -209,7 +209,7 @@ static const struct flash_pages_layout dev_layout = {
 	.pages_size = PAGE_SIZE,
 };
 
-static void flash_b91_pages_layout(const struct device *dev,
+static void flash_b9x_pages_layout(const struct device *dev,
 				   const struct flash_pages_layout **layout,
 				   size_t *layout_size)
 {
@@ -218,19 +218,19 @@ static void flash_b91_pages_layout(const struct device *dev,
 }
 #endif /* CONFIG_FLASH_PAGE_LAYOUT */
 
-static struct flash_b91_data flash_data;
+static struct flash_b9x_data flash_data;
 
-static const struct flash_driver_api flash_b91_api = {
-	.erase = flash_b91_erase,
-	.write = flash_b91_write,
-	.read = flash_b91_read,
-	.get_parameters = flash_b91_get_parameters,
+static const struct flash_driver_api flash_b9x_api = {
+	.erase = flash_b9x_erase,
+	.write = flash_b9x_write,
+	.read = flash_b9x_read,
+	.get_parameters = flash_b9x_get_parameters,
 #if defined(CONFIG_FLASH_PAGE_LAYOUT)
-	.page_layout = flash_b91_pages_layout,
+	.page_layout = flash_b9x_pages_layout,
 #endif
 };
 
 /* Driver registration */
-DEVICE_DT_INST_DEFINE(0, flash_b91_init,
+DEVICE_DT_INST_DEFINE(0, flash_b9x_init,
 		      NULL, &flash_data, NULL, POST_KERNEL,
-		      CONFIG_FLASH_INIT_PRIORITY, &flash_b91_api);
+		      CONFIG_FLASH_INIT_PRIORITY, &flash_b9x_api);

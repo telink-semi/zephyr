@@ -7,7 +7,7 @@
 /dts-v1/;
 
 #include <zephyr/dt-bindings/adc/adc.h>
-#include <zephyr/dt-bindings/adc/b91-adc.h>
+#include <zephyr/dt-bindings/adc/b9x-adc.h>
 #include <zephyr/dt-bindings/gpio/gpio.h>
 #include <zephyr/dt-bindings/i2c/i2c.h>
 #include <zephyr/dt-bindings/pwm/pwm.h>
@@ -57,9 +57,9 @@
 			interrupt-parent = <&plic0>;
 		};
 
-		flash_mspi: flash-controller@80140100 {
-			compatible = "telink,b92-flash-controller";
-			reg = <0x80140100 0x40>;
+		flash_mspi: flash-controller@A3FFFF00 {
+			compatible = "telink,b9x-flash-controller";
+			reg = <0xA3FFFF00 0x100>;
 
 			#address-cells = <1>;
 			#size-cells = <1>;
@@ -214,7 +214,7 @@
 		};
 
 		i2c: i2c@80140280 {
-			compatible = "telink,b91-i2c";
+			compatible = "telink,b9x-i2c";
 			reg = <0x80140280 0x40>;
 			#address-cells = <1>;
 			#size-cells = <0>;
@@ -223,7 +223,7 @@
 		};
 
 		adc: adc@ea {
-			compatible = "telink,b91-adc";
+			compatible = "telink,b9x-adc";
 			reg = <0xea 0x18>;
 			status = "disabled";
 			#io-channel-cells = <1>;
