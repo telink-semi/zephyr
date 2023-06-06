@@ -83,7 +83,7 @@ static void set_mtime(uint64_t time)
 }
 
 #ifdef CONFIG_BOARD_TLSR9518ADK80D_RETENTION
-volatile bool b91_deep_sleep_retention;
+volatile bool b9x_deep_sleep_retention;
 #endif /* CONFIG_BOARD_TLSR9518ADK80D_RETENTION */
 
 /**
@@ -146,7 +146,7 @@ __weak void pm_state_set(enum pm_state state, uint8_t substate_id)
 				current_time += clock_get_digital_32k_tick() - tl_32k_tick;
 				set_mtime_compare(wakeup_time);
 				set_mtime(current_time);
-				b91_deep_sleep_retention = true;
+				b9x_deep_sleep_retention = true;
 			}
 		}
 		break;
@@ -167,7 +167,7 @@ __weak void pm_state_exit_post_ops(enum pm_state state, uint8_t substate_id)
 	ARG_UNUSED(substate_id);
 
 #ifdef CONFIG_BOARD_TLSR9518ADK80D_RETENTION
-	b91_deep_sleep_retention = false;
+	b9x_deep_sleep_retention = false;
 #endif /* CONFIG_BOARD_TLSR9518ADK80D_RETENTION */
 
 	/*
