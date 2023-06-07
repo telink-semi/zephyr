@@ -625,7 +625,7 @@ static void ALWAYS_INLINE b91_rf_rx_isr(const struct device *dev)
 
 #if defined(CONFIG_NET_PKT_TIMESTAMP) && defined(CONFIG_NET_PKT_TXTIME)
 	uint64_t rx_time = k_ticks_to_us_near64(k_uptime_ticks());
-	uint32_t delta_time = (clock_time() - ZB_RADIO_TIMESTAMP_GET(b91->rx_buffer)) /
+	uint32_t delta_time = (stimer_get_tick() - ZB_RADIO_TIMESTAMP_GET(b91->rx_buffer)) /
 		SYSTEM_TIMER_TICK_1US;
 
 	rx_time -= delta_time;
