@@ -142,7 +142,7 @@ __weak void pm_state_set(enum pm_state state, uint8_t substate_id)
 			uint32_t tl_32k_tick = clock_get_digital_32k_tick();
 
 			current_time = get_mtime();
-			if (b91_deep_sleep(tl_sleep_tick + stimer_sleep_ticks)) {
+			if (b9x_deep_sleep(tl_sleep_tick + stimer_sleep_ticks)) {
 				current_time += clock_get_digital_32k_tick() - tl_32k_tick;
 				set_mtime_compare(wakeup_time);
 				set_mtime(current_time);
