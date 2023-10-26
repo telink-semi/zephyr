@@ -1,0 +1,15 @@
+#
+# Copyright (c) 2018 Nordic Semiconductor
+#
+# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+#
+
+config NFC_T2T_NRFXLIB
+    default y if NRFXNFC_T2T
+	bool "Enable NFC Type 2 Tag library"
+
+config NFC_T4T_NRFXLIB
+    default y if NRFXNFC_T4T
+	bool "Enable NFC Type 4 Tag library"
+
+rsource "platform/Kconfig"

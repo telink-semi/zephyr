@@ -1,0 +1,41 @@
+#
+# Copyright (c) 2023 Sendrato
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+config NRFXNFC
+    bool "nRFx-NFC driver"
+    default n
+    help
+        Enable nRFx NFC driver.
+
+if NRFXNFC
+
+config NRFXNFC_DRV_NAME
+    string "Device Tree name of nRFx-NFC driver"
+    default "nRFxNFC"
+    help
+        Device Tree name of nRFx-NFC driver.
+
+config NRFXNFC_T2T
+    bool "Enable NFC Type 2 Tag library"
+    default n
+    select NFC_T2T_NRFXLIB
+
+config NRFXNFC_T4T
+    bool "Enable NFC Type 4 Tag library"
+    default n
+    select NFC_T4T_NRFXLIB
+
+config NRFXNFC_INIT_PRIORITY
+    int "NRFXNFC NFC driver init priority"
+    default 75
+
+config NRFXNFC_MAX_PAYLOAD_SIZE
+    int "Max payload in bytes"
+    default 988
+
+rsource "nrfxnfc/Kconfig"
+
+endif # NRFXNFC

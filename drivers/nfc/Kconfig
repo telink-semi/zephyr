@@ -1,0 +1,8 @@
+#
+# Copyright (c) 2023 Sendrato
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+rsource "Kconfig.nt3h2x11"
+rsource "Kconfig.nrfxnfc"
