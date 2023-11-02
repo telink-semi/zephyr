@@ -1,0 +1,36 @@
+#
+# Copyright (c) 2023 Sendrato
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+config ST25DVXXKC
+    bool "ST25DVXXKC NFC driver"
+    default n
+    depends on I2C
+    help
+      Enable I2C-based driver for ST25DVXXKC driver.
+
+if ST25DVXXKC
+
+config NT3H2X11_2K
+    bool "Use 2k memory map instead of 1k"
+    default n
+    help
+      Use 2k memory map instead of 1k
+
+config NT3H2X11_MAX_WRITE_DELAY
+    int "delay in ms"
+    default 10
+    help
+      Max I2C write delay in ms for when writing EEPROM
+
+config ST25DVXXKC_INIT_PRIORITY
+    int "ST25DVXXKC NFC driver init priority"
+    default 75
+
+module = ST25DVXXKC
+module-str = st25xxdvkc
+source "${ZEPHYR_BASE}/subsys/logging/Kconfig.template.log_config"
+
+endif # ST25DVXXKC

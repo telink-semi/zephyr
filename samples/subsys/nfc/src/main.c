@@ -12,10 +12,15 @@
 #include <zephyr/nfc/ndef/text_rec.h>
 
 #ifdef CONFIG_NRFXNFC
-#define DEV_PTR device_get_binding(CONFIG_NRFXNFC_DRV_NAME)
+  #define DEV_PTR device_get_binding(CONFIG_NRFXNFC_DRV_NAME)
 #else
-#define NFC_DEV nt3h2x11
-#define DEV_PTR DEVICE_DT_GET(DT_NODELABEL(NFC_DEV))
+  #ifdef CONFIG_NT3H2X11
+  #define NFC_DEV nt3h2x11
+  #define DEV_PTR DEVICE_DT_GET(DT_NODELABEL(NFC_DEV))
+#else
+  #define NFC_DEV st25dvxxkc
+  #define DEV_PTR DEVICE_DT_GET(DT_NODELABEL(NFC_DEV))
+  #endif
 #endif
 
 #define MAX_REC_COUNT        3
@@ -146,7 +151,7 @@ int main(void)
 
     /* Set up Tag mode */
     if (rv == 0) {
-        rv = nfc_tag_set_type(dev, NFC_TAG_TYPE_T2T);
+        rv = nfc_tag_set_type(dev, NFC_TAG_TYPE_T5T);
         if (rv != 0) {
             printk("Cannot setup NFC Tag mode! (%d)\n", rv);
         }
@@ -180,7 +185,7 @@ int main(void)
 
     if (rv != 0) {
 #if CONFIG_REBOOT
-        sys_reboot(SYS_REBOOT_COLD);
+        //sys_reboot(SYS_REBOOT_COLD);
 #endif /* CONFIG_REBOOT */
         return -EIO;
     } else {

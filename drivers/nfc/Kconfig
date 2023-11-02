@@ -6,3 +6,4 @@
 
 rsource "Kconfig.nt3h2x11"
 rsource "Kconfig.nrfxnfc"
+rsource "Kconfig.st25dvxxkc"

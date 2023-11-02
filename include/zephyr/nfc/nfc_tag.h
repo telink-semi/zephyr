@@ -45,7 +45,8 @@ enum nfc_tag_event {
 enum nfc_tag_type {
     NFC_TAG_TYPE_UNDEF = 0,
     NFC_TAG_TYPE_T2T,
-    NFC_TAG_TYPE_T4T
+    NFC_TAG_TYPE_T4T,
+    NFC_TAG_TYPE_T5T
 };
 
 /**
