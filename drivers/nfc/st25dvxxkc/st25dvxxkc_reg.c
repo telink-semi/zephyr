@@ -20,7 +20,6 @@
   */
   
 /* Includes ------------------------------------------------------------------*/
-// #include "st25dvxxkc_reg.h"
 #include <zephyr/drivers/nfc/st25dvxxkc/st25dvxxkc_reg.h>
 
 /** @addtogroup BSP

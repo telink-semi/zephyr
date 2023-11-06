@@ -20,7 +20,6 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
-// #include "bsp_nfctag.h"
 #include <zephyr/drivers/nfc/st25dvxxkc/bsp_nfctag.h>
 
 /** @addtogroup BSP

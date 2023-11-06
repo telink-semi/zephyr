@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    st25dv-i2c_linux.h
+  * @file    st25dv-i2c_zephyr.h
   * @author  MMY Application Team
   * @brief   This file provides a set of functions needed to manage the I2C of
 						 the ST25DV-I2C device.

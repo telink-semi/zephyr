@@ -21,8 +21,8 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
-// #include "st25dvxxkc.h"
 #include <zephyr/drivers/nfc/st25dvxxkc/st25dvxxkc.h>
+#include <zephyr/kernel.h>
 
 /** @addtogroup BSP
   * @{
@@ -364,16 +364,9 @@ int32_t ST25DVxxKC_WriteData(const ST25DVxxKC_Object_t *const pObj, const uint8_
     ret = pObj->IO.Write(pObj->IO.DeviceAddress, mem_addr, pdata_index, split_data_nb);
     if(ret == NFCTAG_OK)
     {
-      int32_t pollstatus;
-      /* Poll until EEPROM is available */
-      uint32_t tickstart = pObj->IO.GetTick();
-      /* Wait until ST25DVxxKC is ready or timeout occurs */
-      do
-      {
-        pollstatus = pObj->IO.IsReady(pObj->IO.DeviceAddress, 1);
-      } while(   ((uint32_t)pObj->IO.GetTick() < tickstart + ST25DVXXKC_WRITE_TIMEOUT)
-              && (pollstatus != NFCTAG_OK) );
-      
+      /* Sleep until EEPROM is available */
+      k_sleep(K_MSEC(5U + 5U*split_data_nb/16));
+      int32_t pollstatus = pObj->IO.IsReady(pObj->IO.DeviceAddress, 1);
       if(pollstatus != NFCTAG_OK)
       {
         ret = NFCTAG_TIMEOUT;

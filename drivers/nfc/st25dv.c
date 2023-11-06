@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Sendrato
+ * Copyright (c) 2023 Telink Semiconductor
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -38,13 +38,7 @@ struct st25dvxxkc_cfg {
 struct st25dvxxkc_data {
     const struct device *parent;
     const struct device *dev_i2c;
-    const struct device *dev_irq_external;
-    struct gpio_callback dev_irq_external_cb;
     struct k_work worker_irq;
-    nt3h2x11_irq_callback_t app_irq_cb;
-    uint8_t initialized;
-    /* FD pin edge detection */
-    uint8_t flag_fd_pin;
     /* NFC subsys data */
     nfc_tag_cb_t nfc_tag_cb;
     enum nfc_tag_type tag_type;
@@ -70,7 +64,7 @@ static int st25dvxxkc_tag_set_type(const struct device *dev, enum nfc_tag_type t
 
     NfcTag_SelectProtocol(NFCTAG_TYPE5);
 
-        /* Check if no NDEF detected, init mem in Tag Type 5 */
+    /* Check if no NDEF detected, init mem in Tag Type 5 */
     if(NfcType5_NDEFDetection( ) != NDEF_OK) {
       CCFileStruct.MagicNumber = NFCT5_MAGICNUMBER_E1_CCFILE;
       CCFileStruct.Version = NFCT5_VERSION_V1_0;
@@ -151,11 +145,6 @@ static int _st25dvxxkc_init(const struct device *dev)
     const struct st25dvxxkc_cfg *cfg = (const struct st25dvxxkc_cfg *) dev->config;
 
     LOG_DBG("st25dvxxkc: init");
-
-    //if (!device_is_ready(cfg->i2c.bus)) {
-    //    LOG_ERR("I2C bus is not ready");
-    //    return -ENODEV;
-    //}
 
     /* setup i2c */
     data->parent = (const struct device *) dev;

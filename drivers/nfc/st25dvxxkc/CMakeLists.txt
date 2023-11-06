@@ -1,7 +1,6 @@
 zephyr_library()
 
 zephyr_library_sources(
-    st25_api.c
     tagtype3_wrapper.c
     tagtype4_wrapper.c
     lib_wrapper.c
