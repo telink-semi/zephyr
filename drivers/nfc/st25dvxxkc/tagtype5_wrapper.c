@@ -77,7 +77,7 @@ uint16_t ccFileOffset = 0;
   * @retval NDEF_ERROR                  Error when reading the NDEF message.
   * @retval NDEF_OK                     NDEF message successfully read.
   */
-uint16_t NfcType5_ReadNDEF( uint8_t* pData )
+uint16_t NfcType5_ReadNDEF(const struct device *dev, uint8_t* pData )
 {
   uint16_t status = NDEF_ERROR;
   TT5_TLV_t tlv;
@@ -85,14 +85,14 @@ uint16_t NfcType5_ReadNDEF( uint8_t* pData )
   uint16_t DataLength;
 
   /* Detect NDEF message in memory */
-  status = NfcType5_NDEFDetection( );
+  status = NfcType5_NDEFDetection(dev);
   if( status != NDEF_OK )
   {
     return status;
   }
   
   /* Read TL of Type 5 */
-  status = NDEF_Wrapper_ReadData( (uint8_t*)&tlv, CCFileStruct.NDEF_offset, sizeof(TT5_TLV_t) );
+  status = NDEF_Wrapper_ReadData(dev, (uint8_t*)&tlv, CCFileStruct.NDEF_offset, sizeof(TT5_TLV_t) );
   if( status != NDEF_OK )
   {
     return status;
@@ -124,7 +124,7 @@ uint16_t NfcType5_ReadNDEF( uint8_t* pData )
   if( DataLength > 0 )
   {
     /* Read NDEF */
-    if( NDEF_Wrapper_ReadData( (pData), CCFileStruct.NDEF_offset + tlv_size, DataLength ) != NDEF_OK )
+    if( NDEF_Wrapper_ReadData(dev, (pData), CCFileStruct.NDEF_offset + tlv_size, DataLength ) != NDEF_OK )
     {
       return NDEF_ERROR;
     }
@@ -143,7 +143,7 @@ uint16_t NfcType5_ReadNDEF( uint8_t* pData )
   * @retval NDEF_ERROR                 Error when writing the Tag.
   * @retval NDEF_OK                    The data has been successfully written.
   */
-uint16_t NfcType5_WriteData(uint8_t Type, uint16_t Length , uint8_t *pData )
+uint16_t NfcType5_WriteData(const struct device *dev, uint8_t Type, uint16_t Length , uint8_t *pData )
 {
   TT5_TLV_t tlv;
   uint8_t tlv_size;
@@ -151,7 +151,7 @@ uint16_t NfcType5_WriteData(uint8_t Type, uint16_t Length , uint8_t *pData )
   uint8_t NfcT5_Terminator = NFCT5_TERMINATOR_TLV;
   uint8_t empty_ndef_tlv[] = {Type, 0};
 
-  uint32_t max_length = NDEF_Wrapper_GetMemorySize()        /* Memory size */
+  uint32_t max_length = NDEF_Wrapper_GetMemorySize(dev)        /* Memory size */
                         - ((Length >= 0xFF) ? 4 : 2)    /* - TLV length */
                         - sizeof(NfcT5_Terminator)      /* - Terminator TLV */
                         - CCFileStruct.NDEF_offset;     /* - CCfile length */
@@ -163,7 +163,7 @@ uint16_t NfcType5_WriteData(uint8_t Type, uint16_t Length , uint8_t *pData )
   }
   
   /* Detect NDEF message in memory */
-  if( NfcType5_NDEFDetection( ) != NDEF_OK )
+  if( NfcType5_NDEFDetection(dev) != NDEF_OK )
   {
     return NDEF_ERROR;
   }
@@ -182,21 +182,21 @@ uint16_t NfcType5_WriteData(uint8_t Type, uint16_t Length , uint8_t *pData )
   }
 
   /* Write TLV with length set to 0, required before updating the message */
-  if(NDEF_Wrapper_WriteData( empty_ndef_tlv, CCFileStruct.NDEF_offset, sizeof(empty_ndef_tlv) )!= NDEF_OK)
+  if(NDEF_Wrapper_WriteData(dev, empty_ndef_tlv, CCFileStruct.NDEF_offset, sizeof(empty_ndef_tlv) )!= NDEF_OK)
 	return NDEF_ERROR;
 
   offset = CCFileStruct.NDEF_offset + tlv_size;
   /* Continue by writing the data to the EEPROM */
-  if(NDEF_Wrapper_WriteData( pData , offset, Length ) != NDEF_OK )
+  if(NDEF_Wrapper_WriteData(dev, pData , offset, Length ) != NDEF_OK )
     return NDEF_ERROR;
 
   offset +=Length;
   /* Write Terminator TLV */
-  if(NDEF_Wrapper_WriteData( &NfcT5_Terminator, offset, sizeof(NfcT5_Terminator) ) != NDEF_OK)
+  if(NDEF_Wrapper_WriteData(dev, &NfcT5_Terminator, offset, sizeof(NfcT5_Terminator) ) != NDEF_OK)
     return NDEF_ERROR;
 
   /* Finally write the correct TLV to EEPROM with the actual message length */
-  if(NDEF_Wrapper_WriteData( (uint8_t*)&tlv, CCFileStruct.NDEF_offset, tlv_size )!= NDEF_OK)
+  if(NDEF_Wrapper_WriteData(dev, (uint8_t*)&tlv, CCFileStruct.NDEF_offset, tlv_size )!= NDEF_OK)
     return NDEF_ERROR;
   
   return NDEF_OK;
@@ -212,9 +212,9 @@ uint16_t NfcType5_WriteData(uint8_t Type, uint16_t Length , uint8_t *pData )
   * @retval NDEF_ERROR                 Error when writing the Tag.
   * @retval NDEF_OK                    The data has been successfully written.
   */
-uint16_t NfcType5_WriteNDEF(uint16_t Length , uint8_t *pData )
+uint16_t NfcType5_WriteNDEF(const struct device *dev, uint16_t Length , uint8_t *pData )
 {
-  return NfcType5_WriteData(NFCT5_NDEF_MSG_TLV,Length,pData);
+  return NfcType5_WriteData(dev, NFCT5_NDEF_MSG_TLV,Length,pData);
 }
 
 /**
@@ -226,9 +226,9 @@ uint16_t NfcType5_WriteNDEF(uint16_t Length , uint8_t *pData )
   * @retval NDEF_ERROR                 Error when writing the Tag.
   * @retval NDEF_OK                    The data has been successfully written.
   */
-uint16_t NfcTag_WriteProprietary(uint16_t Length , uint8_t *pData )
+uint16_t NfcTag_WriteProprietary(const struct device *dev, uint16_t Length , uint8_t *pData )
 {
-  return NfcType5_WriteData(NFCT5_PROPRIETARY_TLV,Length,pData);
+  return NfcType5_WriteData(dev, NFCT5_PROPRIETARY_TLV, Length, pData);
 }
 
 
@@ -238,17 +238,17 @@ uint16_t NfcTag_WriteProprietary(uint16_t Length , uint8_t *pData )
   * @retval NDEF_ERROR Error when writing the Tag.
   * @retval NDEF_OK    The CC has been successfully written.
   */
-uint16_t NfcType5_WriteCCFile( const uint8_t * const pCCBuffer )
+uint16_t NfcType5_WriteCCFile(const struct device *dev, const uint8_t * const pCCBuffer )
 {
   int32_t ret_value;
   
   /* Write first block of CCFile */
-  ret_value = NDEF_Wrapper_WriteData( pCCBuffer, 0x00, 0x4 );
+  ret_value = NDEF_Wrapper_WriteData(dev, pCCBuffer, 0x00, 0x4 );
  
   /* If extended memory writes the next 4 bytes */
   if( (pCCBuffer[2] == 0x00) && (ret_value == NDEF_OK) )
   {
-    ret_value = NDEF_Wrapper_WriteData( pCCBuffer + 4, 0x04, 4 );
+    ret_value = NDEF_Wrapper_WriteData(dev, pCCBuffer + 4, 0x04, 4 );
   }
 
   if( ret_value != NDEF_OK )
@@ -265,17 +265,17 @@ uint16_t NfcType5_WriteCCFile( const uint8_t * const pCCBuffer )
   * @retval NDEF_ERROR Error when reading the Tag.
   * @retval NDEF_OK    The CC has been successfully read.
   */
-uint16_t NfcType5_ReadCCFile( uint8_t * const pCCBuffer )
+uint16_t NfcType5_ReadCCFile(const struct device *dev, uint8_t * const pCCBuffer )
 {
   int32_t ret_value;
   
   /* Read 4 bytes of CC File */
-  ret_value = NDEF_Wrapper_ReadData( pCCBuffer, ccFileOffset, 4 );
+  ret_value = NDEF_Wrapper_ReadData(dev, pCCBuffer, ccFileOffset, 4 );
 
   /* If extended memory reads the next 4 bytes */
   if( (pCCBuffer[2] == 0x00) && (ret_value == NDEF_OK) )
   {
-    ret_value = NDEF_Wrapper_ReadData( pCCBuffer + 4, ccFileOffset + 0x04, 4 );
+    ret_value = NDEF_Wrapper_ReadData(dev, pCCBuffer + 4, ccFileOffset + 0x04, 4 );
   }
   
   if( ret_value != NDEF_OK )
@@ -292,7 +292,7 @@ uint16_t NfcType5_ReadCCFile( uint8_t * const pCCBuffer )
   * @retval NDEF_ERROR The Tag has not been initialized.
   * @retval NDEF_OK    The Tag has been successfully initialized.
   */
-uint16_t NfcType5_TT5Init( void )
+uint16_t NfcType5_TT5Init(const struct device *dev)
 {
   int32_t ret_value = NDEF_OK;
   uint16_t status;
@@ -315,7 +315,7 @@ uint16_t NfcType5_TT5Init( void )
   }
   
   /* Update CCFile */
-  status = NfcType5_WriteCCFile( accbuffer );
+  status = NfcType5_WriteCCFile(dev, accbuffer);
   if( status != NDEF_OK )
   {
     return status;
@@ -324,7 +324,7 @@ uint16_t NfcType5_TT5Init( void )
   /* Update NDEF TLV for INITIALIZED state */
   /* Update T */
   cdata = NFCT5_NDEF_MSG_TLV;
-  ret_value = NDEF_Wrapper_WriteData( &cdata, CCFileStruct.NDEF_offset, 1 );
+  ret_value = NDEF_Wrapper_WriteData(dev, &cdata, CCFileStruct.NDEF_offset, 1 );
   if( ret_value != NDEF_OK )
   {
     return NDEF_ERROR;
@@ -332,7 +332,7 @@ uint16_t NfcType5_TT5Init( void )
 
   /* Update L */
   cdata = 0x00;
-  ret_value = NDEF_Wrapper_WriteData( &cdata, (CCFileStruct.NDEF_offset + 1), 1 );
+  ret_value = NDEF_Wrapper_WriteData(dev, &cdata, (CCFileStruct.NDEF_offset + 1), 1 );
   if( ret_value != NDEF_OK )
   {
     return NDEF_ERROR;
@@ -348,7 +348,7 @@ uint16_t NfcType5_TT5Init( void )
   * @retval NDEF_OK                 NDEF message Tag Type 5 detected.
   * @retval NDEF_ERROR_NOT_FORMATED Device is not a NFC Tag Type 5 Tag.
   */
-uint16_t NfcType5_NDEFDetection( void )
+uint16_t NfcType5_NDEFDetection(const struct device *dev)
 {
   uint8_t acc_buffer[8];
   TT5_TLV_t tlv_detect;
@@ -358,7 +358,7 @@ uint16_t NfcType5_NDEFDetection( void )
   CCFileStruct.State = TT5_NO_NDEF;
   
   /* Read CCFile */
-  status = NfcType5_ReadCCFile( acc_buffer );
+  status = NfcType5_ReadCCFile(dev, acc_buffer );
   if( status != NDEF_OK )
   {
     return status;
@@ -400,7 +400,7 @@ uint16_t NfcType5_NDEFDetection( void )
   CCFileStruct.TT5Tag = acc_buffer[3];
   
   /* Search for position of NDEF TLV in memory and tag status */
-  while( ( NDEF_Wrapper_ReadData( (uint8_t *)&tlv_detect, CCFileStruct.NDEF_offset, sizeof(TT5_TLV_t) ) == NDEF_OK ) && ( CCFileStruct.NDEF_offset < memory_size ) )
+  while( ( NDEF_Wrapper_ReadData(dev, (uint8_t *)&tlv_detect, CCFileStruct.NDEF_offset, sizeof(TT5_TLV_t) ) == NDEF_OK ) && ( CCFileStruct.NDEF_offset < memory_size ) )
   {
     /* Detect first NDEF Message in memory */
     if( tlv_detect.Type == NFCT5_NDEF_MSG_TLV )
@@ -459,21 +459,21 @@ uint16_t NfcType5_NDEFDetection( void )
   * @retval NDEF_ERROR              The NDEF message size has not been read.
   * @retval NDEF_OK                 The NDEF message size has been retrieved.
   */
-uint16_t NfcType5_GetLength(uint16_t* Length)
+uint16_t NfcType5_GetLength(const struct device *dev, uint16_t* Length)
 {
   
   uint16_t status = NDEF_ERROR;
   TT5_TLV_t tlv;
   
   /* Detect NDEF message in memory */
-  status = NfcType5_NDEFDetection( );
+  status = NfcType5_NDEFDetection(dev);
   if( status != NDEF_OK )
   {
     return status;
   }
   
   /* Read TL of Type 5 */
-  status = NDEF_Wrapper_ReadData( (uint8_t*)&tlv, CCFileStruct.NDEF_offset, sizeof(TT5_TLV_t) );
+  status = NDEF_Wrapper_ReadData(dev, (uint8_t*)&tlv, CCFileStruct.NDEF_offset, sizeof(TT5_TLV_t) );
   if( status != NDEF_OK )
   {
     return NDEF_ERROR;

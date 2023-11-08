@@ -34,21 +34,21 @@ uint16_t NfcTag_SelectProtocol(NFCTAG_Protocol_Id_t protocol)
   return NDEF_OK;
 }
 
-uint16_t NfcTag_ReadNDEF( uint8_t* pData )
+uint16_t NfcTag_ReadNDEF(const struct device *dev, uint8_t* pData )
 {
   uint16_t status = NDEF_ERROR;
   switch (gCurrentProtocol)
   {
     case NFCTAG_TYPE4:
-      status = NfcType4_ReadNDEF(pData);
+      status = NfcType4_ReadNDEF(dev, pData);
     break;
     case NFCTAG_TYPE3:
-      status = NfcType3_ReadNDEF(pData);
+      status = NfcType3_ReadNDEF(dev, pData);
     break;
     case NFCTAG_TYPE5:
     case NFCTAG_TYPE2:
     case NFCTAG_TYPE1:
-      status = NfcType5_ReadNDEF(pData);
+      status = NfcType5_ReadNDEF(dev, pData);
     break;
     default:
       status = NDEF_ERROR;
@@ -58,21 +58,21 @@ uint16_t NfcTag_ReadNDEF( uint8_t* pData )
 }
 
 
-uint16_t NfcTag_WriteNDEF(uint16_t Length , uint8_t *pData )
+uint16_t NfcTag_WriteNDEF(const struct device *dev, uint16_t Length , uint8_t *pData )
 {
   uint16_t status = NDEF_ERROR;
   switch (gCurrentProtocol)
   {
     case NFCTAG_TYPE4:
-      status = NfcType4_WriteNDEF(Length, pData);
+      status = NfcType4_WriteNDEF(dev, Length, pData);
     break;
     case NFCTAG_TYPE3:
-      status = NfcType3_WriteNDEF(Length,pData);
+      status = NfcType3_WriteNDEF(dev, Length,pData);
     break;
     case NFCTAG_TYPE5:
     case NFCTAG_TYPE2:
     case NFCTAG_TYPE1:
-      status = NfcType5_WriteNDEF(Length, pData);
+      status = NfcType5_WriteNDEF(dev, Length, pData);
     break;
     default:
       status = NDEF_ERROR;
@@ -81,21 +81,21 @@ uint16_t NfcTag_WriteNDEF(uint16_t Length , uint8_t *pData )
   return status;
 }
 
-uint16_t NfcTag_GetLength(uint16_t* Length)
+uint16_t NfcTag_GetLength(const struct device *dev, uint16_t* Length)
 {
   uint16_t status = NDEF_ERROR;
   switch (gCurrentProtocol)
   {
     case NFCTAG_TYPE4:
-      status = NfcType4_GetLength(Length);
+      status = NfcType4_GetLength(dev, Length);
     break;
     case NFCTAG_TYPE3:
-      status = NfcType3_GetLength(Length);
+      status = NfcType3_GetLength(dev, Length);
     break;
     case NFCTAG_TYPE5:
     case NFCTAG_TYPE2:
     case NFCTAG_TYPE1:
-      status = NfcType5_GetLength(Length);
+      status = NfcType5_GetLength(dev, Length);
     break;
     default:
       status = NDEF_ERROR;

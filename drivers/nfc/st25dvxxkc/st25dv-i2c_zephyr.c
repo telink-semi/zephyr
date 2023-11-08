@@ -29,6 +29,7 @@
 #include <zephyr/drivers/i2c.h>
 #include <zephyr/drivers/nfc/st25dvxxkc/st25dv-i2c_zephyr.h>
 #include <zephyr/drivers/nfc/st25dvxxkc/st25dvxxkc.h>
+#include <zephyr/drivers/nfc/st25dv.h>
 
 #if DT_NODE_HAS_STATUS(DT_ALIAS(i2c), okay)
 #define I2C_DEV_NODE	DT_ALIAS(i2c)
@@ -131,10 +132,15 @@ int32_t NFC_IO_IsDeviceReady(uint16_t DevAddr, uint32_t Trials)
   * @retval Status Success (0), Linux errno 
   */
 
-int32_t NFC_IO_WriteReg16(uint16_t DevAddr, uint16_t Reg, uint8_t *pData, uint16_t Length) 
+int32_t NFC_IO_WriteReg16(const struct device *dev, uint16_t DevAddr, uint16_t Reg, uint8_t *pData, uint16_t Length) 
 {
   int8_t ret = 0;
   uint8_t buffer[258];
+  struct st25dvxxkc_data *data = (struct st25dvxxkc_data *) dev->data;
+
+  if (data->dev_i2c == NULL) {
+    return -ENODEV;
+  }
 
   if((pData == NULL) && (Length > 0))
   {
@@ -172,12 +178,18 @@ int32_t NFC_IO_WriteReg16(uint16_t DevAddr, uint16_t Reg, uint8_t *pData, uint16
   * @param  Length Data Length
   * @retval Status Success (0), Error (1)
   */
-int32_t  NFC_IO_ReadReg16(uint16_t DevAddr, uint16_t Reg, uint8_t *pData, uint16_t Length) 
+int32_t  NFC_IO_ReadReg16(const struct device *dev, uint16_t DevAddr, uint16_t Reg, uint8_t *pData, uint16_t Length) 
 {
   int8_t ret = 0;
   uint8_t regAddr[2];
   regAddr[0] = Reg>>8;
   regAddr[1] = Reg & 0xFF;
+
+  struct st25dvxxkc_data *data = (struct st25dvxxkc_data *) dev->data;
+  
+  if (data->dev_i2c == NULL) {
+    return -ENODEV;
+  }
 
   if((pData == NULL) && (Length > 0))
   {

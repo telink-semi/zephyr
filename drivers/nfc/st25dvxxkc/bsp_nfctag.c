@@ -201,7 +201,7 @@ int32_t BSP_NFCTAG_GetITStatus(uint32_t Instance,  uint16_t * const ITConfig )
   * @param  Size : Size in bytes of the value to be read
   * @retval NFCTAG enum status
   */
-int32_t BSP_NFCTAG_ReadData( uint32_t Instance, uint8_t * const pData, const uint16_t TarAddr, const uint16_t Size )
+int32_t BSP_NFCTAG_ReadData(const struct device *dev, uint32_t Instance, uint8_t * const pData, const uint16_t TarAddr, const uint16_t Size )
 {
   UNUSED(Instance);
   if ( Nfctag_Drv->ReadData == NULL )
@@ -209,7 +209,7 @@ int32_t BSP_NFCTAG_ReadData( uint32_t Instance, uint8_t * const pData, const uin
     return NFCTAG_ERROR;
   }
   
-  return Nfctag_Drv->ReadData(&NfcTagObj, pData, TarAddr, Size );
+  return Nfctag_Drv->ReadData(dev, &NfcTagObj, pData, TarAddr, Size );
 }
 
 /**
@@ -219,7 +219,7 @@ int32_t BSP_NFCTAG_ReadData( uint32_t Instance, uint8_t * const pData, const uin
   * @param  Size : Size in bytes of the value to be written
   * @retval NFCTAG enum status
   */
-int32_t BSP_NFCTAG_WriteData( uint32_t Instance, const uint8_t * const pData, const uint16_t TarAddr, const uint16_t Size )
+int32_t BSP_NFCTAG_WriteData(const struct device *dev, uint32_t Instance, const uint8_t * const pData, const uint16_t TarAddr, const uint16_t Size )
 {
   UNUSED(Instance);
   if ( Nfctag_Drv->WriteData == NULL )
@@ -227,7 +227,7 @@ int32_t BSP_NFCTAG_WriteData( uint32_t Instance, const uint8_t * const pData, co
     return NFCTAG_ERROR;
   }
   
-  return Nfctag_Drv->WriteData(&NfcTagObj, pData, TarAddr, Size );
+  return Nfctag_Drv->WriteData(dev, &NfcTagObj, pData, TarAddr, Size );
 }
 
 /**

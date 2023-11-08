@@ -21,6 +21,7 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
+#include <zephyr/drivers/nfc/st25dv.h>
 #include <zephyr/drivers/nfc/st25dvxxkc/st25dvxxkc.h>
 #include <zephyr/kernel.h>
 
@@ -55,9 +56,9 @@ int32_t ST25DVxxKC_ReadID(const ST25DVxxKC_Object_t *const pObj, uint8_t *const 
 int32_t ST25DVxxKC_IsDeviceReady(const ST25DVxxKC_Object_t *const pObj, const uint32_t Trials);
 int32_t ST25DVxxKC_GetGPOStatus(const ST25DVxxKC_Object_t *const pObj, uint16_t *const pGPOStatus);
 int32_t ST25DVxxKC_ConfigureGPO(const ST25DVxxKC_Object_t *const pObj, const uint16_t ITConf);
-int32_t ST25DVxxKC_ReadData(const ST25DVxxKC_Object_t *const pObj, uint8_t *const pData, const uint16_t TarAddr, \
+int32_t ST25DVxxKC_ReadData(const struct device *dev, const ST25DVxxKC_Object_t *const pObj, uint8_t *const pData, const uint16_t TarAddr, \
                                                                                   const uint16_t NbByte);
-int32_t ST25DVxxKC_WriteData(const ST25DVxxKC_Object_t *const pObj, const uint8_t *const pData, \
+int32_t ST25DVxxKC_WriteData(const struct device *dev, const ST25DVxxKC_Object_t *const pObj, const uint8_t *const pData, \
                                                                      const uint16_t TarAddr, const uint16_t NbByte);
 
 /* Global variables ---------------------------------------------------------*/
@@ -322,11 +323,11 @@ int32_t ST25DVxxKC_WriteITPulse(const ST25DVxxKC_Object_t *const pObj, const ST2
   * @param[in] NbByte  Number of bytes to be read.
   * @return int32_t enum status.
   */
-int32_t ST25DVxxKC_ReadData(const ST25DVxxKC_Object_t *const pObj, uint8_t *const pData, const uint16_t TarAddr, \
+int32_t ST25DVxxKC_ReadData(const struct device *dev, const ST25DVxxKC_Object_t *const pObj, uint8_t *const pData, const uint16_t TarAddr, \
                                                                                   const uint16_t NbByte)
 {
   /* Read Data in user memory */
-  return pObj->IO.Read(pObj->IO.DeviceAddress, TarAddr, pData, NbByte);
+  return pObj->IO.Read(dev, pObj->IO.DeviceAddress, TarAddr, pData, NbByte);
 }
 
 /**
@@ -337,7 +338,7 @@ int32_t ST25DVxxKC_ReadData(const ST25DVxxKC_Object_t *const pObj, uint8_t *cons
   * @param[in] NbByte  Number of bytes to be written.
   * @return int32_t enum status.
   */
-int32_t ST25DVxxKC_WriteData(const ST25DVxxKC_Object_t *const pObj, const uint8_t *const pData, \
+int32_t ST25DVxxKC_WriteData(const struct device *dev, const ST25DVxxKC_Object_t *const pObj, const uint8_t *const pData, \
                                                                         const uint16_t TarAddr, const uint16_t NbByte)
 {
   int32_t ret;
@@ -345,7 +346,7 @@ int32_t ST25DVxxKC_WriteData(const ST25DVxxKC_Object_t *const pObj, const uint8_
   const uint8_t *pdata_index = (const uint8_t *)pData;
   uint16_t bytes_to_write = NbByte;
   uint16_t mem_addr = TarAddr;
-  
+
   /* ST25DVxxKC can write a maximum of 256 bytes in EEPROM per i2c communication */
   do
   {
@@ -361,7 +362,7 @@ int32_t ST25DVxxKC_WriteData(const ST25DVxxKC_Object_t *const pObj, const uint8_
       split_data_nb = bytes_to_write;
     }
     /* Write split_data_nb bytes in memory */
-    ret = pObj->IO.Write(pObj->IO.DeviceAddress, mem_addr, pdata_index, split_data_nb);
+    ret = pObj->IO.Write(dev, pObj->IO.DeviceAddress, mem_addr, pdata_index, split_data_nb);
     if(ret == NFCTAG_OK)
     {
       /* Sleep until EEPROM is available */
@@ -395,7 +396,7 @@ int32_t ST25DVxxKC_ReadRegister(const ST25DVxxKC_Object_t *const pObj, uint8_t *
                                                                                       const uint16_t NbByte)
 {
   /* Read Data in system memory */
-  return pObj->IO.Read(pObj->IO.DeviceAddress | ST25DVXXKC_ADDR_SYSTEMMEMORY_BIT_I2C | ST25DVXXKC_ADDR_MODE_BIT_I2C, TarAddr, pData, NbByte);
+  return pObj->IO.Read(NULL, pObj->IO.DeviceAddress | ST25DVXXKC_ADDR_SYSTEMMEMORY_BIT_I2C | ST25DVXXKC_ADDR_MODE_BIT_I2C, TarAddr, pData, NbByte);
 }
 
 /**
@@ -430,7 +431,7 @@ int32_t ST25DVxxKC_WriteRegister(ST25DVxxKC_Object_t *const pObj, const uint8_t 
       split_data_nb = bytes_to_write;
     }
     /* Write split_data_nb bytes in register */
-    ret = pObj->IO.Write(pObj->IO.DeviceAddress | ST25DVXXKC_ADDR_SYSTEMMEMORY_BIT_I2C | ST25DVXXKC_ADDR_MODE_BIT_I2C, mem_addr, pdata_index, split_data_nb);
+    ret = pObj->IO.Write(NULL, pObj->IO.DeviceAddress | ST25DVXXKC_ADDR_SYSTEMMEMORY_BIT_I2C | ST25DVXXKC_ADDR_MODE_BIT_I2C, mem_addr, pdata_index, split_data_nb);
     if(ret == NFCTAG_OK)
     {
       int32_t pollstatus;
@@ -1624,7 +1625,7 @@ int32_t ST25DVxxKC_ReadMailboxData(const ST25DVxxKC_Object_t *const pObj, uint8_
   else
   {
     /* Read Data in user memory */
-    ret = pObj->IO.Read(pObj->IO.DeviceAddress, ST25DVXXKC_MAILBOX_RAM_REG + Offset, pData, NbByte);
+    ret = pObj->IO.Read(NULL, pObj->IO.DeviceAddress, ST25DVXXKC_MAILBOX_RAM_REG + Offset, pData, NbByte);
   }
   
   return ret;
@@ -1646,7 +1647,7 @@ int32_t ST25DVxxKC_WriteMailboxData(const ST25DVxxKC_Object_t *const pObj, const
   if(NbByte <= ST25DVXXKC_MAX_MAILBOX_LENGTH)
   {
     /* Write NbByte data in memory */
-    status =  pObj->IO.Write(pObj->IO.DeviceAddress, ST25DVXXKC_MAILBOX_RAM_REG, pData, NbByte);
+    status =  pObj->IO.Write(NULL, pObj->IO.DeviceAddress, ST25DVXXKC_MAILBOX_RAM_REG, pData, NbByte);
   }
   else
   {
@@ -1675,7 +1676,7 @@ int32_t ST25DVxxKC_ReadMailboxRegister(const ST25DVxxKC_Object_t *const pObj, ui
   }
   else
   {
-    ret = pObj->IO.Read(pObj->IO.DeviceAddress, TarAddr,pData, NbByte);
+    ret = pObj->IO.Read(NULL, pObj->IO.DeviceAddress, TarAddr,pData, NbByte);
   }
   
   return ret;
@@ -1701,7 +1702,7 @@ int32_t ST25DVxxKC_WriteMailboxRegister(const ST25DVxxKC_Object_t *const pObj, c
   else
   {
     /* Write NbByte data in memory */
-    ret = pObj->IO.Write(pObj->IO.DeviceAddress, TarAddr,pData, NbByte);
+    ret = pObj->IO.Write(NULL, pObj->IO.DeviceAddress, TarAddr,pData, NbByte);
   }
   
   return ret;
@@ -2399,14 +2400,15 @@ static int32_t ReadRegWrap(const void *const handle, const uint16_t Reg, uint8_t
 {
   int32_t ret;
   ST25DVxxKC_Object_t *pObj = (ST25DVxxKC_Object_t *)handle;
+  // struct st25dvxxkc_data *data = (struct st25dvxxkc_data *) dev->data;
   
   if((Reg & (ST25DVXXKC_IS_DYNAMIC_REGISTER)) == ST25DVXXKC_IS_DYNAMIC_REGISTER)
   {
-    ret = pObj->IO.Read(pObj->IO.DeviceAddress, Reg, pData, len);
+    ret = pObj->IO.Read(NULL, pObj->IO.DeviceAddress, Reg, pData, len);
   }
   else
   {
-    ret = pObj->IO.Read(pObj->IO.DeviceAddress | ST25DVXXKC_ADDR_SYSTEMMEMORY_BIT_I2C | ST25DVXXKC_ADDR_MODE_BIT_I2C, Reg, pData, len);
+    ret = pObj->IO.Read(NULL, pObj->IO.DeviceAddress | ST25DVXXKC_ADDR_SYSTEMMEMORY_BIT_I2C | ST25DVXXKC_ADDR_MODE_BIT_I2C, Reg, pData, len);
   }
   
   return ret;
@@ -2428,11 +2430,11 @@ static int32_t WriteRegWrap(const void *const handle, const uint16_t Reg, const 
   
   if((Reg & (ST25DVXXKC_IS_DYNAMIC_REGISTER)) == ST25DVXXKC_IS_DYNAMIC_REGISTER)
   {
-    ret = pObj->IO.Write(pObj->IO.DeviceAddress, Reg, pData, len);
+    ret = pObj->IO.Write(NULL, pObj->IO.DeviceAddress, Reg, pData, len);
   }
   else
   {
-    ret = pObj->IO.Write(pObj->IO.DeviceAddress | ST25DVXXKC_ADDR_SYSTEMMEMORY_BIT_I2C | ST25DVXXKC_ADDR_MODE_BIT_I2C, Reg, pData, len);
+    ret = pObj->IO.Write(NULL, pObj->IO.DeviceAddress | ST25DVXXKC_ADDR_SYSTEMMEMORY_BIT_I2C | ST25DVXXKC_ADDR_MODE_BIT_I2C, Reg, pData, len);
     if(ret == NFCTAG_OK)
     {
       int32_t pollstatus;
@@ -2482,7 +2484,7 @@ int32_t ST25DVxxKC_WriteI2CSlaveMode(const ST25DVxxKC_Object_t *const pObj, cons
       if (ret == NFCTAG_OK) {
         // artificially writes to ICREF_REG
         // Caution: DVC DataSheet up to version 3 invertedRFSwitchOff/ON bits: b3=1b means RFSwitchOFF
-        ret = pObj->IO.Write((pObj->IO.DeviceAddress | ST25DVXXKC_ADDR_RFSWITCH_BIT_I2C) & ~ST25DVXXKC_ADDR_MODE_BIT_I2C, ST25DVXXKC_ICREF_REG, NULL, 0);
+        ret = pObj->IO.Write(NULL, (pObj->IO.DeviceAddress | ST25DVXXKC_ADDR_RFSWITCH_BIT_I2C) & ~ST25DVXXKC_ADDR_MODE_BIT_I2C, ST25DVXXKC_ICREF_REG, NULL, 0);
       }
   }
   else if (slaveMode == ST25DVXXKC_SLAVE_MODE_RFON) {
@@ -2491,7 +2493,7 @@ int32_t ST25DVxxKC_WriteI2CSlaveMode(const ST25DVxxKC_Object_t *const pObj, cons
       if (ret == NFCTAG_OK) {
         // artificially writes to ICREF_REG
         // Caution: DVC DataSheet up to version 3 invertedRFSwitchOff/ON bits: b3=0b means RFSwitchON
-        ret = pObj->IO.Write(pObj->IO.DeviceAddress & ~(ST25DVXXKC_ADDR_RFSWITCH_BIT_I2C | ST25DVXXKC_ADDR_MODE_BIT_I2C), ST25DVXXKC_ICREF_REG, NULL, 0);
+        ret = pObj->IO.Write(NULL, pObj->IO.DeviceAddress & ~(ST25DVXXKC_ADDR_RFSWITCH_BIT_I2C | ST25DVXXKC_ADDR_MODE_BIT_I2C), ST25DVXXKC_ICREF_REG, NULL, 0);
       }
   }
   else {

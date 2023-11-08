@@ -25,10 +25,10 @@ typedef struct __attribute__((packed)) {
 } TT3_Attr_Info_t;
 
 static TT3_Attr_Info_t NDEF_Attr_Info;
-uint16_t NfcType3_GetLength(uint16_t* Length)
+uint16_t NfcType3_GetLength(const struct device *dev, uint16_t* Length)
 {
   uint32_t t3NdefLen;
-  uint8_t err = NDEF_Wrapper_ReadData((uint8_t*)&NDEF_Attr_Info,0,16);
+  uint8_t err = NDEF_Wrapper_ReadData(dev, (uint8_t*)&NDEF_Attr_Info,0,16);
   if(err != NDEF_OK)
   {
     return NDEF_ERROR;
@@ -44,16 +44,16 @@ uint16_t NfcType3_GetLength(uint16_t* Length)
   return NDEF_OK;
 }
 
-uint16_t NfcType3_ReadNDEF( uint8_t* pData )
+uint16_t NfcType3_ReadNDEF(const struct device *dev, uint8_t* pData )
 {
   uint16_t length;
   uint8_t err;
-  uint16_t status = NfcType3_GetLength(&length);
+  uint16_t status = NfcType3_GetLength(dev, &length);
   if(status != NDEF_OK)
   {
     return status;
   }
-  err = NDEF_Wrapper_ReadData(pData,16,length);
+  err = NDEF_Wrapper_ReadData(dev, pData,16,length);
   if(err != NDEF_OK)
   {
     return NDEF_ERROR;
@@ -62,15 +62,15 @@ uint16_t NfcType3_ReadNDEF( uint8_t* pData )
 
 }
 
-uint16_t NfcType3_WriteNDEF(uint16_t Length, uint8_t* pData )
+uint16_t NfcType3_WriteNDEF(const struct device *dev, uint16_t Length, uint8_t* pData )
 {
-  uint8_t err = NDEF_Wrapper_WriteData(pData,16,Length);
+  uint8_t err = NDEF_Wrapper_WriteData(dev, pData,16,Length);
   if(err != NDEF_OK)
   {
     return NDEF_ERROR;
   }
 
-  err = NDEF_Wrapper_ReadData((uint8_t *)&NDEF_Attr_Info,0,16);
+  err = NDEF_Wrapper_ReadData(dev, (uint8_t *)&NDEF_Attr_Info,0,16);
   if(err != NDEF_OK)
   {
     return NDEF_ERROR;
@@ -79,7 +79,7 @@ uint16_t NfcType3_WriteNDEF(uint16_t Length, uint8_t* pData )
   NDEF_Attr_Info.Ln[0] = (Length >> 16) & 0xFF;
   NDEF_Attr_Info.Ln[1] = (Length >> 8) & 0xFF;
   NDEF_Attr_Info.Ln[2] = Length & 0xFF;
-  err = NDEF_Wrapper_WriteData((uint8_t *)&NDEF_Attr_Info,0,16);
+  err = NDEF_Wrapper_WriteData(dev, (uint8_t *)&NDEF_Attr_Info,0,16);
   if(err != NDEF_OK)
   {
     return NDEF_ERROR;

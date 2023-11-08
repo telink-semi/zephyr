@@ -31,9 +31,9 @@
   * @param  Size : Size in bytes of the value to be read
   * @retval NDEF_OK if success, NDEF_ERROR in case of failure
   */
-int32_t NDEF_Wrapper_ReadData(uint8_t* pData, uint32_t offset, uint32_t length )
+int32_t NDEF_Wrapper_ReadData(const struct device *dev, uint8_t* pData, uint32_t offset, uint32_t length )
 {
-  if(BSP_NFCTAG_ReadData(0, pData, offset, length ) != NFCTAG_OK)
+  if(BSP_NFCTAG_ReadData(dev, 0, pData, offset, length ) != NFCTAG_OK)
     return NDEF_ERROR;
   return NDEF_OK;
 }
@@ -45,9 +45,9 @@ int32_t NDEF_Wrapper_ReadData(uint8_t* pData, uint32_t offset, uint32_t length )
   * @param  Size : Number of bytes to be written
   * @retval NDEF_OK if success, NDEF_ERROR in case of failure
   */
-int32_t NDEF_Wrapper_WriteData(const uint8_t* pData, uint32_t offset, uint32_t length )
+int32_t NDEF_Wrapper_WriteData(const struct device *dev, const uint8_t* pData, uint32_t offset, uint32_t length )
 {
-  if(BSP_NFCTAG_WriteData(0, pData, offset, length ) != NFCTAG_OK)
+  if(BSP_NFCTAG_WriteData(dev, 0, pData, offset, length ) != NFCTAG_OK)
     return NDEF_ERROR;
   return NDEF_OK;
 }
@@ -56,7 +56,7 @@ int32_t NDEF_Wrapper_WriteData(const uint8_t* pData, uint32_t offset, uint32_t l
   * @brief  Compute the NFCTAG Memory Size.
   * @return uint32_t Memory size in bytes.
   */
-uint32_t NDEF_Wrapper_GetMemorySize(void)
+uint32_t NDEF_Wrapper_GetMemorySize(const struct device *dev)
 {
   return BSP_NFCTAG_GetByteSize(0);
 }

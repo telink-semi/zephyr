@@ -30,6 +30,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "st25dvxxkc_reg.h"
+#include <zephyr/device.h>
 
 /** @addtogroup BSP
   * @{
@@ -291,8 +292,11 @@ typedef struct
 typedef int32_t (*ST25DVxxKC_Init_Func) (void);
 typedef int32_t (*ST25DVxxKC_DeInit_Func) (void);
 typedef int32_t (*ST25DVxxKC_GetTick_Func) (void);
-typedef int32_t (*ST25DVxxKC_Write_Func)(const uint16_t, const uint16_t, const uint8_t *const, const uint16_t);
-typedef int32_t (*ST25DVxxKC_Read_Func) (const uint16_t, const uint16_t, uint8_t *const, const uint16_t);
+typedef int32_t (*ST25DVxxKC_Write_Func)(const struct device *dev, const uint16_t, const uint16_t, const uint8_t *const, const uint16_t);
+typedef int32_t (*ST25DVxxKC_Read_Func) (const struct device *dev, const uint16_t, const uint16_t, uint8_t *const, const uint16_t);
+// typedef int32_t (*ST25DVxxKC_Write_Func)(const uint16_t, const uint16_t, const uint8_t *const, const uint16_t);
+// typedef int32_t (*ST25DVxxKC_Read_Func) (const uint16_t, const uint16_t, uint8_t *const, const uint16_t);
+
 typedef int32_t (*ST25DVxxKC_IsReady_Func) (const uint16_t, const uint32_t);
 
 /**
@@ -331,8 +335,8 @@ typedef struct
   int32_t       (*IsReady)(const ST25DVxxKC_Object_t *const, const uint32_t);
   int32_t       (*GetITStatus)(const ST25DVxxKC_Object_t *const, uint16_t *const);
   int32_t       (*ConfigIT)(const ST25DVxxKC_Object_t *const, const uint16_t);
-  int32_t       (*ReadData)(const ST25DVxxKC_Object_t *const, uint8_t *const, const uint16_t, const uint16_t);
-  int32_t       (*WriteData)(const ST25DVxxKC_Object_t *const, const uint8_t *const, const uint16_t, const uint16_t);
+  int32_t       (*ReadData)(const struct device *dev, const ST25DVxxKC_Object_t *const, uint8_t *const, const uint16_t, const uint16_t);
+  int32_t       (*WriteData)(const struct device *dev, const ST25DVxxKC_Object_t *const, const uint8_t *const, const uint16_t, const uint16_t);
 } ST25DVxxKC_Drv_t;
 
 

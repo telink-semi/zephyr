@@ -28,6 +28,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "common.h"
 
+#include <zephyr/device.h>
 
 typedef enum {
   NFCTAG_TYPE5 = 0,
@@ -40,10 +41,10 @@ typedef enum {
 
 
 uint16_t NfcTag_SelectProtocol(NFCTAG_Protocol_Id_t protocol);
-uint16_t NfcTag_ReadNDEF( uint8_t* pData );
-uint16_t NfcTag_WriteNDEF(uint16_t Length, uint8_t* pData );
-uint16_t NfcTag_WriteProprietary(uint16_t Length, uint8_t* pData );
-uint16_t NfcTag_GetLength(uint16_t* Length);
+uint16_t NfcTag_ReadNDEF(const struct device *dev, uint8_t* pData );
+uint16_t NfcTag_WriteNDEF(const struct device *dev, uint16_t Length, uint8_t* pData );
+uint16_t NfcTag_WriteProprietary(const struct device *dev, uint16_t Length, uint8_t* pData );
+uint16_t NfcTag_GetLength(const struct device *dev, uint16_t* Length);
 
 #endif /* __LIB_WRAPPER_H */
 

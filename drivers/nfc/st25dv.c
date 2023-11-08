@@ -11,7 +11,7 @@
 #include <zephyr/device.h>
 
 #include <zephyr/drivers/i2c.h>
-#include <zephyr/drivers/nfc/st25dvxxkc.h>
+#include <zephyr/drivers/nfc/st25dv.h>
 #include <zephyr/drivers/nfc/st25dvxxkc/bsp_nfctag.h>
 #include <zephyr/drivers/nfc/st25dvxxkc/tagtype5_wrapper.h>
 
@@ -23,29 +23,16 @@
 
 LOG_MODULE_REGISTER(st25dvxxkc, CONFIG_ST25DVXXKC_LOG_LEVEL);
 
-/******************* DEVICE STRUCTURE *******************/
-
-struct st25dvxxkc_cfg {
-    /* i2c parameters */
-    struct i2c_dt_spec i2c;
-    /* irq DTS settings */
-    const struct gpio_dt_spec irq_gpio;
-    uint8_t irq_pin;
-    /* internal (1) or external driver (0) */
-    uint8_t internal;
-};
-
-struct st25dvxxkc_data {
-    const struct device *parent;
-    const struct device *dev_i2c;
-    struct k_work worker_irq;
-    /* NFC subsys data */
-    nfc_tag_cb_t nfc_tag_cb;
-    enum nfc_tag_type tag_type;
-};
-
 static int st25dvxxkc_tag_init(const struct device *dev, nfc_tag_cb_t cb)
 {
+    /* setup callback */
+    struct st25dvxxkc_data *data = dev->data;
+    data->nfc_tag_cb = cb;
+    
+    if (data->dev_i2c == NULL) {
+      printk("Error dev\n");
+      return -ENODEV;
+    }
     /* Init of the Type Tag 5 component (ST25DV-I2C) */
     if(BSP_NFCTAG_Init(0) != NFCTAG_OK) {
       return NFCTAG_ERROR;
@@ -65,13 +52,13 @@ static int st25dvxxkc_tag_set_type(const struct device *dev, enum nfc_tag_type t
     NfcTag_SelectProtocol(NFCTAG_TYPE5);
 
     /* Check if no NDEF detected, init mem in Tag Type 5 */
-    if(NfcType5_NDEFDetection( ) != NDEF_OK) {
+    if(NfcType5_NDEFDetection(dev) != NDEF_OK) {
       CCFileStruct.MagicNumber = NFCT5_MAGICNUMBER_E1_CCFILE;
       CCFileStruct.Version = NFCT5_VERSION_V1_0;
       CCFileStruct.MemorySize = ( ST25DV_MAX_SIZE / 8 ) & 0xFF;
       CCFileStruct.TT5Tag = 0x05;
     /* Init of the Type Tag 5 component */
-      if(NfcType5_TT5Init( ) != NFCTAG_OK) {
+      if(NfcType5_TT5Init(dev) != NFCTAG_OK) {
         printk("Cannot setup ST25\n");
         return NDEF_ERROR;
       }
@@ -107,7 +94,7 @@ static int st25dvxxkc_tag_stop(const struct device *dev)
 static int st25dvxxkc_tag_set_ndef(const struct device *dev,
                                  uint8_t *buf, uint16_t len)
 {
-    int rv = NfcTag_WriteNDEF(len, buf);
+    int rv = NfcTag_WriteNDEF(dev, len, buf);
     return rv;
 }
 
