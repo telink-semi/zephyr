@@ -70,7 +70,7 @@
 int32_t NFC_IO_Tick(void);
 int32_t NFC_IO_DeInit(void);
 int32_t NFC_IO_Init(void);
-int32_t NFC_IO_IsDeviceReady(uint16_t DevAddr, uint32_t Trials) ;
+int32_t NFC_IO_IsDeviceReady(const struct device *dev, uint16_t DevAddr, uint32_t Trials) ;
 int32_t NFC_IO_WriteReg16(const struct device *dev, uint16_t DevAddr, uint16_t Reg, uint8_t *pData, uint16_t Length) ;
 int32_t  NFC_IO_ReadReg16(const struct device *dev, uint16_t DevAddr, uint16_t Reg, uint8_t *pData, uint16_t Length) ;
 

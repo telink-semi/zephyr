@@ -19,11 +19,6 @@
 struct st25dvxxkc_cfg {
     /* i2c parameters */
     struct i2c_dt_spec i2c;
-    /* irq DTS settings */
-    const struct gpio_dt_spec irq_gpio;
-    uint8_t irq_pin;
-    /* internal (1) or external driver (0) */
-    uint8_t internal;
 };
 
 struct st25dvxxkc_data {

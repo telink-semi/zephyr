@@ -148,7 +148,7 @@ int32_t BSP_NFCTAG_ReadID( uint32_t Instance, uint8_t * const wai_id )
   * @param  Trials : Number of trials
   * @retval NFCTAG enum status
   */
-int32_t BSP_NFCTAG_IsDeviceReady( uint32_t Instance, const uint32_t Trials )
+int32_t BSP_NFCTAG_IsDeviceReady(const struct device *dev, uint32_t Instance, const uint32_t Trials )
 {
   UNUSED(Instance);
   if ( Nfctag_Drv->IsReady == NULL )
@@ -156,7 +156,7 @@ int32_t BSP_NFCTAG_IsDeviceReady( uint32_t Instance, const uint32_t Trials )
     return NFCTAG_ERROR;
   }
   
-  return Nfctag_Drv->IsReady(&NfcTagObj, Trials );
+  return Nfctag_Drv->IsReady(dev, &NfcTagObj, Trials );
 }
 
 /**
@@ -259,7 +259,7 @@ int32_t BSP_NFCTAG_WriteRegister( uint32_t Instance, const uint8_t * const pData
   ret_value = ST25DVxxKC_WriteRegister(&NfcTagObj, pData, TarAddr, Size );
   if( ret_value == NFCTAG_OK )
   {
-    while( Nfctag_Drv->IsReady(&NfcTagObj, 1 ) != NFCTAG_OK ) {};
+    while( Nfctag_Drv->IsReady(NULL, &NfcTagObj, 1 ) != NFCTAG_OK ) {};
       return NFCTAG_OK;
   }
   

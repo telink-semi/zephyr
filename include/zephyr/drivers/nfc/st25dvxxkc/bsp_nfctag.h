@@ -83,7 +83,7 @@ int32_t BSP_NFCTAG_ReadData(const struct device *dev, uint32_t Instance, uint8_t
 int32_t BSP_NFCTAG_WriteData(const struct device *dev, uint32_t Instance, const uint8_t * const pData, const uint16_t TarAddr, const uint16_t Size );
 int32_t BSP_NFCTAG_ReadRegister( uint32_t Instance, uint8_t * const pData, const uint16_t TarAddr, const uint16_t Size );
 int32_t BSP_NFCTAG_WriteRegister( uint32_t Instance, const uint8_t * const pData, const uint16_t TarAddr, const uint16_t Size );
-int32_t BSP_NFCTAG_IsDeviceReady( uint32_t Instance,const uint32_t Trials );
+int32_t BSP_NFCTAG_IsDeviceReady(const struct device *dev, uint32_t Instance,const uint32_t Trials );
 
 uint32_t BSP_NFCTAG_GetByteSize( uint32_t Instance );
 int32_t BSP_NFCTAG_ReadICRev( uint32_t Instance, uint8_t * const pICRev );

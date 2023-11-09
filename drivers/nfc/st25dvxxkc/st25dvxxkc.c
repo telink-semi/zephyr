@@ -53,7 +53,7 @@ static int32_t WriteRegWrap(const void *Handle, const uint16_t Reg, const uint8_
 
 int32_t ST25DVxxKC_Init(ST25DVxxKC_Object_t *const pObj);
 int32_t ST25DVxxKC_ReadID(const ST25DVxxKC_Object_t *const pObj, uint8_t *const pICRef);
-int32_t ST25DVxxKC_IsDeviceReady(const ST25DVxxKC_Object_t *const pObj, const uint32_t Trials);
+int32_t ST25DVxxKC_IsDeviceReady(const struct device *dev, const ST25DVxxKC_Object_t *const pObj, const uint32_t Trials);
 int32_t ST25DVxxKC_GetGPOStatus(const ST25DVxxKC_Object_t *const pObj, uint16_t *const pGPOStatus);
 int32_t ST25DVxxKC_ConfigureGPO(const ST25DVxxKC_Object_t *const pObj, const uint16_t ITConf);
 int32_t ST25DVxxKC_ReadData(const struct device *dev, const ST25DVxxKC_Object_t *const pObj, uint8_t *const pData, const uint16_t TarAddr, \
@@ -185,10 +185,10 @@ int32_t ST25DVxxKC_ReadICRev(const ST25DVxxKC_Object_t *const pObj, uint8_t *con
   * @param[in] Trials Max number of tentative.
   * @retval int32_t enum status.
   */
-int32_t ST25DVxxKC_IsDeviceReady(const ST25DVxxKC_Object_t *const pObj, const uint32_t Trials)
+int32_t ST25DVxxKC_IsDeviceReady(const struct device *dev, const ST25DVxxKC_Object_t *const pObj, const uint32_t Trials)
 {
   /* Test communication with device */
-  return pObj->IO.IsReady(pObj->IO.DeviceAddress, Trials);
+  return pObj->IO.IsReady(dev, pObj->IO.DeviceAddress, Trials);
 }
 
 /**
@@ -367,7 +367,7 @@ int32_t ST25DVxxKC_WriteData(const struct device *dev, const ST25DVxxKC_Object_t
     {
       /* Sleep until EEPROM is available */
       k_sleep(K_MSEC(5U + 5U*split_data_nb/16));
-      int32_t pollstatus = pObj->IO.IsReady(pObj->IO.DeviceAddress, 1);
+      int32_t pollstatus = pObj->IO.IsReady(dev, pObj->IO.DeviceAddress, 1);
       if(pollstatus != NFCTAG_OK)
       {
         ret = NFCTAG_TIMEOUT;
@@ -450,7 +450,7 @@ int32_t ST25DVxxKC_WriteRegister(ST25DVxxKC_Object_t *const pObj, const uint8_t 
       /* Wait until ST25DVxxKC is ready or timeout occurs */
       do
       {
-        pollstatus = pObj->IO.IsReady(pObj->IO.DeviceAddress, 1);
+        pollstatus = pObj->IO.IsReady(NULL, pObj->IO.DeviceAddress, 1);
       } while(   ((uint32_t)pObj->IO.GetTick() < tickstart + ST25DVXXKC_WRITE_TIMEOUT)
               && (pollstatus != NFCTAG_OK) );
       
@@ -2453,7 +2453,7 @@ static int32_t WriteRegWrap(const void *const handle, const uint16_t Reg, const 
       /* Wait until ST25DVxxKC is ready or timeout occurs */
       do
       {
-        pollstatus = pObj->IO.IsReady(pObj->IO.DeviceAddress | ST25DVXXKC_ADDR_SYSTEMMEMORY_BIT_I2C | ST25DVXXKC_ADDR_MODE_BIT_I2C, 1);
+        pollstatus = pObj->IO.IsReady(NULL, pObj->IO.DeviceAddress | ST25DVXXKC_ADDR_SYSTEMMEMORY_BIT_I2C | ST25DVXXKC_ADDR_MODE_BIT_I2C, 1);
       } while(   ((uint32_t)pObj->IO.GetTick() < tickstart + ST25DVXXKC_WRITE_TIMEOUT)
               && (pollstatus != NFCTAG_OK) );
     

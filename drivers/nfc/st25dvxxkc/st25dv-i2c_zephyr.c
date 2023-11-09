@@ -105,11 +105,16 @@ int32_t NFC_IO_Init(void)
   * @param  Trials  Number of trials
   * @retval Status Success (0), Timeout (1)
   */
-int32_t NFC_IO_IsDeviceReady(uint16_t DevAddr, uint32_t Trials) 
+int32_t NFC_IO_IsDeviceReady(const struct device *dev, uint16_t DevAddr, uint32_t Trials) 
 {
   int ret = 0;
   uint8_t regAddr[2] = {0,0};
   uint8_t pData[1];
+  struct st25dvxxkc_data *data = (struct st25dvxxkc_data *) dev->data;
+  
+  if (data->dev_i2c == NULL) {
+    return -ENODEV;
+  }
   
   ret = i2c_write_read(i2c_dev, DevAddr >> 1, regAddr, 2, pData, 1);
 

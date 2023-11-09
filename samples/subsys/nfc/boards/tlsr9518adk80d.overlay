@@ -16,8 +16,8 @@
 	pinctrl-0 = <&i2c_scl_pe1_default &i2c_sda_pe3_default>;
 	pinctrl-names = "default";
 
-	st25dvxxkc: st25dvxxkc@2d {
+	st25dvxxkc: st25dvxxkc@a6 {
 		compatible = "stm,st25dvxxkc";
-		reg = <0x2d>, <0x2c>;
+		reg = <0xa6>, <0xae>;
 	};
 };

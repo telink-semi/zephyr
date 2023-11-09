@@ -151,15 +151,6 @@ static int _st25dvxxkc_init(const struct device *dev)
     static struct st25dvxxkc_data st25dvxxkc_data##inst = {0};                      \
     static const struct st25dvxxkc_cfg st25dvxxkc_cfg##inst = {                     \
         .i2c = I2C_DT_SPEC_INST_GET(inst),                                      \
-        COND_CODE_1(DT_INST_NODE_HAS_PROP(inst, interrupts), (                  \
-            .internal  = 1,                                                     \
-          	.irq_gpio  = {0},                                                   \
-            .irq_pin   = DT_INST_IRQ_BY_IDX(inst, 0, irq),                      \
-        ), (                                                                    \
-            .internal = 0,                                                      \
-          	.irq_gpio = GPIO_DT_SPEC_INST_GET_OR(inst, irq_gpios, {0}),         \
-            .irq_pin  = 0,                                                      \
-        ))                                                                      \
     };                                                                          \
                                                                                 \
     static int _st25dvxxkc_init##inst(const struct device *dev)                   \
