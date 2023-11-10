@@ -58,5 +58,5 @@ int32_t NDEF_Wrapper_WriteData(const struct device *dev, const uint8_t* pData, u
   */
 uint32_t NDEF_Wrapper_GetMemorySize(const struct device *dev)
 {
-  return BSP_NFCTAG_GetByteSize(0);
+  return BSP_NFCTAG_GetByteSize(dev, 0);
 }

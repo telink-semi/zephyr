@@ -331,8 +331,6 @@ typedef struct
   int32_t       (*Init)(ST25DVxxKC_Object_t *const);
   int32_t       (*ReadID)(const ST25DVxxKC_Object_t *const, uint8_t *const);
   int32_t       (*IsReady)(const struct device *dev, const ST25DVxxKC_Object_t *const, const uint32_t);
-  int32_t       (*GetITStatus)(const ST25DVxxKC_Object_t *const, uint16_t *const);
-  int32_t       (*ConfigIT)(const ST25DVxxKC_Object_t *const, const uint16_t);
   int32_t       (*ReadData)(const struct device *dev, const ST25DVxxKC_Object_t *const, uint8_t *const, const uint16_t, const uint16_t);
   int32_t       (*WriteData)(const struct device *dev, const ST25DVxxKC_Object_t *const, const uint8_t *const, const uint16_t, const uint16_t);
 } ST25DVxxKC_Drv_t;
@@ -396,88 +394,10 @@ extern int32_t ST25DVxxKC_ReadRegister(const ST25DVxxKC_Object_t *const pObj, ui
 extern int32_t ST25DVxxKC_WriteRegister(ST25DVxxKC_Object_t *const pObj, const uint8_t *const pData, \
                                                                         const uint16_t TarAddr, const uint16_t NbByte);
 int32_t ST25DVxxKC_RegisterBusIO(ST25DVxxKC_Object_t *const pObj, const ST25DVxxKC_IO_t *const pIO);
-int32_t ST25DVxxKC_ReadICRev(const ST25DVxxKC_Object_t *const pObj, uint8_t *const pICRev);
-int32_t ST25DVxxKC_ReadITPulse(const ST25DVxxKC_Object_t *const pObj, ST25DVxxKC_PULSE_DURATION_E *const pITtime);
-int32_t ST25DVxxKC_WriteITPulse(const ST25DVxxKC_Object_t *const pObj, const ST25DVxxKC_PULSE_DURATION_E ITtime);
-int32_t ST25DVxxKC_ReadUID(const ST25DVxxKC_Object_t *const pObj, ST25DVxxKC_UID_t *const pUid);
-int32_t ST25DVxxKC_ReadDSFID(const ST25DVxxKC_Object_t *const pObj, uint8_t *const pDsfid);
-int32_t ST25DVxxKC_ReadDsfidRFProtection(const ST25DVxxKC_Object_t *const pObj, ST25DVxxKC_LOCK_STATUS_E *const pLockDsfid);
-int32_t ST25DVxxKC_ReadAFI(const ST25DVxxKC_Object_t *const pObj, uint8_t *const pAfi);
-int32_t ST25DVxxKC_ReadAfiRFProtection(const ST25DVxxKC_Object_t *const pObj, ST25DVxxKC_LOCK_STATUS_E *const pLockAfi);
-int32_t ST25DVxxKC_ReadI2CProtectZone(const ST25DVxxKC_Object_t *const pObj, ST25DVxxKC_I2C_PROT_ZONE_t *const pProtZone);
-int32_t ST25DVxxKC_WriteI2CProtectZonex(const ST25DVxxKC_Object_t *const pObj, const ST25DVxxKC_PROTECTION_ZONE_E Zone, \
-                                                          const ST25DVxxKC_PROTECTION_CONF_E ReadWriteProtection);
-int32_t ST25DVxxKC_ReadLockCCFile(const ST25DVxxKC_Object_t *const pObj, ST25DVxxKC_LOCK_CCFILE_t *const pLockCCFile);
-int32_t ST25DVxxKC_WriteLockCCFile(const ST25DVxxKC_Object_t *const pObj, const ST25DVxxKC_CCFILE_BLOCK_E NbBlockCCFile, \
-                                                          const ST25DVxxKC_LOCK_STATUS_E LockCCFile);
-int32_t ST25DVxxKC_ReadLockCFG(const ST25DVxxKC_Object_t *const pObj, ST25DVxxKC_LOCK_STATUS_E *const pLockCfg);
-int32_t ST25DVxxKC_WriteLockCFG(const ST25DVxxKC_Object_t *const pObj, const ST25DVxxKC_LOCK_STATUS_E LockCfg);
-int32_t ST25DVxxKC_PresentI2CPassword(const ST25DVxxKC_Object_t *const pObj, const ST25DVxxKC_PASSWD_t PassWord);
-int32_t ST25DVxxKC_WriteI2CPassword(const ST25DVxxKC_Object_t *const pObj, const ST25DVxxKC_PASSWD_t PassWord);
-int32_t ST25DVxxKC_ReadRFZxSS(const ST25DVxxKC_Object_t *const pObj, const ST25DVxxKC_PROTECTION_ZONE_E Zone, \
-                                                          ST25DVxxKC_RF_PROT_ZONE_t *const pRfprotZone);
-int32_t ST25DVxxKC_WriteRFZxSS(const ST25DVxxKC_Object_t *const pObj, const ST25DVxxKC_PROTECTION_ZONE_E Zone, \
-                                                          const ST25DVxxKC_RF_PROT_ZONE_t RfProtZone);
-int32_t ST25DVxxKC_ReadEndZonex(const ST25DVxxKC_Object_t *const pObj, const ST25DVxxKC_END_ZONE_E EndZone, uint8_t * pEndZ);
-int32_t ST25DVxxKC_WriteEndZonex(const ST25DVxxKC_Object_t *const pObj, const ST25DVxxKC_END_ZONE_E EndZone, const uint8_t EndZ);
-int32_t ST25DVxxKC_InitEndZone(const ST25DVxxKC_Object_t *const pObj);
-int32_t ST25DVxxKC_CreateUserZone(const ST25DVxxKC_Object_t *const pObj, uint16_t Zone1Length, uint16_t Zone2Length, \
-                                                          uint16_t Zone3Length, uint16_t Zone4Length);
-int32_t ST25DVxxKC_ReadMemSize(const ST25DVxxKC_Object_t *const pObj, ST25DVxxKC_MEM_SIZE_t *const pSizeInfo);
-int32_t ST25DVxxKC_ReadEHMode(const ST25DVxxKC_Object_t *const pObj, ST25DVxxKC_EH_MODE_STATUS_E *const pEH_mode);
-int32_t ST25DVxxKC_WriteEHMode(const ST25DVxxKC_Object_t *const pObj, const ST25DVxxKC_EH_MODE_STATUS_E EH_mode);
-int32_t ST25DVxxKC_ReadRFMngt(const ST25DVxxKC_Object_t *const pObj, ST25DVxxKC_RF_MNGT_t *const pRF_Mngt);
-int32_t ST25DVxxKC_WriteRFMngt(const ST25DVxxKC_Object_t *const pObj, const uint8_t Rfmngt);
-int32_t ST25DVxxKC_GetRFDisable(const ST25DVxxKC_Object_t *const pObj, ST25DVxxKC_EN_STATUS_E *const pRFDisable);
-int32_t ST25DVxxKC_SetRFDisable(const ST25DVxxKC_Object_t *const pObj);
-int32_t ST25DVxxKC_ResetRFDisable(const ST25DVxxKC_Object_t *const pObj);
-int32_t ST25DVxxKC_GetRFSleep(const ST25DVxxKC_Object_t *const pObj, ST25DVxxKC_EN_STATUS_E *const pRFSleep);
-int32_t ST25DVxxKC_SetRFSleep(const ST25DVxxKC_Object_t *const pObj);
-int32_t ST25DVxxKC_ResetRFSleep(const ST25DVxxKC_Object_t *const pObj);
-int32_t ST25DVxxKC_ReadMBMode(const ST25DVxxKC_Object_t *const pObj, ST25DVxxKC_EN_STATUS_E *const pMB_mode);
-int32_t ST25DVxxKC_WriteMBMode(const ST25DVxxKC_Object_t *const pObj, const ST25DVxxKC_EN_STATUS_E MB_mode);
-int32_t ST25DVxxKC_ReadMBWDG(const ST25DVxxKC_Object_t *const pObj, uint8_t *const pWdgDelay);
-int32_t ST25DVxxKC_WriteMBWDG(const ST25DVxxKC_Object_t *const pObj, const uint8_t WdgDelay);
-int32_t ST25DVxxKC_ReadMailboxData(const ST25DVxxKC_Object_t *const pObj, uint8_t *const pData, const uint16_t TarAddr, \
-                                                          const uint16_t NbByte);
-int32_t ST25DVxxKC_WriteMailboxData(const ST25DVxxKC_Object_t *const pObj, const uint8_t *const pData, const uint16_t NbByte);
-int32_t ST25DVxxKC_ReadMailboxRegister(const ST25DVxxKC_Object_t *const pObj, uint8_t *const pData, const uint16_t TarAddr, \
-                                                          const uint16_t NbByte);
-int32_t ST25DVxxKC_WriteMailboxRegister(const ST25DVxxKC_Object_t *const pObj, const uint8_t *const pData, \
-                                                          const uint16_t TarAddr, const uint16_t NbByte);
-int32_t ST25DVxxKC_ReadI2CSecuritySession_Dyn(const ST25DVxxKC_Object_t *const pObj, ST25DVxxKC_I2CSSO_STATUS_E *const pSession);
-int32_t ST25DVxxKC_ReadITSTStatus_Dyn(const ST25DVxxKC_Object_t *const pObj, uint8_t *const pITStatus);
-int32_t ST25DVxxKC_ReadGPO_Dyn(const ST25DVxxKC_Object_t *const pObj, uint8_t *GPOConfig);
-int32_t ST25DVxxKC_GetGPO_en_Dyn(const ST25DVxxKC_Object_t *const pObj, ST25DVxxKC_EN_STATUS_E *const pGPO_en);
-int32_t ST25DVxxKC_SetGPO_en_Dyn(const ST25DVxxKC_Object_t *const pObj);
-int32_t ST25DVxxKC_ResetGPO_en_Dyn(const ST25DVxxKC_Object_t *const pObj);
-int32_t ST25DVxxKC_ReadEHCtrl_Dyn(const ST25DVxxKC_Object_t *const pObj, ST25DVxxKC_EH_CTRL_t *const pEH_CTRL);
-int32_t ST25DVxxKC_GetEHENMode_Dyn(const ST25DVxxKC_Object_t *const pObj, ST25DVxxKC_EN_STATUS_E *const pEH_Val);
-int32_t ST25DVxxKC_SetEHENMode_Dyn(const ST25DVxxKC_Object_t *const pObj);
-int32_t ST25DVxxKC_ResetEHENMode_Dyn(const ST25DVxxKC_Object_t *const pObj);
-int32_t ST25DVxxKC_GetEHON_Dyn(const ST25DVxxKC_Object_t *const pObj, ST25DVxxKC_EN_STATUS_E *const pEHON);
-int32_t ST25DVxxKC_GetRFField_Dyn(const ST25DVxxKC_Object_t *const pObj, ST25DVxxKC_FIELD_STATUS_E *const pRF_Field);
-int32_t ST25DVxxKC_GetVCC_Dyn(const ST25DVxxKC_Object_t *const pObj, ST25DVxxKC_VCC_STATUS_E *const pVCC);
-int32_t ST25DVxxKC_ReadRFMngt_Dyn(const ST25DVxxKC_Object_t *const pObj, ST25DVxxKC_RF_MNGT_t *const pRF_Mngt);
-int32_t ST25DVxxKC_WriteRFMngt_Dyn(const ST25DVxxKC_Object_t *const pObj, const uint8_t RF_Mngt);
-int32_t ST25DVxxKC_GetRFDisable_Dyn(const ST25DVxxKC_Object_t *const pObj, ST25DVxxKC_EN_STATUS_E *const pRFDisable);
-int32_t ST25DVxxKC_SetRFDisable_Dyn(const ST25DVxxKC_Object_t *const pObj);
-int32_t ST25DVxxKC_ResetRFDisable_Dyn(const ST25DVxxKC_Object_t *const pObj);
+int32_t ST25DVxxKC_ReadMemSize(const struct device *dev, const ST25DVxxKC_Object_t *const pObj, ST25DVxxKC_MEM_SIZE_t *const pSizeInfo);
 int32_t ST25DVxxKC_GetRFSleep_Dyn(const ST25DVxxKC_Object_t *const pObj, ST25DVxxKC_EN_STATUS_E *const pRFSleep);
 int32_t ST25DVxxKC_SetRFSleep_Dyn(const ST25DVxxKC_Object_t *const pObj);
 int32_t ST25DVxxKC_ResetRFSleep_Dyn(const ST25DVxxKC_Object_t *const pObj);
-int32_t ST25DVxxKC_GetRFOff_Dyn(const ST25DVxxKC_Object_t *const pObj, ST25DVxxKC_EN_STATUS_E *const pRFSleep);
-int32_t ST25DVxxKC_SetRFOff_Dyn(const ST25DVxxKC_Object_t *const pObj);
-int32_t ST25DVxxKC_ResetRFOff_Dyn(const ST25DVxxKC_Object_t *const pObj);
-int32_t ST25DVxxKC_ReadMBCtrl_Dyn(const ST25DVxxKC_Object_t *const pObj, ST25DVxxKC_MB_CTRL_DYN_STATUS_t *const pCtrlStatus);
-int32_t ST25DVxxKC_GetMBEN_Dyn(const ST25DVxxKC_Object_t *const pObj, ST25DVxxKC_EN_STATUS_E *const pMBEN);
-int32_t ST25DVxxKC_SetMBEN_Dyn(const ST25DVxxKC_Object_t *const pObj);
-int32_t ST25DVxxKC_ResetMBEN_Dyn(const ST25DVxxKC_Object_t *const pObj);
-int32_t ST25DVxxKC_ReadMBLength_Dyn(const ST25DVxxKC_Object_t *const pObj, uint8_t *const pMBLength);
-int32_t ST25DVxxKC_WriteI2CSlaveMode(const ST25DVxxKC_Object_t *const pObj, const ST25DVxxKC_SLAVE_MODE_E slave_mode);
-int32_t ST25DVxxKC_ReadI2CSlaveMode(const ST25DVxxKC_Object_t *const pObj, ST25DVxxKC_SLAVE_MODE_E *const slave_mode);
-int32_t ST25DVxxKC_WriteI2CSlaveAddress(const ST25DVxxKC_Object_t *const pObj, const uint8_t deviceCode, const uint8_t E0);
-int32_t ST25DVxxKC_ReadI2CSlaveAddress(const ST25DVxxKC_Object_t *const pObj, uint8_t *const deviceCode, uint8_t *const E0);
 
 /**
   * @}
