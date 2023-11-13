@@ -65,7 +65,7 @@ static ST25DVxxKC_Object_t NfcTagObj;
  */
 
 
-int32_t BSP_NFCTAG_Init (uint32_t Instance)
+int32_t BSP_NFCTAG_Init (const struct device *dev, uint32_t Instance)
 {
   int32_t status;
   ST25DVxxKC_IO_t IO;
@@ -79,14 +79,14 @@ int32_t BSP_NFCTAG_Init (uint32_t Instance)
   IO.Write        = (ST25DVxxKC_Write_Func)NFC_IO_WriteReg16;
   IO.GetTick      = NFC_IO_Tick;
 
-  status = ST25DVxxKC_RegisterBusIO (&NfcTagObj, &IO);
+  status = ST25DVxxKC_RegisterBusIO (dev, &NfcTagObj, &IO);
   if(status != NFCTAG_OK)
     return NFCTAG_ERROR;
 
   Nfctag_Drv = (ST25DVxxKC_Drv_t *)(void *)&St25Dvxxkc_Drv;
   if(Nfctag_Drv->Init != NULL)
   {
-    status = Nfctag_Drv->Init(&NfcTagObj);
+    status = Nfctag_Drv->Init(dev, &NfcTagObj);
     if(status != NFCTAG_OK)
     {
       Nfctag_Drv = NULL;
@@ -105,7 +105,7 @@ int32_t BSP_NFCTAG_Init (uint32_t Instance)
   * @param  None
   * @retval None
   */
-void BSP_NFCTAG_DeInit( uint32_t Instance )
+void BSP_NFCTAG_DeInit(const struct device *dev, uint32_t Instance )
 { 
   UNUSED(Instance);
 
@@ -132,7 +132,7 @@ uint8_t BSP_NFCTAG_isInitialized( uint32_t Instance )
   * @param  wai_id : the pointer where the who_am_i of the device is stored
   * @retval NFCTAG enum status
   */
-int32_t BSP_NFCTAG_ReadID( uint32_t Instance, uint8_t * const wai_id )
+int32_t BSP_NFCTAG_ReadID(const struct device *dev, uint32_t Instance, uint8_t * const wai_id )
 {
   UNUSED(Instance);
   if ( Nfctag_Drv->ReadID == NULL )
@@ -140,7 +140,7 @@ int32_t BSP_NFCTAG_ReadID( uint32_t Instance, uint8_t * const wai_id )
     return NFCTAG_ERROR;
   }
   
-  return Nfctag_Drv->ReadID(&NfcTagObj, wai_id );
+  return Nfctag_Drv->ReadID(dev, &NfcTagObj, wai_id);
 }
 
 /**
@@ -206,7 +206,7 @@ int32_t BSP_NFCTAG_ReadRegister(const struct device *dev, uint32_t Instance, uin
 {
   UNUSED(Instance);
 
-  return ST25DVxxKC_ReadRegister(&NfcTagObj, pData, TarAddr, Size );
+  return ST25DVxxKC_ReadRegister(dev, &NfcTagObj, pData, TarAddr, Size );
 }
 
 /**
@@ -221,10 +221,10 @@ int32_t BSP_NFCTAG_WriteRegister(const struct device *dev, uint32_t Instance, co
   UNUSED(Instance);
   int32_t ret_value;
 
-  ret_value = ST25DVxxKC_WriteRegister(&NfcTagObj, pData, TarAddr, Size );
+  ret_value = ST25DVxxKC_WriteRegister(dev, &NfcTagObj, pData, TarAddr, Size );
   if( ret_value == NFCTAG_OK )
   {
-    while( Nfctag_Drv->IsReady(NULL, &NfcTagObj, 1 ) != NFCTAG_OK ) {};
+    while( Nfctag_Drv->IsReady(dev, &NfcTagObj, 1 ) != NFCTAG_OK ) {};
       return NFCTAG_OK;
   }
   
@@ -249,10 +249,10 @@ uint32_t BSP_NFCTAG_GetByteSize(const struct device *dev, uint32_t Instance )
   * @param  pSizeInfo Pointer on a ST25DVxxKC_MEM_SIZE_t structure used to return the Memory size information.
   * @return int32_t enum status.
   */
-int32_t BSP_NFCTAG_ReadMemSize(uint32_t Instance, ST25DVxxKC_MEM_SIZE_t * const pSizeInfo )
+int32_t BSP_NFCTAG_ReadMemSize(const struct device *dev, uint32_t Instance, ST25DVxxKC_MEM_SIZE_t * const pSizeInfo )
 {
   UNUSED(Instance);
-  return ST25DVxxKC_ReadMemSize(NULL, &NfcTagObj, pSizeInfo);
+  return ST25DVxxKC_ReadMemSize(dev, &NfcTagObj, pSizeInfo);
 }
 
 /**
@@ -260,30 +260,30 @@ int32_t BSP_NFCTAG_ReadMemSize(uint32_t Instance, ST25DVxxKC_MEM_SIZE_t * const 
   * @param  pRFSleep Pointer on a ST25DVxxKC_EN_STATUS_E values used to return the RF Sleep state.
   * @return int32_t enum status.
   */
-int32_t BSP_NFCTAG_GetRFSleep_Dyn(uint32_t Instance, ST25DVxxKC_EN_STATUS_E * const pRFSleep )
+int32_t BSP_NFCTAG_GetRFSleep_Dyn(const struct device *dev, uint32_t Instance, ST25DVxxKC_EN_STATUS_E * const pRFSleep )
 {
   UNUSED(Instance);
-  return ST25DVxxKC_GetRFSleep_Dyn(&NfcTagObj, pRFSleep);
+  return ST25DVxxKC_GetRFSleep_Dyn(dev, &NfcTagObj, pRFSleep);
 }
 
 /**
   * @brief  Sets the RF Sleep dynamic configuration.
   * @return int32_t enum status.
   */
-int32_t BSP_NFCTAG_SetRFSleep_Dyn(uint32_t Instance)
+int32_t BSP_NFCTAG_SetRFSleep_Dyn(const struct device *dev, uint32_t Instance)
 {
   UNUSED(Instance);
-  return ST25DVxxKC_SetRFSleep_Dyn(&NfcTagObj);
+  return ST25DVxxKC_SetRFSleep_Dyn(dev, &NfcTagObj);
 }
 
 /**
   * @brief  Unsets the RF Sleep dynamic configuration.
   * @return int32_t enum status.
   */
-int32_t BSP_NFCTAG_ResetRFSleep_Dyn(uint32_t Instance)
+int32_t BSP_NFCTAG_ResetRFSleep_Dyn(const struct device *dev, uint32_t Instance)
 {
   UNUSED(Instance);
-  return ST25DVxxKC_ResetRFSleep_Dyn(&NfcTagObj);
+  return ST25DVxxKC_ResetRFSleep_Dyn(dev, &NfcTagObj);
 }
 
 /**

@@ -29,6 +29,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include <stdint.h>
+#include <zephyr/device.h>
 
 /** @addtogroup BSP
   * @{
@@ -43,12 +44,12 @@
 /**
  * @brief  ST25DVxxKC Write register function typedef definition.
  */
-typedef int32_t(*ST25DVxxKC_WriteReg_Func)(const void *const, const uint16_t, const uint8_t *const, const uint16_t);
+typedef int32_t(*ST25DVxxKC_WriteReg_Func)(const struct device *, const void *const, const uint16_t, const uint8_t *const, const uint16_t);
 
 /**
  * @brief  ST25DVxxKC Read register function typedef definition.
  */
-typedef int32_t(*ST25DVxxKC_ReadReg_Func)(const void *const, const uint16_t, uint8_t *const, const uint16_t);
+typedef int32_t(*ST25DVxxKC_ReadReg_Func)(const struct device *, const void *const, const uint16_t, uint8_t *const, const uint16_t);
 
 /**
  * @brief  ST25DVxxKC context structure.
@@ -387,12 +388,12 @@ typedef struct
 
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-int32_t ST25DVxxKC_GetICREF(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetMEM_SIZE_MSB(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetBLK_SIZE(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetMEM_SIZE_LSB(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetRF_MNGT_DYN_RFSLEEP(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetRF_MNGT_DYN_RFSLEEP(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
+int32_t ST25DVxxKC_GetICREF(const struct device *dev, const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
+int32_t ST25DVxxKC_GetMEM_SIZE_MSB(const struct device *dev, const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
+int32_t ST25DVxxKC_GetBLK_SIZE(const struct device *dev, const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
+int32_t ST25DVxxKC_GetMEM_SIZE_LSB(const struct device *dev, const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
+int32_t ST25DVxxKC_GetRF_MNGT_DYN_RFSLEEP(const struct device *dev, const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
+int32_t ST25DVxxKC_SetRF_MNGT_DYN_RFSLEEP(const struct device *dev, const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
 
 /**
   * @}

@@ -31,12 +31,7 @@
 #include <zephyr/drivers/nfc/st25dvxxkc/st25dvxxkc.h>
 #include <zephyr/drivers/nfc/st25dv.h>
 
-#if DT_NODE_HAS_STATUS(DT_ALIAS(i2c), okay)
-#define I2C_DEV_NODE	DT_ALIAS(i2c)
-#endif
-
 uint32_t i2c_cfg = I2C_SPEED_SET(I2C_SPEED_STANDARD) | I2C_MODE_CONTROLLER;
-const struct device *const i2c_dev = DEVICE_DT_GET(I2C_DEV_NODE);
 
 /** @addtogroup ST25DV_I2C_BSP
   * @{
@@ -76,7 +71,7 @@ int32_t NFC_IO_Tick(void)
   * @brief  DeInitializes Sensors low level.
   * @retval Status Success (0), Error (1)
   */
-int32_t NFC_IO_DeInit(void)
+int32_t NFC_IO_DeInit(const struct device *dev)
 {
   return 0;
 }
@@ -85,13 +80,19 @@ int32_t NFC_IO_DeInit(void)
   * @brief  Initializes Sensors low level.
   * @retval Status Success (0), Error (1)
   */
-int32_t NFC_IO_Init(void)
+int32_t NFC_IO_Init(const struct device *dev)
 {
-	if (!device_is_ready(i2c_dev)) {
+  struct st25dvxxkc_data *data = (struct st25dvxxkc_data *) dev->data;
+  
+  if (data->dev_i2c == NULL) {
+    return -ENODEV;
+  }
+
+  if (!device_is_ready(data->dev_i2c)) {
 		printk("I2C device is not ready\n");
 		return ERR_IO;
 	}
-  if (i2c_configure(i2c_dev, i2c_cfg)) {
+  if (i2c_configure(data->dev_i2c, i2c_cfg)) {
 		printk("I2C config failed\n");
 		return ERR_IO;
 	}
@@ -116,7 +117,7 @@ int32_t NFC_IO_IsDeviceReady(const struct device *dev, uint16_t DevAddr, uint32_
     return -ENODEV;
   }
   
-  ret = i2c_write_read(i2c_dev, DevAddr >> 1, regAddr, 2, pData, 1);
+  ret = i2c_write_read(data->dev_i2c, DevAddr >> 1, regAddr, 2, pData, 1);
 
   if (ret)
   {
@@ -166,7 +167,7 @@ int32_t NFC_IO_WriteReg16(const struct device *dev, uint16_t DevAddr, uint16_t R
     memcpy(&buffer[2],pData,Length);
   }
 
-  ret = i2c_write(i2c_dev, buffer, (Length || (pData != NULL)) ? Length + 2 : 0, DevAddr >> 1);
+  ret = i2c_write(data->dev_i2c, buffer, (Length || (pData != NULL)) ? Length + 2 : 0, DevAddr >> 1);
 
   if (ret)
   {
@@ -202,7 +203,7 @@ int32_t  NFC_IO_ReadReg16(const struct device *dev, uint16_t DevAddr, uint16_t R
     return ERR_PARAM;
   }
 
-  ret = i2c_write_read(i2c_dev, DevAddr >> 1, regAddr, 2, pData, Length);
+  ret = i2c_write_read(data->dev_i2c, DevAddr >> 1, regAddr, 2, pData, Length);
   if (ret) {
       printk("\r\nError %d while reading @%X (devAddr=%X)\r\n", ret,Reg,DevAddr);
       return ret;

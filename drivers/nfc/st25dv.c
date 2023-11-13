@@ -34,7 +34,7 @@ static int st25dvxxkc_tag_init(const struct device *dev, nfc_tag_cb_t cb)
       return -ENODEV;
     }
     /* Init of the Type Tag 5 component (ST25DV-I2C) */
-    if(BSP_NFCTAG_Init(0) != NFCTAG_OK) {
+    if(BSP_NFCTAG_Init(dev, 0) != NFCTAG_OK) {
       return NFCTAG_ERROR;
     }
     return 0;
@@ -80,20 +80,21 @@ static int st25dvxxkc_tag_get_type(const struct device *dev,
 static int st25dvxxkc_tag_start(const struct device *dev)
 {
     ARG_UNUSED(dev);
-    BSP_NFCTAG_ResetRFSleep_Dyn(0);
+    BSP_NFCTAG_ResetRFSleep_Dyn(dev, 0);
     return 0;
 }
 
 static int st25dvxxkc_tag_stop(const struct device *dev)
 {
     ARG_UNUSED(dev);
-    BSP_NFCTAG_SetRFSleep_Dyn(0);
+    BSP_NFCTAG_SetRFSleep_Dyn(dev, 0);
     return 0;
 }
 
 static int st25dvxxkc_tag_set_ndef(const struct device *dev,
                                  uint8_t *buf, uint16_t len)
 {
+    NfcTag_WriteNDEF(dev, 0 , NULL);
     int rv = NfcTag_WriteNDEF(dev, len, buf);
     return rv;
 }

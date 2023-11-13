@@ -48,11 +48,11 @@
 
 /* Private macros ------------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
-static int32_t ReadRegWrap(const void *const Handle, const uint16_t Reg, uint8_t *const pData, const uint16_t Length);
-static int32_t WriteRegWrap(const void *Handle, const uint16_t Reg, const uint8_t *const pData, const uint16_t Length);
+static int32_t ReadRegWrap(const struct device *dev, const void *const Handle, const uint16_t Reg, uint8_t *const pData, const uint16_t Length);
+static int32_t WriteRegWrap(const struct device *dev, const void *Handle, const uint16_t Reg, const uint8_t *const pData, const uint16_t Length);
 
-int32_t ST25DVxxKC_Init(ST25DVxxKC_Object_t *const pObj);
-int32_t ST25DVxxKC_ReadID(const ST25DVxxKC_Object_t *const pObj, uint8_t *const pICRef);
+int32_t ST25DVxxKC_Init(const struct device *dev, ST25DVxxKC_Object_t *const pObj);
+int32_t ST25DVxxKC_ReadID(const struct device *dev, const ST25DVxxKC_Object_t *const pObj, uint8_t *const pICRef);
 int32_t ST25DVxxKC_IsDeviceReady(const struct device *dev, const ST25DVxxKC_Object_t *const pObj, const uint32_t Trials);
 int32_t ST25DVxxKC_ReadData(const struct device *dev, const ST25DVxxKC_Object_t *const pObj, uint8_t *const pData, const uint16_t TarAddr, \
                                                                                   const uint16_t NbByte);
@@ -83,7 +83,7 @@ ST25DVxxKC_Drv_t St25Dvxxkc_Drv =
   * @param[in] pIO pointer to the IO APIs structure.
   * @return int32_t enum status.
   */
-int32_t ST25DVxxKC_RegisterBusIO(ST25DVxxKC_Object_t *const pObj, const ST25DVxxKC_IO_t *const pIO)
+int32_t ST25DVxxKC_RegisterBusIO(const struct device *dev, ST25DVxxKC_Object_t *const pObj, const ST25DVxxKC_IO_t *const pIO)
 {
   int32_t ret;
 
@@ -111,7 +111,7 @@ int32_t ST25DVxxKC_RegisterBusIO(ST25DVxxKC_Object_t *const pObj, const ST25DVxx
     }
     else
     {
-      ret = (pObj->IO.Init() == 0) ? NFCTAG_OK : NFCTAG_ERROR;
+      ret = (pObj->IO.Init(dev) == 0) ? NFCTAG_OK : NFCTAG_ERROR;
     }
   }
 
@@ -123,14 +123,14 @@ int32_t ST25DVxxKC_RegisterBusIO(ST25DVxxKC_Object_t *const pObj, const ST25DVxx
   * @param[in,out] pObj pointer to the device structure object.
   * @return int32_t enum status.
   */
-int32_t ST25DVxxKC_Init(ST25DVxxKC_Object_t *const pObj)
+int32_t ST25DVxxKC_Init(const struct device *dev, ST25DVxxKC_Object_t *const pObj)
 {
   int32_t ret = NFCTAG_OK;
   
   if (pObj->IsInitialized == 0U)
   {
     uint8_t nfctag_id;
-    ret = ST25DVxxKC_ReadID(pObj,&nfctag_id);
+    ret = ST25DVxxKC_ReadID(dev, pObj,&nfctag_id);
     if (ret == NFCTAG_OK)
     {
         if((nfctag_id != I_AM_ST25DV04KC) && (nfctag_id != I_AM_ST25DV64KC))
@@ -155,10 +155,10 @@ int32_t ST25DVxxKC_Init(ST25DVxxKC_Object_t *const pObj)
   * @param[out] pICRef Pointer on an uint8_t used to return the ST25DVxxKC ID.
   * @return int32_t enum status.
   */
-int32_t ST25DVxxKC_ReadID(const ST25DVxxKC_Object_t *const pObj, uint8_t *const pICRef)
+int32_t ST25DVxxKC_ReadID(const struct device *dev, const ST25DVxxKC_Object_t *const pObj, uint8_t *const pICRef)
 {
   /* Read ICRef on device */
-  return ST25DVxxKC_GetICREF(&(pObj->Ctx), pICRef);
+  return ST25DVxxKC_GetICREF(dev, &(pObj->Ctx), pICRef);
 }
 
 /**
@@ -252,11 +252,11 @@ int32_t ST25DVxxKC_WriteData(const struct device *dev, const ST25DVxxKC_Object_t
   * @param[in] NbByte  Number of bytes to be read.
   * @return int32_t enum status.
   */
-int32_t ST25DVxxKC_ReadRegister(const ST25DVxxKC_Object_t *const pObj, uint8_t * pData, const uint16_t TarAddr, \
+int32_t ST25DVxxKC_ReadRegister(const struct device *dev, const ST25DVxxKC_Object_t *const pObj, uint8_t * pData, const uint16_t TarAddr, \
                                                                                       const uint16_t NbByte)
 {
   /* Read Data in system memory */
-  return pObj->IO.Read(NULL, pObj->IO.DeviceAddress | ST25DVXXKC_ADDR_SYSTEMMEMORY_BIT_I2C | ST25DVXXKC_ADDR_MODE_BIT_I2C, TarAddr, pData, NbByte);
+  return pObj->IO.Read(dev, pObj->IO.DeviceAddress | ST25DVXXKC_ADDR_SYSTEMMEMORY_BIT_I2C | ST25DVXXKC_ADDR_MODE_BIT_I2C, TarAddr, pData, NbByte);
 }
 
 /**
@@ -268,7 +268,7 @@ int32_t ST25DVxxKC_ReadRegister(const ST25DVxxKC_Object_t *const pObj, uint8_t *
   * @param[in] NbByte  Number of bytes to be written.
   * @return   int32_t enum status.
   */
-int32_t ST25DVxxKC_WriteRegister(ST25DVxxKC_Object_t *const pObj, const uint8_t *const pData, const uint16_t TarAddr, const uint16_t NbByte)
+int32_t ST25DVxxKC_WriteRegister(const struct device *dev, ST25DVxxKC_Object_t *const pObj, const uint8_t *const pData, const uint16_t TarAddr, const uint16_t NbByte)
 { 
   int32_t ret;
   uint16_t split_data_nb;
@@ -291,7 +291,7 @@ int32_t ST25DVxxKC_WriteRegister(ST25DVxxKC_Object_t *const pObj, const uint8_t 
       split_data_nb = bytes_to_write;
     }
     /* Write split_data_nb bytes in register */
-    ret = pObj->IO.Write(NULL, pObj->IO.DeviceAddress | ST25DVXXKC_ADDR_SYSTEMMEMORY_BIT_I2C | ST25DVXXKC_ADDR_MODE_BIT_I2C, mem_addr, pdata_index, split_data_nb);
+    ret = pObj->IO.Write(dev, pObj->IO.DeviceAddress | ST25DVXXKC_ADDR_SYSTEMMEMORY_BIT_I2C | ST25DVXXKC_ADDR_MODE_BIT_I2C, mem_addr, pdata_index, split_data_nb);
     if(ret == NFCTAG_OK)
     {
       int32_t pollstatus;
@@ -310,7 +310,7 @@ int32_t ST25DVxxKC_WriteRegister(ST25DVxxKC_Object_t *const pObj, const uint8_t 
       /* Wait until ST25DVxxKC is ready or timeout occurs */
       do
       {
-        pollstatus = pObj->IO.IsReady(NULL, pObj->IO.DeviceAddress, 1);
+        pollstatus = pObj->IO.IsReady(dev, pObj->IO.DeviceAddress, 1);
       } while(   ((uint32_t)pObj->IO.GetTick() < tickstart + ST25DVXXKC_WRITE_TIMEOUT)
               && (pollstatus != NFCTAG_OK) );
       
@@ -345,13 +345,13 @@ int32_t ST25DVxxKC_ReadMemSize(const struct device *dev, const ST25DVxxKC_Object
   pSizeInfo->Mem_Size = 0;
 
   /* Read actual value of MEM_SIZE register */
-  status = ST25DVxxKC_GetMEM_SIZE_LSB(&(pObj->Ctx), &memsize_lsb);
+  status = ST25DVxxKC_GetMEM_SIZE_LSB(dev, &(pObj->Ctx), &memsize_lsb);
   if(status == NFCTAG_OK)
   {
-    status = ST25DVxxKC_GetMEM_SIZE_MSB(&(pObj->Ctx), &memsize_msb);
+    status = ST25DVxxKC_GetMEM_SIZE_MSB(dev, &(pObj->Ctx), &memsize_msb);
     if(status == NFCTAG_OK)
     {
-      status = ST25DVxxKC_GetBLK_SIZE(&(pObj->Ctx), &(pSizeInfo->BlockSize));
+      status = ST25DVxxKC_GetBLK_SIZE(dev, &(pObj->Ctx), &(pSizeInfo->BlockSize));
       if(status == NFCTAG_OK)
       {
         /* Extract Memory information */
@@ -369,7 +369,7 @@ int32_t ST25DVxxKC_ReadMemSize(const struct device *dev, const ST25DVxxKC_Object
   * @param[out] pRFSleep Pointer on a ST25DVxxKC_EN_STATUS values used to return the RF Sleep state.
   * @return int32_t enum status.
   */
-int32_t ST25DVxxKC_GetRFSleep_Dyn(const ST25DVxxKC_Object_t *const pObj, ST25DVxxKC_EN_STATUS_E *const pRFSleep)
+int32_t ST25DVxxKC_GetRFSleep_Dyn(const struct device *dev, const ST25DVxxKC_Object_t *const pObj, ST25DVxxKC_EN_STATUS_E *const pRFSleep)
 {
   int32_t status;
   uint8_t reg_value = 0;
@@ -377,7 +377,7 @@ int32_t ST25DVxxKC_GetRFSleep_Dyn(const ST25DVxxKC_Object_t *const pObj, ST25DVx
   *pRFSleep = ST25DVXXKC_DISABLE;
 
   /* Read actual value of RF_MNGT_DYN register */
-  status = ST25DVxxKC_GetRF_MNGT_DYN_RFSLEEP(&(pObj->Ctx), &reg_value);
+  status = ST25DVxxKC_GetRF_MNGT_DYN_RFSLEEP(dev, &(pObj->Ctx), &reg_value);
   
   /* Extract RFSleep information */
   if(status == NFCTAG_OK)
@@ -400,11 +400,11 @@ int32_t ST25DVxxKC_GetRFSleep_Dyn(const ST25DVxxKC_Object_t *const pObj, ST25DVx
   * @param[in] pObj pointer to the device structure object.
   * @return int32_t enum status.
   */
-int32_t ST25DVxxKC_SetRFSleep_Dyn(const ST25DVxxKC_Object_t *const pObj)
+int32_t ST25DVxxKC_SetRFSleep_Dyn(const struct device *dev, const ST25DVxxKC_Object_t *const pObj)
 {
   uint8_t reg_value = 1U;
   
-  return ST25DVxxKC_SetRF_MNGT_DYN_RFSLEEP(&(pObj->Ctx), &reg_value);
+  return ST25DVxxKC_SetRF_MNGT_DYN_RFSLEEP(dev, &(pObj->Ctx), &reg_value);
 }
 
 /**
@@ -412,11 +412,11 @@ int32_t ST25DVxxKC_SetRFSleep_Dyn(const ST25DVxxKC_Object_t *const pObj)
   * @param[in] pObj pointer to the device structure object.
   * @return int32_t enum status.
   */
-int32_t ST25DVxxKC_ResetRFSleep_Dyn(const ST25DVxxKC_Object_t *const pObj)
+int32_t ST25DVxxKC_ResetRFSleep_Dyn(const struct device *dev, const ST25DVxxKC_Object_t *const pObj)
 {
   uint8_t reg_value = 0U;
   
-  return ST25DVxxKC_SetRF_MNGT_DYN_RFSLEEP(&(pObj->Ctx), &reg_value);
+  return ST25DVxxKC_SetRF_MNGT_DYN_RFSLEEP(dev, &(pObj->Ctx), &reg_value);
 }
 
 /**
@@ -427,19 +427,18 @@ int32_t ST25DVxxKC_ResetRFSleep_Dyn(const ST25DVxxKC_Object_t *const pObj)
   * @param[in] len length of the data to be read.
   * @return int32_t enum status.
   */
-static int32_t ReadRegWrap(const void *const handle, const uint16_t Reg, uint8_t *const pData, const uint16_t len)
+static int32_t ReadRegWrap(const struct device *dev, const void *const handle, const uint16_t Reg, uint8_t *const pData, const uint16_t len)
 {
   int32_t ret;
   ST25DVxxKC_Object_t *pObj = (ST25DVxxKC_Object_t *)handle;
-  // struct st25dvxxkc_data *data = (struct st25dvxxkc_data *) dev->data;
   
   if((Reg & (ST25DVXXKC_IS_DYNAMIC_REGISTER)) == ST25DVXXKC_IS_DYNAMIC_REGISTER)
   {
-    ret = pObj->IO.Read(NULL, pObj->IO.DeviceAddress, Reg, pData, len);
+    ret = pObj->IO.Read(dev, pObj->IO.DeviceAddress, Reg, pData, len);
   }
   else
   {
-    ret = pObj->IO.Read(NULL, pObj->IO.DeviceAddress | ST25DVXXKC_ADDR_SYSTEMMEMORY_BIT_I2C | ST25DVXXKC_ADDR_MODE_BIT_I2C, Reg, pData, len);
+    ret = pObj->IO.Read(dev, pObj->IO.DeviceAddress | ST25DVXXKC_ADDR_SYSTEMMEMORY_BIT_I2C | ST25DVXXKC_ADDR_MODE_BIT_I2C, Reg, pData, len);
   }
   
   return ret;
@@ -453,7 +452,7 @@ static int32_t ReadRegWrap(const void *const handle, const uint16_t Reg, uint8_t
   * @param[in] len length of the data to be written.
   * @return int32_t enum status.
   */
-static int32_t WriteRegWrap(const void *const handle, const uint16_t Reg, const uint8_t *const pData, \
+static int32_t WriteRegWrap(const struct device *dev, const void *const handle, const uint16_t Reg, const uint8_t *const pData, \
                                                                 const uint16_t len)
 {
   int32_t ret;
@@ -461,11 +460,11 @@ static int32_t WriteRegWrap(const void *const handle, const uint16_t Reg, const 
   
   if((Reg & (ST25DVXXKC_IS_DYNAMIC_REGISTER)) == ST25DVXXKC_IS_DYNAMIC_REGISTER)
   {
-    ret = pObj->IO.Write(NULL, pObj->IO.DeviceAddress, Reg, pData, len);
+    ret = pObj->IO.Write(dev, pObj->IO.DeviceAddress, Reg, pData, len);
   }
   else
   {
-    ret = pObj->IO.Write(NULL, pObj->IO.DeviceAddress | ST25DVXXKC_ADDR_SYSTEMMEMORY_BIT_I2C | ST25DVXXKC_ADDR_MODE_BIT_I2C, Reg, pData, len);
+    ret = pObj->IO.Write(dev, pObj->IO.DeviceAddress | ST25DVXXKC_ADDR_SYSTEMMEMORY_BIT_I2C | ST25DVXXKC_ADDR_MODE_BIT_I2C, Reg, pData, len);
     if(ret == NFCTAG_OK)
     {
       int32_t pollstatus;
@@ -484,7 +483,7 @@ static int32_t WriteRegWrap(const void *const handle, const uint16_t Reg, const 
       /* Wait until ST25DVxxKC is ready or timeout occurs */
       do
       {
-        pollstatus = pObj->IO.IsReady(NULL, pObj->IO.DeviceAddress | ST25DVXXKC_ADDR_SYSTEMMEMORY_BIT_I2C | ST25DVXXKC_ADDR_MODE_BIT_I2C, 1);
+        pollstatus = pObj->IO.IsReady(dev, pObj->IO.DeviceAddress | ST25DVXXKC_ADDR_SYSTEMMEMORY_BIT_I2C | ST25DVXXKC_ADDR_MODE_BIT_I2C, 1);
       } while(   ((uint32_t)pObj->IO.GetTick() < tickstart + ST25DVXXKC_WRITE_TIMEOUT)
               && (pollstatus != NFCTAG_OK) );
     

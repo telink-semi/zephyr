@@ -289,8 +289,8 @@ typedef struct
 } ST25DVxxKC_PASSWD_t;
 
 
-typedef int32_t (*ST25DVxxKC_Init_Func) (void);
-typedef int32_t (*ST25DVxxKC_DeInit_Func) (void);
+typedef int32_t (*ST25DVxxKC_Init_Func) (const struct device *dev);
+typedef int32_t (*ST25DVxxKC_DeInit_Func) (const struct device *dev);
 typedef int32_t (*ST25DVxxKC_GetTick_Func) (void);
 typedef int32_t (*ST25DVxxKC_Write_Func)(const struct device *dev, const uint16_t, const uint16_t, const uint8_t *const, const uint16_t);
 typedef int32_t (*ST25DVxxKC_Read_Func) (const struct device *dev, const uint16_t, const uint16_t, uint8_t *const, const uint16_t);
@@ -328,11 +328,11 @@ typedef struct
  */
 typedef struct
 {
-  int32_t       (*Init)(ST25DVxxKC_Object_t *const);
-  int32_t       (*ReadID)(const ST25DVxxKC_Object_t *const, uint8_t *const);
-  int32_t       (*IsReady)(const struct device *dev, const ST25DVxxKC_Object_t *const, const uint32_t);
-  int32_t       (*ReadData)(const struct device *dev, const ST25DVxxKC_Object_t *const, uint8_t *const, const uint16_t, const uint16_t);
-  int32_t       (*WriteData)(const struct device *dev, const ST25DVxxKC_Object_t *const, const uint8_t *const, const uint16_t, const uint16_t);
+  int32_t       (*Init)(const struct device *, ST25DVxxKC_Object_t *const);
+  int32_t       (*ReadID)(const struct device *, const ST25DVxxKC_Object_t *const, uint8_t *const);
+  int32_t       (*IsReady)(const struct device *, const ST25DVxxKC_Object_t *const, const uint32_t);
+  int32_t       (*ReadData)(const struct device *, const ST25DVxxKC_Object_t *const, uint8_t *const, const uint16_t, const uint16_t);
+  int32_t       (*WriteData)(const struct device *, const ST25DVxxKC_Object_t *const, const uint8_t *const, const uint16_t, const uint16_t);
 } ST25DVxxKC_Drv_t;
 
 
@@ -389,15 +389,15 @@ extern ST25DVxxKC_Drv_t St25Dvxxkc_Drv;
 /* Imported functions ------------------------------------------------------- */
 
 /* Exported functions ------------------------------------------------------- */
-extern int32_t ST25DVxxKC_ReadRegister(const ST25DVxxKC_Object_t *const pObj, uint8_t *const pData, const uint16_t TarAddr, \
+extern int32_t ST25DVxxKC_ReadRegister(const struct device *dev, const ST25DVxxKC_Object_t *const pObj, uint8_t *const pData, const uint16_t TarAddr, \
                                                                                       const uint16_t NbByte);
-extern int32_t ST25DVxxKC_WriteRegister(ST25DVxxKC_Object_t *const pObj, const uint8_t *const pData, \
+extern int32_t ST25DVxxKC_WriteRegister(const struct device *dev, ST25DVxxKC_Object_t *const pObj, const uint8_t *const pData, \
                                                                         const uint16_t TarAddr, const uint16_t NbByte);
-int32_t ST25DVxxKC_RegisterBusIO(ST25DVxxKC_Object_t *const pObj, const ST25DVxxKC_IO_t *const pIO);
+int32_t ST25DVxxKC_RegisterBusIO(const struct device *dev, ST25DVxxKC_Object_t *const pObj, const ST25DVxxKC_IO_t *const pIO);
 int32_t ST25DVxxKC_ReadMemSize(const struct device *dev, const ST25DVxxKC_Object_t *const pObj, ST25DVxxKC_MEM_SIZE_t *const pSizeInfo);
-int32_t ST25DVxxKC_GetRFSleep_Dyn(const ST25DVxxKC_Object_t *const pObj, ST25DVxxKC_EN_STATUS_E *const pRFSleep);
-int32_t ST25DVxxKC_SetRFSleep_Dyn(const ST25DVxxKC_Object_t *const pObj);
-int32_t ST25DVxxKC_ResetRFSleep_Dyn(const ST25DVxxKC_Object_t *const pObj);
+int32_t ST25DVxxKC_GetRFSleep_Dyn(const struct device *dev, const ST25DVxxKC_Object_t *const pObj, ST25DVxxKC_EN_STATUS_E *const pRFSleep);
+int32_t ST25DVxxKC_SetRFSleep_Dyn(const struct device *dev, const ST25DVxxKC_Object_t *const pObj);
+int32_t ST25DVxxKC_ResetRFSleep_Dyn(const struct device *dev, const ST25DVxxKC_Object_t *const pObj);
 
 /**
   * @}
