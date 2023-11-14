@@ -31,14 +31,10 @@
 #include <zephyr/drivers/nfc/st25dvxxkc/st25dvxxkc.h>
 #include <zephyr/drivers/nfc/st25dv.h>
 
-uint32_t i2c_cfg = I2C_SPEED_SET(I2C_SPEED_STANDARD) | I2C_MODE_CONTROLLER;
-
 /** @addtogroup ST25DV_I2C_BSP
   * @{
   *	@brief  <b>This file contains the BSP IO layer for the ST25DV-I2C</b> 
   */
-
-#define REVERSE16(x) ((X >> 8) | ((X & 0xFF) << 8)) 
 
 /** @defgroup ST25DV_I2C_BSP_IO_Private_Functions
  *  @{
@@ -66,7 +62,6 @@ int32_t NFC_IO_Tick(void)
   return k_uptime_get_32();
 }
 
-
 /**
   * @brief  DeInitializes Sensors low level.
   * @retval Status Success (0), Error (1)
@@ -83,7 +78,8 @@ int32_t NFC_IO_DeInit(const struct device *dev)
 int32_t NFC_IO_Init(const struct device *dev)
 {
   struct st25dvxxkc_data *data = (struct st25dvxxkc_data *) dev->data;
-  
+  uint32_t i2c_cfg = I2C_SPEED_SET(I2C_SPEED_STANDARD) | I2C_MODE_CONTROLLER;
+
   if (data->dev_i2c == NULL) {
     return -ENODEV;
   }

@@ -86,6 +86,7 @@ ST25DVxxKC_Drv_t St25Dvxxkc_Drv =
 int32_t ST25DVxxKC_RegisterBusIO(const struct device *dev, ST25DVxxKC_Object_t *const pObj, const ST25DVxxKC_IO_t *const pIO)
 {
   int32_t ret;
+  const struct st25dvxxkc_cfg *cfg = (const struct st25dvxxkc_cfg *) dev->config;
 
   if (pObj == NULL)
   {
@@ -99,7 +100,7 @@ int32_t ST25DVxxKC_RegisterBusIO(const struct device *dev, ST25DVxxKC_Object_t *
     pObj->IO.Read           = pIO->Read;
     pObj->IO.IsReady        = pIO->IsReady;
     pObj->IO.GetTick        = pIO->GetTick;
-    pObj->IO.DeviceAddress  = ST25DVXXKC_ADDR_DATA_I2C;
+    pObj->IO.DeviceAddress  = cfg->i2c.addr;
 
     pObj->Ctx.ReadReg  = ReadRegWrap;
     pObj->Ctx.WriteReg = WriteRegWrap;
