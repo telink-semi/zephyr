@@ -4,10 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#define NDS_MCACHE_CTL               0x7ca
-#define NDS_MMISC_CTL                0x7d0
-
+#include <soc.h>
+#include <zephyr/devicetree.h>
 #include <zephyr/toolchain.h>
+
+#define N22_LOAD_ADDR (DT_REG_ADDR(DT_CHOSEN(zephyr_flash)) + DT_REG_SIZE(DT_CHOSEN(zephyr_flash)))
 
 	.option push
 	.option norelax
@@ -15,26 +16,53 @@
 SECTION_FUNC(init, init)
 	.org 0x0
 
-	.word (0x31707848)	      /* magic */
-	.word (0x33e90d91)        /* header crc32 */
+	.global reset_vector
+
+reset_vector:
+	.global _start
+	.type _start,@function
+
+	.word (0x31707848)	               #/ magic
+	.word (0x33e90d91)                 #/ header crc32
 	.org 0x14
-	.word (0xa0000080)        /* start address */
+	.word (0xa0000080)                 #/ start address
+
 	.org 0xa0
+_start:                                #/ after reset starts on N22 core
+	lui    t0, 0xf0100
+	lui	   t1, %hi(d25_core_start)
+	addi   t1, t1, %lo(d25_core_start)
+	sw     t1, 0x204(t0)               #/ D25 core address: 0xf0100204 <- _start
+	lui    t0, 0xf1700
+	li     t1, 0x10
+	sw     t1, 0x218(t0)               #/ D25 core reset: 0xf1700218 <- 0x10
 
-	/* Enable I/D-Cache */
-	csrr   t0, NDS_MCACHE_CTL
-	ori    t0, t0, 1                #/ I-Cache
-	ori    t0, t0, 2                #/ D-Cache
-	csrw   NDS_MCACHE_CTL, t0
-	fence.i
+	lui    t0, 0xf0100
+	lui	   t1, %hi(N22_LOAD_ADDR)
+	addi   t1, t1, %lo(N22_LOAD_ADDR)
+	sw     t1, 0x200(t0)               #/ N22 core address: 0xf0100200
+	lui    t0, 0xf1700
+	li     t1, 0x01
+	sw     t1, 0x218(t0)               #/ N22 core reset: 0xf1700218 <- 0x01
+1:	j      1b
 
-	/* Enable misaligned access and non-blocking load */
-	li     t0, (1 << 8) | (1 << 6)
-	csrs   NDS_MMISC_CTL, t0
+d25_core_start:                        #/ D25 core start
 
+	csrw   mie, zero                   #/ disable interrupts
+	li     t0, (1 << 3)
+	csrc   mstatus, t0                 #/ Clear Machine Status
+	csrw   mepc, zero                  #/ Clear Machine Exception PC
+	li     t0, (3 << 6)
+	csrc   NDS_MXSTATUS, t0            #/ Clear Machine Extended Status
 
+	li     t0, 0x1
+	csrs   NDS_MCACHE_CTL, t0          #/ enable I-Cache
+	li     t0, 0x2
+	csrs   NDS_MCACHE_CTL, t0          #/ enable I-Cache
+	li     t0, (1 << 6)
+	csrs   NDS_MMISC_CTL, t0           #/ Enable Misaligned access
 
-_START:
-	j      __start
+	call   __start                     #/ jump to kernel entry
+1:	j      1b
 
 	.option pop

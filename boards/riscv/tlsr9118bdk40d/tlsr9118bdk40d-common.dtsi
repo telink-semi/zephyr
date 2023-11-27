@@ -15,7 +15,7 @@
 	compatible = "telink,tlsr9118bdk40d";
 
 	chosen {
-		zephyr,sram = &ram_dlm;
+		zephyr,sram = &sram;
 		zephyr,flash = &flash;
 		zephyr,flash-controller = &flash_mspi;
 		zephyr,entropy = &trng0;
@@ -27,16 +27,12 @@
 	clock-frequency = <48000000>;
 };
 
-&ram_ilm {
-	reg = <0x00000000 0x00008000>;
-};
-
-&ram_dlm {
-	reg = <0x0020AC00 0x00025400>;
+&sram {
+	reg = <0x40000000 0x00020000>;
 };
 
 &flash {
-	reg = <0x80000000 0x100000>;
+	reg = <0x80000000 0x300000>;
 
 	partitions {
 		compatible = "fixed-partitions";
@@ -62,16 +58,6 @@
 		storage_partition: partition@f4000 {
 			label = "storage";
 			reg = <0xf4000 0x0000a000>;
-		};
-
-		/* region <0xfe000 0x2000> is used for Telink W91 RF parameters */
-		/* For 1M MCU - the partition address is 0xfe000 */
-		/* For 2M MCU - the partition address is 0x1fe000 */
-		/* For 4M MCU - the partition address is 0x3fe000 */
-		/* For 16M MCU - the partition address is 0xffe000 */
-		vendor_partition: partition@fe000 {
-			label = "vendor-data";
-			reg = <0xfe000 0x2000>;
 		};
 	};
 };

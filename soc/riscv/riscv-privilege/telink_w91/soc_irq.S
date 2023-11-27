@@ -9,8 +9,6 @@
 
 #include <soc.h>
 
-#define NDS_MXSTATUS                 0x7C4
-
 /* Exports */
 #ifdef CONFIG_RISCV_SOC_CONTEXT_SAVE
 GTEXT(__soc_save_context)
