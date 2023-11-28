@@ -8,7 +8,7 @@
 #include <zephyr/devicetree.h>
 #include <zephyr/toolchain.h>
 
-#define N22_LOAD_ADDR (DT_REG_ADDR(DT_CHOSEN(zephyr_flash)) + DT_REG_SIZE(DT_CHOSEN(zephyr_flash)))
+#define N22_CORE_START (DT_REG_ADDR(DT_CHOSEN(zephyr_flash)) + DT_REG_SIZE(DT_CHOSEN(zephyr_flash)))
 
 	.option push
 	.option norelax
@@ -28,25 +28,15 @@ reset_vector:
 	.word (0xa0000080)                 #/ start address
 
 	.org 0xa0
-_start:                                #/ after reset starts on N22 core
+_start:                                #/ after reset starts on D25 core
+
 	lui    t0, 0xf0100
-	lui	   t1, %hi(d25_core_start)
-	addi   t1, t1, %lo(d25_core_start)
-	sw     t1, 0x204(t0)               #/ D25 core address: 0xf0100204 <- _start
+	lui	   t1, %hi(N22_CORE_START)
+	addi   t1, t1, %lo(N22_CORE_START)
+	sw     t1, 0x204(t0)               #/ N22 core address: 0xf0100204 <- N22_CORE_START
 	lui    t0, 0xf1700
 	li     t1, 0x10
-	sw     t1, 0x218(t0)               #/ D25 core reset: 0xf1700218 <- 0x10
-
-	lui    t0, 0xf0100
-	lui	   t1, %hi(N22_LOAD_ADDR)
-	addi   t1, t1, %lo(N22_LOAD_ADDR)
-	sw     t1, 0x200(t0)               #/ N22 core address: 0xf0100200
-	lui    t0, 0xf1700
-	li     t1, 0x01
-	sw     t1, 0x218(t0)               #/ N22 core reset: 0xf1700218 <- 0x01
-1:	j      1b
-
-d25_core_start:                        #/ D25 core start
+	sw     t1, 0x218(t0)               #/ N22 core reset: 0xf1700218 <- 0x10
 
 	csrw   mie, zero                   #/ disable interrupts
 	li     t0, (1 << 3)
