@@ -94,8 +94,15 @@ static int st25dvxxkc_tag_stop(const struct device *dev)
 static int st25dvxxkc_tag_set_ndef(const struct device *dev,
                                  uint8_t *buf, uint16_t len)
 {
-    NfcTag_WriteNDEF(dev, 0 , NULL);
-    int rv = NfcTag_WriteNDEF(dev, len, buf);
+    uint8_t current_nfef[ST25DV_NDEF_MAX_SIZE ] = {0};
+    int rv = NfcTag_ReadNDEF(dev, current_nfef);
+    if(rv) {
+        return rv;
+    }
+    if(memcmp(current_nfef, buf, len)) {
+        NfcTag_WriteNDEF(dev, 0 , NULL);
+        rv = NfcTag_WriteNDEF(dev, len, buf);
+    }
     return rv;
 }
 
