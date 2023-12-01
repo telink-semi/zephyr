@@ -5,11 +5,11 @@
  */
 
 #include <sys.h>
-#include <clock.h>
+// #include <clock.h>
 // #include <gpio.h>
 // #include <ext_driver/ext_pm.h>
 // #include "rf.h"
-#include "flash.h"
+// #include "flash.h"
 // #include <watchdog.h>
 
 #include <zephyr/device.h>
@@ -20,45 +20,36 @@
 #define SOFT_RESET                  0x20u
 
 /* List of supported CCLK frequencies */
-#define CLK_16MHZ                   16000000u
-#define CLK_24MHZ                   24000000u
-#define CLK_32MHZ                   32000000u
-#define CLK_48MHZ                   48000000u
-#define CLK_60MHZ                   60000000u
-#define CLK_96MHZ                   96000000u
+#define CLK_160MHZ                  160000000u
+// #define CLK_240MHZ                  240000000u // EXPERIMENTAL
 
 /* MID register flash size */
-#define FLASH_MID_SIZE_OFFSET       16
-#define FLASH_MID_SIZE_MASK         0x00ff0000
+// #define FLASH_MID_SIZE_OFFSET       16
+// #define FLASH_MID_SIZE_MASK         0x00ff0000
 
 /* Power Mode value */
-#if DT_ENUM_IDX(DT_NODELABEL(power), power_mode) == 0
-	#define POWER_MODE      LDO_1P4_LDO_2P0
-#elif DT_ENUM_IDX(DT_NODELABEL(power), power_mode) == 1
-	#define POWER_MODE      DCDC_1P4_LDO_2P0
-#elif DT_ENUM_IDX(DT_NODELABEL(power), power_mode) == 2
-	#define POWER_MODE      DCDC_1P4_DCDC_2P0
-#else
-	#error "Wrong value for power-mode parameter"
-#endif
+// #if DT_ENUM_IDX(DT_NODELABEL(power), power_mode) == 0
+// 	#define POWER_MODE      LDO_1P4_LDO_2P0
+// #elif DT_ENUM_IDX(DT_NODELABEL(power), power_mode) == 1
+// 	#define POWER_MODE      DCDC_1P4_LDO_2P0
+// #elif DT_ENUM_IDX(DT_NODELABEL(power), power_mode) == 2
+// 	#define POWER_MODE      DCDC_1P4_DCDC_2P0
+// #else
+// 	#error "Wrong value for power-mode parameter"
+// #endif
 
 /* Vbat Type value */
-#if DT_ENUM_IDX(DT_NODELABEL(power), vbat_type) == 0
-	#define VBAT_TYPE       VBAT_MAX_VALUE_LESS_THAN_3V6
-#elif DT_ENUM_IDX(DT_NODELABEL(power), vbat_type) == 1
-	#define VBAT_TYPE       VBAT_MAX_VALUE_GREATER_THAN_3V6
-#else
-	#error "Wrong value for vbat-type parameter"
-#endif
+// #if DT_ENUM_IDX(DT_NODELABEL(power), vbat_type) == 0
+// 	#define VBAT_TYPE       VBAT_MAX_VALUE_LESS_THAN_3V6
+// #elif DT_ENUM_IDX(DT_NODELABEL(power), vbat_type) == 1
+// 	#define VBAT_TYPE       VBAT_MAX_VALUE_GREATER_THAN_3V6
+// #else
+// 	#error "Wrong value for vbat-type parameter"
+// #endif
 
 /* Check System Clock value. */
-#if ((DT_PROP(DT_PATH(cpus, cpu_0), clock_frequency) != CLK_16MHZ) &&	 \
-	(DT_PROP(DT_PATH(cpus, cpu_0), clock_frequency) != CLK_24MHZ) && \
-	(DT_PROP(DT_PATH(cpus, cpu_0), clock_frequency) != CLK_32MHZ) && \
-	(DT_PROP(DT_PATH(cpus, cpu_0), clock_frequency) != CLK_48MHZ) && \
-	(DT_PROP(DT_PATH(cpus, cpu_0), clock_frequency) != CLK_60MHZ) && \
-	(DT_PROP(DT_PATH(cpus, cpu_0), clock_frequency) != CLK_96MHZ))
-	#error "Unsupported clock-frequency. Supported values: 16, 24, 32, 48, 60 and 96 MHz"
+#if ((DT_PROP(DT_PATH(cpus, cpu_0), clock_frequency) != CLK_160MHZ))
+	#error "Unsupported clock-frequency. Supported values: 160 MHz"
 #endif
 
 /**
@@ -68,33 +59,23 @@
  */
 static int soc_w91_init(void)
 {
-	unsigned int cclk = DT_PROP(DT_PATH(cpus, cpu_0), clock_frequency);
+	// Done by FreeRTOS clock_init() and clock_postinit() -> hal/soc/scm2010/soc.c (hal/drivers/clk/clk-scm2010.c)
+	
+	// unsigned int cclk = DT_PROP(DT_PATH(cpus, cpu_0), clock_frequency);
 
 	/* system init */
 	// sys_init(POWER_MODE, VBAT_TYPE, GPIO_VOLTAGE_3V3);
 
 	/* clocks init: CCLK, HCLK, PCLK */
-	switch (cclk) {
-	case CLK_16MHZ:
-		CCLK_16M_HCLK_16M_PCLK_16M;
-		break;
+	// switch (cclk) {
+	// case CLK_160MHZ:
+	// 	CCLK_160M_HCLK_16M_PCLK_16M;
+	// 	break;
 
-	case CLK_24MHZ:
-		CCLK_24M_HCLK_24M_PCLK_24M;
-		break;
-
-	case CLK_32MHZ:
-		CCLK_32M_HCLK_32M_PCLK_16M;
-		break;
-
-	case CLK_48MHZ:
-		// CCLK_48M_HCLK_48M_PCLK_24M;
-		break;
-
-	case CLK_96MHZ:
-		CCLK_96M_HCLK_48M_PCLK_24M;
-		break;
-	}
+	// case CLK_240MHZ:
+	// 	CCLK_240M_HCLK_24M_PCLK_24M;
+	// 	break;
+	// }
 
 	/* Init Machine Timer source clock: 32 KHz RC */
 	// clock_32k_init(CLK_32K_RC);
