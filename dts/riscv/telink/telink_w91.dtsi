@@ -64,14 +64,6 @@
 			};
 		};
 
-		power: power@80140180 {
-			compatible = "telink,w91-power";
-			reg = <0x80140180 0x40>;
-			power-mode = "LDO_1P4_LDO_2P0";
-			vbat-type = "VBAT_MAX_VALUE_GREATER_THAN_3V6";
-			status = "okay";
-		};
-
 		plic0: interrupt-controller@e4000000 {
 			compatible = "sifive,plic-1.0.0";
 			#address-cells = <0>;

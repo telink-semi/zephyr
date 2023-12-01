@@ -9,7 +9,7 @@ config SOC_SERIES
 
 config SYS_CLOCK_HW_CYCLES_PER_SEC
 	int
-	default 32000
+	default 10000000
 
 config RISCV_SOC_INTERRUPT_INIT
 	bool
