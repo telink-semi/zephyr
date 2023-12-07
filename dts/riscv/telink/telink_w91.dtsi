@@ -40,7 +40,7 @@
 			compatible = "mmio-sram";
 		};
 
-		ram_dlm: memory@80000 {
+		ram_dlm: memory@200000 {
 			compatible = "mmio-sram";
 		};
 
