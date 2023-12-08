@@ -11,6 +11,7 @@ zephyr_sources(
 	soc.c
 	halt.c
 	sys_heap_alloc_wrap.c
+	debug.c
 )
 
 if(CONFIG_SOC_RISCV_TELINK_W91)

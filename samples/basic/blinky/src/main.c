@@ -6,6 +6,9 @@
 
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/gpio.h>
+
+#if defined(CONFIG_BOARD_TLSR9118BDK40D)
+
 #include "reg_include/register.h"
 #include "driver_w91.h"
 #include "debug.h"
@@ -64,11 +67,11 @@ static void control_gpio_out(uint8_t gpio, bool state)
 	update_reg(GPIO_BASE_ADDR + 0x14, 1 << gpio, state);
 }
 
+static bool led_state;
+
 static void irq_sw_handler(uint32_t id)
 {
 	if (id == 1) {
-		static bool led_state = false;
-
 		led_state = !led_state;
 		control_gpio_out(20, led_state);
 	}
@@ -92,12 +95,13 @@ static void irq_trap_handler(const void *unused)
 	__asm__ volatile("csrr %0, mcause" : "=r"(mcause));
 	__asm__ volatile("csrr %0, mepc"   : "=r"(mepc));
 
-	debug_printf("irq: mcause = 0x%x, mcause = 0x%x \n", mcause, mcause);
+	debug_printf("irq: mcause = 0x%x, mcause = 0x%x\n", mcause, mcause);
 
 	if (mcause & (1u << 31)) {
 		switch (mcause & 0xfff) {
 		case 3: {
 			uint32_t id = plic_sw_claim_interrupt();
+
 			irq_sw_handler(id);
 			plic_sw_complete_interrupt(id);
 		}
@@ -134,9 +138,48 @@ int main(void)
 	plic_sw_interrupt_enable(1);
 
 	for (;;) {
-		debug_printf("main loop: sw requestn \n");
+		debug_printf("loop: sw request\n");
 		plic_sw_set_pending(1);
 		k_msleep(SLEEP_TIME_MS);
 	}
 	return 0;
 }
+
+#else
+
+/* 1000 msec = 1 sec */
+#define SLEEP_TIME_MS   1000
+
+/* The devicetree node identifier for the "led0" alias. */
+#define LED0_NODE DT_ALIAS(led0)
+
+/*
+ * A build error on this line means your board is unsupported.
+ * See the sample documentation for information on how to fix this.
+ */
+static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
+
+int main(void)
+{
+	int ret;
+
+	if (!gpio_is_ready_dt(&led)) {
+		return 0;
+	}
+
+	ret = gpio_pin_configure_dt(&led, GPIO_OUTPUT_ACTIVE);
+	if (ret < 0) {
+		return 0;
+	}
+
+	while (1) {
+		ret = gpio_pin_toggle_dt(&led);
+		if (ret < 0) {
+			return 0;
+		}
+		k_msleep(SLEEP_TIME_MS);
+	}
+	return 0;
+}
+
+#endif
