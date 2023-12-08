@@ -16,8 +16,8 @@
 #include <zephyr/storage/flash_map.h>
 
 /* Software reset defines */
-#define reg_reset                   REG_ADDR8(0x1401ef)
-#define SOFT_RESET                  0x20u
+// #define reg_reset                   REG_ADDR8(0x1401ef)
+// #define SOFT_RESET                  0x20u
 
 /* List of supported CCLK frequencies */
 #define CLK_160MHZ                  160000000u
@@ -91,7 +91,8 @@ void sys_arch_reboot(int type)
 {
 	ARG_UNUSED(type);
 
-	reg_reset = SOFT_RESET;
+	// reg_reset = SOFT_RESET;
+	// writel(0x01, SYS(CORE_RESET_CTRL)); // TBD reset D25 core or reset via FreeRTOS WDG
 }
 
 /**
