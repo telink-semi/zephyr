@@ -7,10 +7,11 @@
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/gpio.h>
 #include "reg_include/register.h"
+#include "driver_w91.h"
 #include "debug.h"
 
-/* 1000 msec = 1 sec */
-#define SLEEP_TIME_MS   1000
+/* 5000 msec = 5 sec */
+#define SLEEP_TIME_MS   5000
 
 /* The devicetree node identifier for the "led0" alias. */
 #define LED0_NODE DT_ALIAS(led0)
@@ -63,6 +64,53 @@ static void control_gpio_out(uint8_t gpio, bool state)
 	update_reg(GPIO_BASE_ADDR + 0x14, 1 << gpio, state);
 }
 
+static void irq_sw_handler(uint32_t id)
+{
+	if (id == 1) {
+		static bool led_state = false;
+
+		led_state = !led_state;
+		control_gpio_out(20, led_state);
+	}
+	debug_printf("sw irq handler %u\n", id);
+}
+
+static void except_handler(uint32_t mcause, uint32_t mepc)
+{
+	(void)mcause;
+	(void)mepc;
+
+	for (;;) {
+		__asm__ volatile("nop");
+	}
+}
+
+static void irq_trap_handler(const void *unused)
+{
+	uint32_t mcause, mepc;
+
+	__asm__ volatile("csrr %0, mcause" : "=r"(mcause));
+	__asm__ volatile("csrr %0, mepc"   : "=r"(mepc));
+
+	debug_printf("irq: mcause = 0x%x, mcause = 0x%x \n", mcause, mcause);
+
+	if (mcause & (1u << 31)) {
+		switch (mcause & 0xfff) {
+		case 3: {
+			uint32_t id = plic_sw_claim_interrupt();
+			irq_sw_handler(id);
+			plic_sw_complete_interrupt(id);
+		}
+		break;
+		default:
+			except_handler(mcause, mepc);
+			break;
+		}
+	} else {
+		except_handler(mcause, mepc);
+	}
+}
+
 int main(void)
 {
 	unsigned long hartid, vendor, arch;
@@ -78,10 +126,16 @@ int main(void)
 
 	/* blink red LED */
 	enable_gpio_out(20);
+
+	/* enable sw interrupt */
+	core_interrupt_enable();
+	IRQ_CONNECT(RISCV_MACHINE_SOFT_IRQ, 0, irq_trap_handler, NULL, 0);
+	irq_enable(RISCV_MACHINE_SOFT_IRQ);
+	plic_sw_interrupt_enable(1);
+
 	for (;;) {
-		control_gpio_out(20, true);
-		k_msleep(SLEEP_TIME_MS);
-		control_gpio_out(20, false);
+		debug_printf("main loop: sw requestn \n");
+		plic_sw_set_pending(1);
 		k_msleep(SLEEP_TIME_MS);
 	}
 	return 0;
