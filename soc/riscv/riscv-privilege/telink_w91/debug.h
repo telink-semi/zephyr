@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2023 Telink Semiconductor
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #ifndef __DEBUG_H
 #define __DEBUG_H
 

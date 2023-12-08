@@ -5,8 +5,7 @@
  */
 
 #include <zephyr/kernel.h>
-// #include <stimer.h>
-
+/* #include <stimer.h> */
 
 FUNC_NORETURN void arch_system_halt(unsigned int reason)
 {

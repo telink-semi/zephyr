@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2023 Telink Semiconductor
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #include "debug.h"
 #include <reg_include/register.h>
 
@@ -22,21 +28,21 @@
 #define OFT_ATCUART_HWC				0x10
 #define OFT_ATCUART_OSC				0x14
 #define OFT_ATCUART_RBR				0x20
-#define OFT_ATCUART_THR 			0x20
-#define OFT_ATCUART_DLL 			0x20
-#define OFT_ATCUART_IER  			0x24
+#define OFT_ATCUART_THR				0x20
+#define OFT_ATCUART_DLL				0x20
+#define OFT_ATCUART_IER				0x24
 #define OFT_ATCUART_DLM				0x24
 #define OFT_ATCUART_IIR				0x28
 #define OFT_ATCUART_FCR				0x28
 #define OFT_ATCUART_LCR				0x2C
-#define OFT_ATCUART_MCR 			0x30
+#define OFT_ATCUART_MCR				0x30
 #define OFT_ATCUART_LSR				0x34
-#define OFT_ATCUART_MSR 			0x38
-#define OFT_ATCUART_SCR 			0x3C
+#define OFT_ATCUART_MSR				0x38
+#define OFT_ATCUART_SCR				0x3C
 
 static void debug_init(void)
 {
-	static volatile bool debug_inited = false;
+	static volatile bool debug_inited;
 
 	if (!debug_inited) {
 		debug_inited = true;
@@ -65,7 +71,8 @@ static void debug_init(void)
 void debug_putch(char ch)
 {
 	debug_init();
-	while (!(readl(UART0_BASE_ADDR + OFT_ATCUART_LSR) & (1 << 5)));
+	while (!(readl(UART0_BASE_ADDR + OFT_ATCUART_LSR) & (1 << 5)))
+		;
 	writel((uint32_t)ch, UART0_BASE_ADDR + OFT_ATCUART_THR);
 }
 
@@ -80,8 +87,9 @@ void debug_puts(const char *str)
 void debug_printf(const char *format, ...)
 {
 	char buf[DEBUG_BUFFER_SIZE];
-	buf[0] = 0;
 	va_list args;
+
+	buf[0] = 0;
 	va_start(args, format);
 	(void)vsnprintf(buf, sizeof(buf), format, args);
 	va_end(args);

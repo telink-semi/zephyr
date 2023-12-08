@@ -21,16 +21,10 @@
 
 #define CORE_NAME "D25 core -> "
 
-static uint32_t request_sw_irq_cntr = 0;
-static uint32_t responce_sw_irq_cntr = 0;
+static uint32_t request_sw_irq_cntr;
+static uint32_t response_sw_irq_cntr;
 
 static bool led_state;
-
-/*
- * A build error on this line means your board is unsupported.
- * See the sample documentation for information on how to fix this.
- */
-// static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
 
 /***************************************************************************************
  * GPIO test functionality
@@ -48,6 +42,7 @@ static bool led_state;
 static void update_reg(uint32_t addr, uint32_t value, bool set)
 {
 	uint32_t reg = readl(addr);
+
 	if (set) {
 		reg |= value;
 	} else {
@@ -80,7 +75,7 @@ static void irq_sw_handler(uint32_t id)
 		led_state = !led_state;
 		control_gpio_out(20, led_state);
 	}
-	debug_printf(CORE_NAME "sw irq handler id = %u: cnt = %u \n", id, ++responce_sw_irq_cntr);
+	debug_printf(CORE_NAME "sw irq handler id = %u: cnt = %u\n", id, ++response_sw_irq_cntr);
 }
 
 static void except_handler(uint32_t mcause, uint32_t mepc)
@@ -121,15 +116,11 @@ static void irq_trap_handler(const void *unused)
 int main(void)
 {
 	unsigned long hartid, vendor, arch;
+
 	read_csr(hartid, NDS_MHARTID);
 	read_csr(vendor, NDS_MVENDORID);
 	read_csr(arch, NDS_MARCHID);
-	debug_printf(CORE_NAME "main   [%u] vendor %08x, arch %08x\n", hartid, vendor, arch);
-
-// *((volatile unsigned int *)(0xF0700028)) = *((volatile unsigned int *)(0xF0700028)) & ~(0xf << 16);
-// *((volatile unsigned int *)(0xF0700028)) = *((volatile unsigned int *)(0xF0700028)) | (0x8 << 16);
-// *((volatile unsigned int *)(0xf0700010)) = *((volatile unsigned int *)(0xf0700010)) | (1 << 20);
-// *((volatile unsigned int *)(0xf0700014)) = *((volatile unsigned int *)(0xf0700014)) | (1 << 20);
+	debug_printf(CORE_NAME " [%u] vendor %08x, arch %08x\n", hartid, vendor, arch);
 
 	/* blink red LED */
 	enable_gpio_out(20);
@@ -140,11 +131,11 @@ int main(void)
 	irq_enable(RISCV_MACHINE_SOFT_IRQ);
 	plic_sw_interrupt_enable(1);
 
-	/* Waiting init N22 core*/
+	/* Waiting init N22 core */
 	k_msleep(SLEEP_TIME_MS);
 
 	for (;;) {
-		debug_printf(CORE_NAME "sw irq request: cnt = %u \n", ++request_sw_irq_cntr);
+		debug_printf(CORE_NAME "sw irq request: cnt = %u\n", ++request_sw_irq_cntr);
 		plic_sw_set_pending(1);
 		plic_sw_set_pending(2);
 		k_msleep(SLEEP_TIME_MS);
