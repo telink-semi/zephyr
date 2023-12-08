@@ -7,17 +7,24 @@
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/gpio.h>
 
+/* 1000 msec = 1 sec */
+#define SLEEP_TIME_MS   1000
+
+/* The devicetree node identifier for the "led0" alias. */
+#define LED0_NODE DT_ALIAS(led0)
+
 #if defined(CONFIG_BOARD_TLSR9118BDK40D)
 
 #include "reg_include/register.h"
 #include "driver_w91.h"
 #include "debug.h"
 
-/* 5000 msec = 5 sec */
-#define SLEEP_TIME_MS   5000
+#define CORE_NAME "D25 core -> "
 
-/* The devicetree node identifier for the "led0" alias. */
-#define LED0_NODE DT_ALIAS(led0)
+static uint32_t request_sw_irq_cntr = 0;
+static uint32_t responce_sw_irq_cntr = 0;
+
+static bool led_state;
 
 /*
  * A build error on this line means your board is unsupported.
@@ -67,15 +74,13 @@ static void control_gpio_out(uint8_t gpio, bool state)
 	update_reg(GPIO_BASE_ADDR + 0x14, 1 << gpio, state);
 }
 
-static bool led_state;
-
 static void irq_sw_handler(uint32_t id)
 {
 	if (id == 1) {
 		led_state = !led_state;
 		control_gpio_out(20, led_state);
 	}
-	debug_printf("sw irq handler %u\n", id);
+	debug_printf(CORE_NAME "sw irq handler id = %u: cnt = %u \n", id, ++responce_sw_irq_cntr);
 }
 
 static void except_handler(uint32_t mcause, uint32_t mepc)
@@ -94,8 +99,6 @@ static void irq_trap_handler(const void *unused)
 
 	__asm__ volatile("csrr %0, mcause" : "=r"(mcause));
 	__asm__ volatile("csrr %0, mepc"   : "=r"(mepc));
-
-	debug_printf("irq: mcause = 0x%x, mcause = 0x%x\n", mcause, mcause);
 
 	if (mcause & (1u << 31)) {
 		switch (mcause & 0xfff) {
@@ -121,7 +124,7 @@ int main(void)
 	read_csr(hartid, NDS_MHARTID);
 	read_csr(vendor, NDS_MVENDORID);
 	read_csr(arch, NDS_MARCHID);
-	debug_printf("main   [%u] vendor %08x, arch %08x\n", hartid, vendor, arch);
+	debug_printf(CORE_NAME "main   [%u] vendor %08x, arch %08x\n", hartid, vendor, arch);
 
 // *((volatile unsigned int *)(0xF0700028)) = *((volatile unsigned int *)(0xF0700028)) & ~(0xf << 16);
 // *((volatile unsigned int *)(0xF0700028)) = *((volatile unsigned int *)(0xF0700028)) | (0x8 << 16);
@@ -137,21 +140,19 @@ int main(void)
 	irq_enable(RISCV_MACHINE_SOFT_IRQ);
 	plic_sw_interrupt_enable(1);
 
+	/* Waiting init N22 core*/
+	k_msleep(SLEEP_TIME_MS);
+
 	for (;;) {
-		debug_printf("loop: sw request\n");
+		debug_printf(CORE_NAME "sw irq request: cnt = %u \n", ++request_sw_irq_cntr);
 		plic_sw_set_pending(1);
+		plic_sw_set_pending(2);
 		k_msleep(SLEEP_TIME_MS);
 	}
 	return 0;
 }
 
 #else
-
-/* 1000 msec = 1 sec */
-#define SLEEP_TIME_MS   1000
-
-/* The devicetree node identifier for the "led0" alias. */
-#define LED0_NODE DT_ALIAS(led0)
 
 /*
  * A build error on this line means your board is unsupported.
