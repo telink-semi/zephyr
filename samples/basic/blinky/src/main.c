@@ -7,6 +7,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/gpio.h>
 #include "reg_include/register.h"
+#include "debug.h"
 
 /* 1000 msec = 1 sec */
 #define SLEEP_TIME_MS   1000
@@ -64,6 +65,12 @@ static void control_gpio_out(uint8_t gpio, bool state)
 
 int main(void)
 {
+	unsigned long hartid, vendor, arch;
+	read_csr(hartid, NDS_MHARTID);
+	read_csr(vendor, NDS_MVENDORID);
+	read_csr(arch, NDS_MARCHID);
+	debug_printf("main   [%u] vendor %08x, arch %08x\n", hartid, vendor, arch);
+
 // *((volatile unsigned int *)(0xF0700028)) = *((volatile unsigned int *)(0xF0700028)) & ~(0xf << 16);
 // *((volatile unsigned int *)(0xF0700028)) = *((volatile unsigned int *)(0xF0700028)) | (0x8 << 16);
 // *((volatile unsigned int *)(0xf0700010)) = *((volatile unsigned int *)(0xf0700010)) | (1 << 20);

@@ -15,7 +15,7 @@
 	compatible = "telink,tlsr9118bdk40d";
 
 	chosen {
-		zephyr,sram = &sram;
+		zephyr,sram = &ram_dlm;
 		zephyr,flash = &flash;
 		zephyr,flash-controller = &flash_mspi;
 		zephyr,entropy = &trng0;
@@ -27,8 +27,12 @@
 	clock-frequency = <48000000>;
 };
 
-&sram {
-	reg = <0x40000000 0x00020000>;
+&ram_ilm {
+	reg = <0x00000000 0x00008000>;
+};
+
+&ram_dlm {
+	reg = <0x00080000 0x00030000>;
 };
 
 &flash {
