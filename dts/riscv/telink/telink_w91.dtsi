@@ -40,7 +40,7 @@
 			compatible = "mmio-sram";
 		};
 
-		ram_dlm: memory@80000 {
+		ram_dlm: memory@20AC00 {
 			compatible = "mmio-sram";
 		};
 
@@ -58,7 +58,7 @@
 			#address-cells = <1>;
 			#size-cells = <1>;
 
-			flash: flash@20000000 {
+			flash: flash@80000000 {
 				compatible = "soc-nv-flash";
 				write-block-size = <1>;
 			};
