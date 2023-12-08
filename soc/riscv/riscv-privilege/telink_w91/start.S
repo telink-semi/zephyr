@@ -45,6 +45,16 @@ _start:                                #/ after reset starts on D25 core
 	li     t0, (3 << 6)
 	csrc   NDS_MXSTATUS, t0            #/ Clear Machine Extended Status
 
+#if defined(CONFIG_TELINK_W91_2_WIRE_SPI_ENABLE) && CONFIG_TELINK_W91_2_WIRE_SPI_ENABLE
+	lui    t0, 0xf0900
+	li     t1, 0x00
+	sw     t1, 0x050(t0)               #/ SPI flash regular mode: 0xf0900050 <- 0x00
+#else
+	lui    t0, 0xf0900
+	li     t1, 0x05
+	sw     t1, 0x050(t0)               #/ SPI flash quad mode: 0xf0900050 <- 0x05
+#endif
+
 	li     t0, 0x1
 	csrs   NDS_MCACHE_CTL, t0          #/ enable I-Cache
 	li     t0, 0x2

@@ -1,6 +1,10 @@
 # Copyright (c) 2023 Telink Semiconductor
 # SPDX-License-Identifier: Apache-2.0
 
+if (CONFIG_TELINK_W91_2_WIRE_SPI_ENABLE)
+	message(WARNING "2-wire SPI interface enabled!")
+endif()
+
 zephyr_sources(
 	start.S
 	soc_irq.S

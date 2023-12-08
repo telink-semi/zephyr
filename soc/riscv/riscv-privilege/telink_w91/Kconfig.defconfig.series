@@ -87,4 +87,8 @@ config STACK_SENTINEL
 config THREAD_NAME
 	default y if STACK_SENTINEL
 
+config TELINK_W91_2_WIRE_SPI_ENABLE
+	bool
+	default n
+
 endif # SOC_SERIES_RISCV_TELINK_W91

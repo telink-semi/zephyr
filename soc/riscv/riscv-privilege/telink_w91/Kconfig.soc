@@ -61,6 +61,13 @@ config TELINK_W91_REBOOT_ON_FAULT_DELAY
 	help
 		This option sets Telink W91 chip reboot on fault delay in mS.
 
+config TELINK_W91_2_WIRE_SPI_ENABLE
+	bool "Use 2-wire SPI interface to FLASH"
+	depends on SOC_SERIES_RISCV_TELINK_W91
+	default n
+	help
+		This option enables 2-wire SPI interface to FLASH
+
 config TELINK_W91_MALLOC_FAILED_HOOK
 	bool "Stop SW execution when system heap allocation failed"
 	depends on SOC_SERIES_RISCV_TELINK_W91
