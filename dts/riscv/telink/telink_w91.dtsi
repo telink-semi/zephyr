@@ -36,11 +36,7 @@
 		compatible = "telink,telink_w91-soc";
 		ranges;
 
-		ram_ilm: memory@0 {
-			compatible = "mmio-sram";
-		};
-
-		ram_dlm: memory@20AC00 {
+		sram: memory@40000000 {
 			compatible = "mmio-sram";
 		};
 
