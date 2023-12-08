@@ -80,13 +80,9 @@ int main(void)
 	enable_gpio_out(20);
 	for (;;) {
 		control_gpio_out(20, true);
-		for (size_t i = 0; i < 1000000; i++) {
-			__asm__ volatile("nop");
-		}
+		k_msleep(SLEEP_TIME_MS);
 		control_gpio_out(20, false);
-		for (size_t i = 0; i < 1000000; i++) {
-			__asm__ volatile("nop");
-		}
+		k_msleep(SLEEP_TIME_MS);
 	}
 	return 0;
 }
