@@ -27,7 +27,7 @@ supports retention feature), external Flash memory, stereo audio codec, 14 bit A
 analog and digital Microphone input, PWM, flexible IO interfaces, and other peripheral blocks required
 for advanced IoT, hearable, and wearable devices.
 
-.. figure:: img/tlsr9118bdk40d_block_diagram.jpg
+.. figure:: img/tlsr9118_block_diagram.jpg
      :align: center
      :alt: TLSR9118BDK40D_SOC
 
