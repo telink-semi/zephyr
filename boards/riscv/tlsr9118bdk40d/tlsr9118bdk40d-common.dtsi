@@ -16,10 +16,29 @@
 
 	chosen {
 		zephyr,sram = &ram_dlm;
+		zephyr,ipc_shm = &sram0_shared;
 		zephyr,flash = &flash;
 		zephyr,flash-controller = &flash_mspi;
 		zephyr,entropy = &trng0;
 		zephyr,code-partition = &slot0_partition;
+	};
+
+	reserved-memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		sram0_shared: memory@40000000 {
+			/* SRAM allocated to shared memory */
+			reg = <0x40000000 0x20000>;
+		};
+	};
+
+	mbox: ipc: mbox@2a000 {
+		compatible = "telink,mbox-ipc-w91";
+		reg = <0x2a000 0x1000>;
+		#mbox-cells = <1>;
+		status = "okay";
 	};
 };
 

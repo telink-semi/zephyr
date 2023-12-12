@@ -12,10 +12,12 @@
 #define TX_ID (0)
 #define RX_ID (1)
 
+#define CORE_NAME "N22 core -> "
+
 static void callback(const struct device *dev, uint32_t channel,
 		     void *user_data, struct mbox_msg *data)
 {
-	printk("Pong (on channel %d)\n", channel);
+	debug_printf(CORE_NAME "Pong (on channel %d)\n", channel);
 }
 
 int main(void)
@@ -24,7 +26,7 @@ int main(void)
 	struct mbox_channel rx_channel;
 	const struct device *dev;
 
-	printk("Hello from NET\n");
+	debug_printf(CORE_NAME "Hello from NET\n");
 
 	dev = DEVICE_DT_GET(DT_NODELABEL(mbox));
 
@@ -32,21 +34,21 @@ int main(void)
 	mbox_init_channel(&rx_channel, dev, RX_ID);
 
 	if (mbox_register_callback(&rx_channel, callback, NULL)) {
-		printk("mbox_register_callback() error\n");
+		debug_printf(CORE_NAME "mbox_register_callback() error\n");
 		return 0;
 	}
 
 	if (mbox_set_enabled(&rx_channel, 1)) {
-		printk("mbox_set_enable() error\n");
+		debug_printf(CORE_NAME "mbox_set_enable() error\n");
 		return 0;
 	}
 
 	while (1) {
 
-		printk("Ping (on channel %d)\n", tx_channel.id);
+		debug_printf(CORE_NAME "Ping (on channel %d)\n", tx_channel.id);
 
 		if (mbox_send(&tx_channel, NULL) < 0) {
-			printk("mbox_send() error\n");
+			debug_printf(CORE_NAME "mbox_send() error\n");
 			return 0;
 		}
 
