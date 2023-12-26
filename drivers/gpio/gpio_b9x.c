@@ -132,7 +132,9 @@ struct gpio_b9x_data {
 	struct gpio_driver_data common; /* driver data */
 	sys_slist_t callbacks;          /* list of callbacks */
 #if (defined CONFIG_PM_DEVICE && (defined(CONFIG_BOARD_TLSR9518ADK80D_RETENTION) \
-|| defined(CONFIG_BOARD_TLSR9528A_RETENTION)))
+	|| defined(CONFIG_BOARD_TLSR9518ADK80D_MARS_RETENTION) \
+	|| defined(CONFIG_BOARD_TLSR9518ADK80D_USB_DONGLE_RETENTION) \
+	|| defined(CONFIG_BOARD_TLSR9528A_RETENTION)))
 	struct gpio_b9x_retention_data gpio_b9x_retention; /* list of necessary retained data */
 #endif
 };
@@ -616,7 +618,9 @@ static int gpio_b9x_manage_callback(const struct device *dev,
 }
 
 #if (defined CONFIG_PM_DEVICE && (defined(CONFIG_BOARD_TLSR9518ADK80D_RETENTION) \
-|| defined(CONFIG_BOARD_TLSR9528A_RETENTION)))
+	|| defined(CONFIG_BOARD_TLSR9518ADK80D_MARS_RETENTION) \
+	|| defined(CONFIG_BOARD_TLSR9518ADK80D_USB_DONGLE_RETENTION) \
+	|| defined(CONFIG_BOARD_TLSR9528A_RETENTION)))
 
 static int gpio_b9x_pm_action(const struct device *dev, enum pm_device_action action)
 {
@@ -728,6 +732,8 @@ static int gpio_b9x_pm_action(const struct device *dev, enum pm_device_action ac
 
 #endif
 /* (CONFIG_PM_DEVICE && (defined(CONFIG_BOARD_TLSR9518ADK80D_RETENTION)
+ * || defined(CONFIG_BOARD_TLSR9518ADK80D_MARS_RETENTION)
+ * || defined(CONFIG_BOARD_TLSR9518ADK80D_USB_DONGLE_RETENTION)
  * || defined(CONFIG_BOARD_TLSR9528A_RETENTION)))
  */
 
@@ -804,7 +810,9 @@ static void gpio_b9x_irq_connect_4(void)
 #endif
 
 #if (defined CONFIG_PM_DEVICE && (defined(CONFIG_BOARD_TLSR9518ADK80D_RETENTION) \
-|| defined(CONFIG_BOARD_TLSR9528A_RETENTION)))
+	|| defined(CONFIG_BOARD_TLSR9518ADK80D_MARS_RETENTION) \
+	|| defined(CONFIG_BOARD_TLSR9518ADK80D_USB_DONGLE_RETENTION) \
+	|| defined(CONFIG_BOARD_TLSR9528A_RETENTION)))
 #define PM_DEVICE_INST_DEFINE(n, gpio_b9x_pm_action)  \
 PM_DEVICE_DT_INST_DEFINE(n, gpio_b9x_pm_action);
 #define PM_DEVICE_INST_GET(n) PM_DEVICE_DT_INST_GET(n)

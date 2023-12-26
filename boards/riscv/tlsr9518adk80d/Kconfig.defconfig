@@ -8,20 +8,54 @@ config BOARD
 
 endif
 
+if BOARD_TLSR9518ADK80D_USB_DONGLE
+
+config BOARD
+	default "tlsr9518adk80d_usb_dongle"
+config USB_TELINK_B9X
+	default y
+
+endif
+
+if BOARD_TLSR9518ADK80D_USB_DONGLE_RETENTION
+
+config BOARD
+	default "tlsr9518adk80d_usb_dongle_retention"
+config USB_TELINK_B9X
+	default y
+
+endif
+
 if BOARD_TLSR9518ADK80D_RETENTION
 
 config BOARD
 	default "tlsr9518adk80d_retention"
 
-config BOARD_TLSR9X_NON_RETENTION_RAM_CODE
-	default n
+endif
+
+if BOARD_TLSR9518ADK80D_MARS
+
+config BOARD
+	default "tlsr9518adk80d_mars"
+
+config USB_TELINK_B9X
+	default y
+
+endif
+
+if BOARD_TLSR9518ADK80D_MARS_RETENTION
+
+config BOARD
+	default "tlsr9518adk80d_mars_retention"
 
 endif
 
 config HEAP_MEM_POOL_SIZE
 	default 4096
 
-if BOARD_TLSR9518ADK80D || BOARD_TLSR9518ADK80D_RETENTION
+if BOARD_TLSR9518ADK80D || BOARD_TLSR9518ADK80D_RETENTION || BOARD_TLSR9518ADK80D_MARS \
+	|| BOARD_TLSR9518ADK80D_MARS_RETENTION || BOARD_TLSR9518ADK80D_USB_DONGLE_RETENTION \
+	|| BOARD_TLSR9518ADK80D_USB_DONGLE
 
 config SOC_FLASH_TELINK_B9X
 	default y if FLASH

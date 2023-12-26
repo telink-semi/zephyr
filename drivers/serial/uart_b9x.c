@@ -594,7 +594,9 @@ static int uart_b9x_pm_action(const struct device *dev, enum pm_device_action ac
 
 	switch (action) {
 	case PM_DEVICE_ACTION_RESUME:
-#if defined(CONFIG_BOARD_TLSR9518ADK80D_RETENTION) || defined(CONFIG_BOARD_TLSR9528A_RETENTION)
+#if defined(CONFIG_BOARD_TLSR9518ADK80D_RETENTION) || defined(CONFIG_BOARD_TLSR9528A_RETENTION) \
+	|| defined(CONFIG_BOARD_TLSR9518ADK80D_MARS_RETENTION) \
+	|| defined(CONFIG_BOARD_TLSR9518ADK80D_USB_DONGLE_RETENTION)
 		{
 			extern volatile bool b9x_deep_sleep_retention;
 
@@ -602,7 +604,7 @@ static int uart_b9x_pm_action(const struct device *dev, enum pm_device_action ac
 				uart_b9x_driver_init(dev);
 			}
 		}
-#endif /* CONFIG_BOARD_TLSR9518ADK80D_RETENTION || CONFIG_BOARD_TLSR9528A_RETENTION */
+#endif
 		/* reset TX/RX byte index */
 		data->tx_byte_index = 0;
 		data->rx_byte_index = 0;

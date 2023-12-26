@@ -1,0 +1,137 @@
+/*
+ * Copyright (c) 2023 Telink Semiconductor
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/dts-v1/;
+#include "tlsr9518adk80d-common.dtsi"
+#include <zephyr/dt-bindings/gpio/gpio.h>
+#include <zephyr/dt-bindings/led/led.h>
+
+/ {
+	soc {
+
+		/delete-node/ memory@0;
+
+		ram_ilm_retention: memory@0 {
+			compatible = "mmio-sram";
+		};
+
+		ram_ilm_nonretention: memory@10000 {
+			ompatible = "mmio-sram";
+		};
+	};
+
+	chosen {
+		zephyr,sram = &ram_ilm_retention;
+	};
+
+	cpus {
+		cpu0: cpu@0 {
+			cpu-power-states = <&state0 &state1>;
+		};
+	};
+
+	power-states {
+		state1: state1 {
+			compatible = "zephyr,power-state";
+			power-state-name = "standby";
+			min-residency-us = <100000>;
+			exit-latency-us = <7000>;
+		};
+	};
+
+	aliases {
+		led-strip = &led_strip;
+		// system-state-led = &led_red;
+	};
+
+	keys {
+		/delete-node/ button_1;
+		/delete-node/ button_4;
+		/delete-node/ key_matrix_col1;
+		/delete-node/ key_matrix_col2;
+		/delete-node/ key_matrix_row1;
+		/delete-node/ key_matrix_row2;
+		/delete-node/ key_dfu;
+		compatible = "gpio-keys";
+
+		key_1: button_1 {
+			gpios = <&gpiod 1 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+		};
+		key_4: button_4 {
+			gpios = <&gpiod 3 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+		};
+	};
+
+	led_strip: ws2812 {
+		compatible = "worldsemi,ws2812-gpio";
+
+		chain-length = <1>; /* arbitrary; change at will */
+		color-mapping = <LED_COLOR_ID_GREEN
+				 LED_COLOR_ID_RED
+				 LED_COLOR_ID_BLUE>;
+		in-gpios = <&gpiob 4 0>;
+	};
+};
+
+&gpioc {
+	interrupts = <38 1>;
+};
+
+&gpiod {
+	interrupts = <37 1>;
+	status = "okay";
+};
+
+&pinctrl {
+	/* Define I2C pins: SCL(PE0), SDA(PC2) */
+	i2c_scl_pe0_default: i2c_scl_pe0_default {
+		pinmux = <B9x_PINMUX_SET(B9x_PORT_E, B9x_PIN_0, B91_FUNC_A)>;
+	};
+	i2c_sda_pc2_default: i2c_sda_pc2_default {
+		pinmux = <B9x_PINMUX_SET(B9x_PORT_C, B9x_PIN_2, B91_FUNC_A)>;
+	};
+
+	/* PWMs */
+	pwm_ch0_pe3_default: pwm_ch0_pe3_default {
+		pinmux = <B9x_PINMUX_SET(B9x_PORT_E, B9x_PIN_3, B91_FUNC_C)>;
+	};
+	pwm_ch1_pb5_default: pwm_ch1_pb5_default {
+		pinmux = <B9x_PINMUX_SET(B9x_PORT_B, B9x_PIN_5, B91_FUNC_C)>;
+	};
+	pwm_ch2_pe2_default: pwm_ch2_pe2_default {
+		pinmux = <B9x_PINMUX_SET(B9x_PORT_E, B9x_PIN_2, B91_FUNC_C)>;
+	};
+	pwm_ch3_pe0_default: pwm_ch3_pe0_default {
+		pinmux = <B9x_PINMUX_SET(B9x_PORT_E, B9x_PIN_0, B91_FUNC_C)>;
+	};
+	pwm_ch4_pe4_default: pwm_ch4_pe4_default {
+		pinmux = <B9x_PINMUX_SET(B9x_PORT_E, B9x_PIN_4, B91_FUNC_C)>;
+	};
+};
+
+&i2c {
+	pinctrl-0 = <&i2c_scl_pe0_default &i2c_sda_pc2_default>;
+
+	sht3xd@44 {
+		compatible = "sensirion,sht3xd";
+		reg = <0x44>;
+	};
+};
+
+&pwm0 {
+	pinctrl-0 = <&pwm_ch0_pe3_default
+				 &pwm_ch1_pb5_default
+				 &pwm_ch2_pe2_default
+				 &pwm_ch4_pe4_default>;
+};
+
+&ram_ilm_retention {
+	reg = <0x00000000 0x00010000>;
+};
+
+&ram_ilm_nonretention {
+	reg = <0x00010000 0x00010000>;
+};

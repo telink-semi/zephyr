@@ -1,0 +1,86 @@
+/*
+ * Copyright (c) 2023 Telink Semiconductor
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/dts-v1/;
+
+#include "tlsr9518adk80d-common.dtsi"
+
+/ {
+	aliases {
+		/delete-property/ sw2;
+		/delete-property/ sw3;
+	};
+
+	soc {
+
+		/delete-node/ memory@0;
+
+		ram_ilm_retention: memory@0 {
+			compatible = "mmio-sram";
+		};
+
+		ram_ilm_nonretention: memory@10000 {
+			ompatible = "mmio-sram";
+		};
+	};
+	chosen {
+		zephyr,sram = &ram_ilm_retention;
+	};
+
+	cpus {
+		cpu0: cpu@0 {
+			cpu-power-states = <&state0 &state1>;
+		};
+	};
+
+	power-states {
+		state1: state1 {
+			compatible = "zephyr,power-state";
+			power-state-name = "standby";
+			min-residency-us = <100000>;
+			exit-latency-us = <7000>;
+		};
+	};
+	keys {
+		compatible = "gpio-keys";
+		/delete-node/ button_1;
+		/delete-node/ button_2;
+		/delete-node/ button_3;
+		/delete-node/ button_4;
+		/delete-node/ button_dfu;
+
+		key_dfu: button_dfu {
+			label = "USB DFU";
+			gpios = <&gpiob 2 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+		};
+		key_1: button_1 {
+			gpios = <&gpiob 2 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+		};
+		key_2: button_2 {
+			gpios = <&gpioc 3 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+		};
+	};
+};
+
+&ram_ilm_retention {
+	reg = <0x00000000 0x00010000>;
+};
+
+&ram_ilm_nonretention {
+	reg = <0x00010000 0x00010000>;
+};
+
+&uart0 {
+	pinctrl-0 = <&uart0_tx_pa3_default &uart0_rx_pa4_default>;
+};
+
+&gpiob {
+	interrupts = <37 1>;
+};
+
+&gpioc {
+	interrupts = <38 1>;
+};

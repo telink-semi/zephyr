@@ -93,8 +93,11 @@
 				       ((pin & 0xf0) ? 1 : 0)))
 
 
-#if (defined(CONFIG_BOARD_TLSR9518ADK80D_RETENTION) || defined(CONFIG_BOARD_TLSR9528A_RETENTION)) \
-						&& defined(CONFIG_PM_DEVICE)
+#if (defined(CONFIG_BOARD_TLSR9518ADK80D_RETENTION) \
+				|| defined(CONFIG_BOARD_TLSR9528A_RETENTION) \
+				|| defined(CONFIG_BOARD_TLSR9518ADK80D_MARS_RETENTION) \
+				|| defined(CONFIG_BOARD_TLSR9518ADK80D_USB_DONGLE_RETENTION)) \
+				&& defined(CONFIG_PM_DEVICE)
 
 static int pinctrl_b9x_init(const struct device *dev)
 {
