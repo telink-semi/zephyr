@@ -106,13 +106,13 @@ extern sCCFileInfo CCFileStruct;
 extern uint16_t ccFileOffset;
 
 /* Exported functions ------------------------------------------------------- */
-uint16_t NfcType5_WriteCCFile( const uint8_t * const pCCBuffer );
-uint16_t NfcType5_ReadCCFile( uint8_t * const pCCBuffer );
-uint16_t NfcType5_TT5Init( void );
-uint16_t NfcType5_NDEFDetection( void );
-uint16_t NfcType5_ReadNDEF( uint8_t* pData );
-uint16_t NfcType5_WriteNDEF(uint16_t Length, uint8_t* pData );
-uint16_t NfcType5_GetLength(uint16_t* Length);
+uint16_t NfcType5_WriteCCFile( const struct device *dev, const uint8_t * const pCCBuffer );
+uint16_t NfcType5_ReadCCFile( const struct device *dev, uint8_t * const pCCBuffer );
+uint16_t NfcType5_TT5Init( const struct device *dev );
+uint16_t NfcType5_NDEFDetection( const struct device *dev );
+uint16_t NfcType5_ReadNDEF( const struct device *dev, uint8_t* pData );
+uint16_t NfcType5_WriteNDEF(const struct device *dev, uint16_t Length, uint8_t* pData );
+uint16_t NfcType5_GetLength(const struct device *dev, uint16_t* Length);
 
 #endif /* __TAGTYPE5_WRAPPER_H */
 

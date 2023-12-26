@@ -1476,7 +1476,7 @@ static int _nt3h2x11_init(const struct device *dev)
                             NULL,                                               \
                             &nt3h2x11_data##inst,                               \
                             &nt3h2x11_cfg##inst,                                \
-                            POST_KERNEL,                                        \
+                            APPLICATION,                                        \
                             CONFIG_NT3H2X11_INIT_PRIORITY,                      \
                             &_nt3h2x11_driver_api);
 

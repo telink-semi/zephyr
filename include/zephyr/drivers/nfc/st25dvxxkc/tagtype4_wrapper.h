@@ -23,8 +23,8 @@
 
 #include "lib_NDEF.h"
 
-uint16_t NfcType4_GetLength(uint16_t* Length);
-uint16_t NfcType4_ReadNDEF( uint8_t* pData );
-uint16_t NfcType4_WriteNDEF(uint16_t Length, uint8_t* pData );
+uint16_t NfcType4_GetLength(const struct device *dev, uint16_t* Length);
+uint16_t NfcType4_ReadNDEF( const struct device *dev, uint8_t* pData );
+uint16_t NfcType4_WriteNDEF(const struct device *dev, uint16_t Length, uint8_t* pData );
 
 #endif // _TAGNFCA_H_

@@ -26,6 +26,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include <stdint.h>
+#include <zephyr/device.h>
 
 /** @addtogroup BSP
   * @{
@@ -40,12 +41,12 @@
 /**
  * @brief  ST25DVxxKC Write register function typedef definition.
  */
-typedef int32_t(*ST25DVxxKC_WriteReg_Func)(const void *const, const uint16_t, const uint8_t *const, const uint16_t);
+typedef int32_t(*ST25DVxxKC_WriteReg_Func)(const struct device *, const void *const, const uint16_t, const uint8_t *const, const uint16_t);
 
 /**
  * @brief  ST25DVxxKC Read register function typedef definition.
  */
-typedef int32_t(*ST25DVxxKC_ReadReg_Func)(const void *const, const uint16_t, uint8_t *const, const uint16_t);
+typedef int32_t(*ST25DVxxKC_ReadReg_Func)(const struct device *, const void *const, const uint16_t, uint8_t *const, const uint16_t);
 
 /**
  * @brief  ST25DVxxKC context structure.
@@ -384,150 +385,12 @@ typedef struct
 
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-int32_t ST25DVxxKC_GetICREF(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetENDA1(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetENDA1(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetENDA2(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetENDA2(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetENDA3(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetENDA3(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetDSFID(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetAFI(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetMEM_SIZE_MSB(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetBLK_SIZE(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetMEM_SIZE_LSB(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetICREV(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetUID(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetI2CPASSWD(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetI2CPASSWD(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetLOCKDSFID(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetLOCKAFI(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetFTM_MBMODE(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetFTM_MBMODE(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetMBLEN_DYN_MBLEN(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetMB_CTRL_DYN_MBEN(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetMB_CTRL_DYN_MBEN(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetMB_CTRL_DYN_HOSTPUTMSG(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetMB_CTRL_DYN_RFPUTMSG(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetMB_CTRL_DYN_STRESERVED(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetMB_CTRL_DYN_HOSTMISSMSG(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetMB_CTRL_DYN_RFMISSMSG(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetMB_CTRL_DYN_CURRENTMSG(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetMB_CTRL_DYN_ALL(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetFTM_MBWDG(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetFTM_MBWDG(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetGPO1_RFUSERSTATE(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetGPO1_RFUSERSTATE(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetGPO1_RFACTIVITY(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetGPO1_RFACTIVITY(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetGPO1_RFINTERRUPT(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetGPO1_RFINTERRUPT(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetGPO1_FIELDCHANGE(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetGPO1_FIELDCHANGE(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetGPO1_RFPUTMSG(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetGPO1_RFPUTMSG(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetGPO1_RFGETMSG(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetGPO1_RFGETMSG(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetGPO1_RFWRITE(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetGPO1_RFWRITE(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetGPO1_ENABLE(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetGPO1_ENABLE(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetGPO1_ALL(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetGPO1_ALL(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetGPO2_I2CWRITEENABLE(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetGPO2_I2CWRITEENABLE(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetGPO2_RFOFF(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetGPO2_RFOFF(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetGPO2_ITTIME(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetGPO2_ITTIME(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetGPO2_ALL(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetGPO2_ALL(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetGPO_DYN_ENABLE(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetGPO_DYN_ENABLE(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetGPO_DYN_ALL(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetGPO_DYN_ALL(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetITTIME_DELAY(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetITTIME_DELAY(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetITSTS_DYN_RFUSERSTATE(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetITSTS_DYN_RFACTIVITY(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetITSTS_DYN_RFINTERRUPT(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetITSTS_DYN_FIELDFALLING(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetITSTS_DYN_FIELDRISING(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetITSTS_DYN_RFPUTMSG(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetITSTS_DYN_RFGETMSG(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetITSTS_DYN_RFWRITE(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetITSTS_DYN_ALL(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetEH_MODE(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetEH_MODE(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetEH_CTRL_DYN_EH_EN(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetEH_CTRL_DYN_EH_EN(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetEH_CTRL_DYN_EH_ON(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetEH_CTRL_DYN_FIELD_ON(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetEH_CTRL_DYN_VCC_ON(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetEH_CTRL_DYN_ALL(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetRF_MNGT_RFDIS(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetRF_MNGT_RFDIS(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetRF_MNGT_RFSLEEP(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetRF_MNGT_RFSLEEP(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetRF_MNGT_ALL(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetRF_MNGT_ALL(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetRF_MNGT_DYN_RFDIS(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetRF_MNGT_DYN_RFDIS(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetRF_MNGT_DYN_RFSLEEP(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetRF_MNGT_DYN_RFSLEEP(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetRF_MNGT_DYN_ALL(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetRF_MNGT_DYN_ALL(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetRFA1SS_PWDCTRL(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetRFA1SS_PWDCTRL(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetRFA1SS_RWPROT(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetRFA1SS_RWPROT(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetRFA1SS_ALL(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetRFA1SS_ALL(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetRFA2SS_PWDCTRL(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetRFA2SS_PWDCTRL(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetRFA2SS_RWPROT(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetRFA2SS_RWPROT(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetRFA2SS_ALL(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetRFA2SS_ALL(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetRFA3SS_PWDCTRL(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetRFA3SS_PWDCTRL(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetRFA3SS_RWPROT(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetRFA3SS_RWPROT(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetRFA3SS_ALL(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetRFA3SS_ALL(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetRFA4SS_PWDCTRL(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetRFA4SS_PWDCTRL(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetRFA4SS_RWPROT(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetRFA4SS_RWPROT(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetRFA4SS_ALL(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetRFA4SS_ALL(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetI2CSS_PZ1(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetI2CSS_PZ1(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetI2CSS_PZ2(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetI2CSS_PZ2(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetI2CSS_PZ3(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetI2CSS_PZ3(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetI2CSS_PZ4(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetI2CSS_PZ4(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetI2CSS_ALL(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetI2CSS_ALL(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetLOCKCCFILE_BLCK0(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetLOCKCCFILE_BLCK0(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetLOCKCCFILE_BLCK1(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetLOCKCCFILE_BLCK1(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetLOCKCCFILE_ALL(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetLOCKCCFILE_ALL(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetLOCKCFG_B0(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetLOCKCFG_B0(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetI2C_SSO_DYN_I2CSSO(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_GetI2CCFG_DEVICECODE(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetI2CCFG_DEVICECODE(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetI2CCFG_E0(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetI2CCFG_E0(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetI2CCFG_RFSWITCHOFF(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetI2CCFG_RFSWITCHOFF(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
-int32_t ST25DVxxKC_GetRF_MNGT_DYN_RFOFF(const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
-int32_t ST25DVxxKC_SetRF_MNGT_DYN_RFOFF(const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
+int32_t ST25DVxxKC_GetICREF(const struct device *dev, const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
+int32_t ST25DVxxKC_GetMEM_SIZE_MSB(const struct device *dev, const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
+int32_t ST25DVxxKC_GetBLK_SIZE(const struct device *dev, const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
+int32_t ST25DVxxKC_GetMEM_SIZE_LSB(const struct device *dev, const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
+int32_t ST25DVxxKC_GetRF_MNGT_DYN_RFSLEEP(const struct device *dev, const ST25DVxxKC_Ctx_t *const ctx, uint8_t *const value);
+int32_t ST25DVxxKC_SetRF_MNGT_DYN_RFSLEEP(const struct device *dev, const ST25DVxxKC_Ctx_t *const ctx, const uint8_t *const value);
 
 /**
   * @}

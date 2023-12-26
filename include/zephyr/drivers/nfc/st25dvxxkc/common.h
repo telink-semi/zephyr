@@ -24,38 +24,16 @@
 
 /* Includes ------------------------------------------------------------------*/
 
-#include "nfc07a1_nfctag.h"
+#include "stm32l4s5i_iot01_nfctag.h"
 
 #include <string.h>
 
 /* Exported types ------------------------------------------------------------*/
-typedef uint8_t boolean;
-
-/**
- * @brief  GPO status information structure definition
- */
-typedef struct
-{
-  uint8_t WritenEEPROM;
-  uint8_t RfBusy;
-  uint8_t FieldOn;
-  uint8_t FieldOff;
-  uint8_t MsgInMailbox;
-  uint8_t MailboxMsgRead;
-  uint8_t RfInterrupt;
-  uint8_t Rfuser;
-} IT_GPO_STATUS;
 
 /* Exported macro ------------------------------------------------------------*/
 #ifndef MIN
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 #endif
-
-#undef FAIL
-#define FAIL 0
-
-#undef PASS
-#define PASS !FAIL
 
 /* Exported constants --------------------------------------------------------*/
 #define MAX_NDEF_MEM                 0x200

@@ -19,7 +19,7 @@
   ******************************************************************************
   */
 #include "lib_NDEF_config.h"
-#include "nfc07a1_nfctag.h"
+#include "stm32l4s5i_iot01_nfctag.h"
 
 /**
   * @brief  Reads data in the nfctag at specific address
@@ -28,9 +28,9 @@
   * @param  Size : Size in bytes of the value to be read
   * @retval NDEF_OK if success, NDEF_ERROR in case of failure
   */
-int32_t NDEF_Wrapper_ReadData(uint8_t* pData, uint32_t offset, uint32_t length )
+int32_t NDEF_Wrapper_ReadData(const struct device *dev, uint8_t* pData, uint32_t offset, uint32_t length )
 {
-  if(NFC07A1_NFCTAG_ReadData(NFC07A1_NFCTAG_INSTANCE, pData, offset, length ) != NFCTAG_OK)
+  if(BSP_NFCTAG_ReadData(dev, 0, pData, offset, length ) != NFCTAG_OK)
     return NDEF_ERROR;
   return NDEF_OK;
 }
@@ -42,9 +42,9 @@ int32_t NDEF_Wrapper_ReadData(uint8_t* pData, uint32_t offset, uint32_t length )
   * @param  Size : Number of bytes to be written
   * @retval NDEF_OK if success, NDEF_ERROR in case of failure
   */
-int32_t NDEF_Wrapper_WriteData(const uint8_t* pData, uint32_t offset, uint32_t length )
+int32_t NDEF_Wrapper_WriteData(const struct device *dev, const uint8_t* pData, uint32_t offset, uint32_t length )
 {
-  if(NFC07A1_NFCTAG_WriteData(NFC07A1_NFCTAG_INSTANCE, pData, offset, length ) != NFCTAG_OK)
+  if(BSP_NFCTAG_WriteData(dev, 0, pData, offset, length ) != NFCTAG_OK)
     return NDEF_ERROR;
   return NDEF_OK;
 }
@@ -54,7 +54,7 @@ int32_t NDEF_Wrapper_WriteData(const uint8_t* pData, uint32_t offset, uint32_t l
   * @brief  Compute the NFCTAG Memory Size.
   * @return uint32_t Memory size in bytes.
   */
-uint32_t NDEF_Wrapper_GetMemorySize(void)
+uint32_t NDEF_Wrapper_GetMemorySize(const struct device *dev)
 {
-  return NFC07A1_NFCTAG_GetByteSize(NFC07A1_NFCTAG_INSTANCE);
+  return BSP_NFCTAG_GetByteSize(dev, 0);
 }
