@@ -1,0 +1,24 @@
+#
+# Copyright (c) 2023 Sendrato
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+menu "NFC"
+
+config NFC
+  bool "NFC subsystem"
+  default n
+  help
+    This option enables the NFC subsystem.
+
+if NFC
+
+rsource "ndef/Kconfig"
+rsource "t2t/Kconfig"
+rsource "t4t/Kconfig"
+rsource "tnep/Kconfig"
+
+endif # NFC
+
+endmenu
