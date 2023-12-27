@@ -10,5 +10,6 @@ config SOC_SERIES_RISCV_TELINK_B91
 	select RISCV_ISA_EXT_C
 	select SOC_FAMILY_RISCV_PRIVILEGE
 	select HAS_TELINK_DRIVERS
+	select SOC_SERIES_RISCV_TELINK_B9X
 	help
 	  Enable support for Telink B91 SoC

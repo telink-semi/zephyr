@@ -45,5 +45,9 @@ if(CONFIG_RISCV_ISA_EXT_C)
     string(CONCAT riscv_march ${riscv_march} "c")
 endif()
 
+if(CONFIG_SOC_SERIES_RISCV_TELINK_B91)
+    string(CONCAT riscv_march ${riscv_march} "_zicsr_zifencei")
+endif()
+
 list(APPEND TOOLCHAIN_C_FLAGS -mabi=${riscv_mabi} -march=${riscv_march})
 list(APPEND TOOLCHAIN_LD_FLAGS NO_SPLIT -mabi=${riscv_mabi} -march=${riscv_march})
