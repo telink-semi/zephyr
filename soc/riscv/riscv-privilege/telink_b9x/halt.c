@@ -17,7 +17,7 @@ FUNC_NORETURN void arch_system_halt(unsigned int reason)
 
 	(void)arch_irq_lock();
 
-#ifdef CONFIG_TELINK_B9X_REBOOT_ON_FAULT
+#if CONFIG_TELINK_B9X_REBOOT_ON_FAULT
 	printk("!!! reboot\n\n");
 #if CONFIG_TELINK_B9X_REBOOT_ON_FAULT_DELAY
 	delay_ms(CONFIG_TELINK_B9X_REBOOT_ON_FAULT_DELAY);

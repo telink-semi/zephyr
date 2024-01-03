@@ -419,7 +419,7 @@ static int adc_b9x_read(const struct device *dev,
 	return status;
 }
 
-#ifdef CONFIG_ADC_ASYNC
+#if CONFIG_ADC_ASYNC
 /* API implementation: read_async */
 static int adc_b9x_read_async(const struct device *dev,
 			      const struct adc_sequence *sequence,
@@ -453,7 +453,7 @@ static const struct b9x_adc_cfg cfg_0 = {
 static const struct adc_driver_api adc_b9x_driver_api = {
 	.channel_setup = adc_b9x_channel_setup,
 	.read = adc_b9x_read,
-#ifdef CONFIG_ADC_ASYNC
+#if CONFIG_ADC_ASYNC
 	.read_async = adc_b9x_read_async,
 #endif
 	.ref_internal = cfg_0.vref_internal_mv,

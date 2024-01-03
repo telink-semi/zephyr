@@ -122,7 +122,7 @@ static int soc_b9x_init(void)
 {
 	unsigned int cclk = DT_PROP(DT_PATH(cpus, cpu_0), clock_frequency);
 
-#ifdef CONFIG_PM
+#if CONFIG_PM
 	/* Select internal 32K for BLE PM, ASAP after boot */
 	blc_pm_select_internal_32k_crystal();
 #endif /* CONFIG_PM  */

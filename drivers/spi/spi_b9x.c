@@ -456,7 +456,7 @@ static int spi_b9x_transceive(const struct device *dev,
 	return status;
 }
 
-#ifdef CONFIG_SPI_ASYNC
+#if CONFIG_SPI_ASYNC
 /* API implementation: transceive_async */
 static int spi_b9x_transceive_async(const struct device *dev,
 				    const struct spi_config *config,
@@ -495,7 +495,7 @@ static int spi_b9x_release(const struct device *dev,
 static struct spi_driver_api spi_b9x_api = {
 	.transceive = spi_b9x_transceive,
 	.release = spi_b9x_release,
-#ifdef CONFIG_SPI_ASYNC
+#if CONFIG_SPI_ASYNC
 	.transceive_async = spi_b9x_transceive_async,
 #endif /* CONFIG_SPI_ASYNC */
 };

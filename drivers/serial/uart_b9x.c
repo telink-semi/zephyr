@@ -64,7 +64,7 @@ struct uart_b9x_data {
 	uint8_t tx_byte_index;
 	uint8_t rx_byte_index;
 	struct uart_config cfg;
-#ifdef CONFIG_UART_INTERRUPT_DRIVEN
+#if CONFIG_UART_INTERRUPT_DRIVEN
 	uart_irq_callback_user_data_t callback;
 	void *cb_data;
 #endif
@@ -348,7 +348,7 @@ static int uart_b9x_driver_init(const struct device *dev)
 		data->cfg.flow_ctrl = UART_CFG_FLOW_CTRL_NONE;
 	}
 
-#ifdef CONFIG_UART_INTERRUPT_DRIVEN
+#if CONFIG_UART_INTERRUPT_DRIVEN
 	cfg->pirq_connect();
 #endif
 
@@ -404,7 +404,7 @@ static int uart_b9x_err_check(const struct device *dev)
 #endif
 }
 
-#ifdef CONFIG_UART_INTERRUPT_DRIVEN
+#if CONFIG_UART_INTERRUPT_DRIVEN
 
 /* API implementation: fifo_fill */
 static int uart_b9x_fifo_fill(const struct device *dev,
@@ -585,7 +585,7 @@ static void uart_b9x_irq_callback_set(const struct device *dev,
 
 #endif /* CONFIG_UART_INTERRUPT_DRIVEN */
 
-#ifdef CONFIG_PM_DEVICE
+#if CONFIG_PM_DEVICE
 
 static int uart_b9x_pm_action(const struct device *dev, enum pm_device_action action)
 {
@@ -633,7 +633,7 @@ static const struct uart_driver_api uart_b9x_driver_api = {
 	.err_check = uart_b9x_err_check,
 	.configure = uart_b9x_configure,
 	.config_get = uart_b9x_config_get,
-#ifdef CONFIG_UART_INTERRUPT_DRIVEN
+#if CONFIG_UART_INTERRUPT_DRIVEN
 	.fifo_fill = uart_b9x_fifo_fill,
 	.fifo_read = uart_b9x_fifo_read,
 	.irq_tx_enable = uart_b9x_irq_tx_enable,

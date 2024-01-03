@@ -143,7 +143,7 @@ static int i2c_b9x_init(const struct device *dev)
 		return status;
 	}
 
-#ifdef CONFIG_PM
+#if CONFIG_PM
 	const pinctrl_soc_pin_t *i2cPinsMux = cfg->pcfg->states->pins;
 
 	/* Enable the input function of the SCL and SDA pins */

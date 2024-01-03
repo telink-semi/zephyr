@@ -131,15 +131,15 @@ struct gpio_b9x_retention_data {
 struct gpio_b9x_data {
 	struct gpio_driver_data common; /* driver data */
 	sys_slist_t callbacks;          /* list of callbacks */
-#if (defined CONFIG_PM_DEVICE && (defined(CONFIG_BOARD_TLSR9518ADK80D_RETENTION) \
-	|| defined(CONFIG_BOARD_TLSR9518ADK80D_MARS_RETENTION) \
-	|| defined(CONFIG_BOARD_TLSR9518ADK80D_USB_DONGLE_RETENTION) \
-	|| defined(CONFIG_BOARD_TLSR9528A_RETENTION)))
+#if CONFIG_PM_DEVICE && (CONFIG_BOARD_TLSR9518ADK80D_RETENTION \
+	|| CONFIG_BOARD_TLSR9518ADK80D_MARS_RETENTION \
+	|| CONFIG_BOARD_TLSR9518ADK80D_USB_DONGLE_RETENTION \
+	|| CONFIG_BOARD_TLSR9528A_RETENTION)
 	struct gpio_b9x_retention_data gpio_b9x_retention; /* list of necessary retained data */
 #endif
 };
 
-#ifdef CONFIG_PM_DEVICE
+#if CONFIG_PM_DEVICE
 /* Set Wake-up Enable bit based on GPIO pin number */
 static inline void gpio_b9x_irq_pin_wakeup_set(const struct device *dev, gpio_pin_t pin,
 	uint8_t trigger_type)
@@ -517,7 +517,7 @@ static void gpio_b9x_irq_handler(const struct device *dev)
 {
 	struct gpio_b9x_data *data				= dev->data;
 	const struct gpio_b9x_config *cfg		= dev->config;
-#ifdef CONFIG_PM
+#if CONFIG_PM
 	const uint8_t wakeup_trigger_pol_reg	= reg_wakeup_trig_pol_base +
 		GET_PORT_NUM(GET_GPIO(dev));
 #endif
@@ -617,10 +617,10 @@ static int gpio_b9x_manage_callback(const struct device *dev,
 	return gpio_manage_callback(&data->callbacks, callback, set);
 }
 
-#if (defined CONFIG_PM_DEVICE && (defined(CONFIG_BOARD_TLSR9518ADK80D_RETENTION) \
-	|| defined(CONFIG_BOARD_TLSR9518ADK80D_MARS_RETENTION) \
-	|| defined(CONFIG_BOARD_TLSR9518ADK80D_USB_DONGLE_RETENTION) \
-	|| defined(CONFIG_BOARD_TLSR9528A_RETENTION)))
+#if CONFIG_PM_DEVICE && (CONFIG_BOARD_TLSR9518ADK80D_RETENTION \
+	|| CONFIG_BOARD_TLSR9518ADK80D_MARS_RETENTION \
+	|| CONFIG_BOARD_TLSR9518ADK80D_USB_DONGLE_RETENTION \
+	|| CONFIG_BOARD_TLSR9528A_RETENTION)
 
 static int gpio_b9x_pm_action(const struct device *dev, enum pm_device_action action)
 {
@@ -731,10 +731,10 @@ static int gpio_b9x_pm_action(const struct device *dev, enum pm_device_action ac
 }
 
 #endif
-/* (CONFIG_PM_DEVICE && (defined(CONFIG_BOARD_TLSR9518ADK80D_RETENTION)
- * || defined(CONFIG_BOARD_TLSR9518ADK80D_MARS_RETENTION)
- * || defined(CONFIG_BOARD_TLSR9518ADK80D_USB_DONGLE_RETENTION)
- * || defined(CONFIG_BOARD_TLSR9528A_RETENTION)))
+/* CONFIG_PM_DEVICE && (CONFIG_BOARD_TLSR9518ADK80D_RETENTION
+ * || CONFIG_BOARD_TLSR9518ADK80D_MARS_RETENTION
+ * || CONFIG_BOARD_TLSR9518ADK80D_USB_DONGLE_RETENTION
+ * || CONFIG_BOARD_TLSR9528A_RETENTION)
  */
 
 /* GPIO driver APIs structure */
@@ -809,10 +809,10 @@ static void gpio_b9x_irq_connect_4(void)
 }
 #endif
 
-#if (defined CONFIG_PM_DEVICE && (defined(CONFIG_BOARD_TLSR9518ADK80D_RETENTION) \
-	|| defined(CONFIG_BOARD_TLSR9518ADK80D_MARS_RETENTION) \
-	|| defined(CONFIG_BOARD_TLSR9518ADK80D_USB_DONGLE_RETENTION) \
-	|| defined(CONFIG_BOARD_TLSR9528A_RETENTION)))
+#if CONFIG_PM_DEVICE && (CONFIG_BOARD_TLSR9518ADK80D_RETENTION \
+	|| CONFIG_BOARD_TLSR9518ADK80D_MARS_RETENTION \
+	|| CONFIG_BOARD_TLSR9518ADK80D_USB_DONGLE_RETENTION \
+	|| CONFIG_BOARD_TLSR9528A_RETENTION)
 #define PM_DEVICE_INST_DEFINE(n, gpio_b9x_pm_action)  \
 PM_DEVICE_DT_INST_DEFINE(n, gpio_b9x_pm_action);
 #define PM_DEVICE_INST_GET(n) PM_DEVICE_DT_INST_GET(n)

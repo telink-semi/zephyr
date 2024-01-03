@@ -257,7 +257,7 @@ flash_b9x_get_parameters(const struct device *dev)
 }
 
 /* API implementation: page_layout */
-#if defined(CONFIG_FLASH_PAGE_LAYOUT)
+#if CONFIG_FLASH_PAGE_LAYOUT
 static const struct flash_pages_layout dev_layout = {
 	.pages_count = FLASH_SIZE / SECTOR_SIZE,
 	.pages_size = SECTOR_SIZE,
@@ -279,7 +279,7 @@ static const struct flash_driver_api flash_b9x_api = {
 	.write = flash_b9x_write,
 	.read = flash_b9x_read,
 	.get_parameters = flash_b9x_get_parameters,
-#if defined(CONFIG_FLASH_PAGE_LAYOUT)
+#if CONFIG_FLASH_PAGE_LAYOUT
 	.page_layout = flash_b9x_pages_layout,
 #endif
 };

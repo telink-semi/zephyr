@@ -7,7 +7,7 @@
 #ifndef SOC_RISCV_TELINK_B9X_SOC_CONTEXT_H
 #define SOC_RISCV_TELINK_B9X_SOC_CONTEXT_H
 
-#ifdef CONFIG_RISCV_SOC_CONTEXT_SAVE
+#if CONFIG_RISCV_SOC_CONTEXT_SAVE
 
 /* Telink B91 specific registers. */
 #if defined(CONFIG_TELINK_B9X_PFT_ARCH) && defined(__riscv_dsp)
