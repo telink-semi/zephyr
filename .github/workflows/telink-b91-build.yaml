@@ -99,20 +99,25 @@ jobs:
         cd ..
         west build -b tlsr9518adk80d             -d build_ot_coprocessor_rcp_usb_b91    zephyr/samples/net/openthread/coprocessor                -- -DDTC_OVERLAY_FILE="usb.overlay boards/tlsr9518adk80d-dongle.overlay" -DOVERLAY_CONFIG=overlay-rcp-usb-telink.conf
 
-    - name: Build B91 boards/tlsr9518adk80d_retention/basic
+    - name: Build B91 zephyr/samples/boards/tlsr9x_retention/basic
       run: |
         cd ..
-        west build -b tlsr9518adk80d_retention   -d build_retention_basic_b91           zephyr/samples/boards/tlsr9518adk80d_retention/basic     -- -DCONFIG_BOARD_TLSR9X_NON_RETENTION_RAM_CODE=y
+        west build -b tlsr9518adk80d_retention   -d build_retention_basic_b91           zephyr/samples/boards/tlsr9x_retention/basic     -- -DCONFIG_BOARD_TLSR9X_NON_RETENTION_RAM_CODE=y
 
     - name: Build B91 net/sockets/echo_client for OpenThread with PM deep-sleep
       run: |
         cd ..
         west build -b tlsr9518adk80d_retention   -d build_ot_echo_client_pm_deep_b91    zephyr/samples/net/sockets/echo_client                   -- -DOVERLAY_CONFIG=overlay-ot-sed.conf -DCONFIG_OPENTHREAD_NETWORKKEY=\"09:24:01:56:04:4a:45:0b:23:22:1e:0e:3b:0d:0e:61:2f:1b:2c:24\" -DCONFIG_PM=y -DCONFIG_BOARD_TLSR9X_NON_RETENTION_RAM_CODE=y -DCONFIG_TELINK_B9X_2_WIRE_SPI_ENABLE=y
 
-    - name: Build B91 boards/tlsr9518adk80d_mars_retention/basic
+    - name: Build B91 Mars zephyr/samples/boards/tlsr9x_retention/basic
       run: |
         cd ..
-        west build -b tlsr9518adk80d_mars_retention   -d build_retention_mars_b91           zephyr/samples/boards/tlsr9518adk80d_mars_retention/basic     -- -DCONFIG_BOARD_TLSR9X_NON_RETENTION_RAM_CODE=y
+        west build -b tlsr9518adk80d_mars_retention   -d build_retention_mars_b91           zephyr/samples/boards/tlsr9x_retention/basic     -- -DCONFIG_BOARD_TLSR9X_NON_RETENTION_RAM_CODE=y
+
+    - name: Build B91 Dongle zephyr/samples/boards/tlsr9x_retention/basic
+      run: |
+        cd ..
+        west build -b tlsr9518adk80d_usb_dongle_retention   -d build_retention_usb_dongle_b91           zephyr/samples/boards/tlsr9x_retention/basic     -- -DCONFIG_BOARD_TLSR9X_NON_RETENTION_RAM_CODE=y
 
     - name: Build B91 bootloader/mcuboot/boot for USB DFU
       run: |
@@ -147,6 +152,7 @@ jobs:
         cp ../build_retention_basic_b91/zephyr/zephyr.bin           telink_build_artifacts/b91_retention_basic.bin
         cp ../build_ot_echo_client_pm_deep_b91/zephyr/zephyr.bin    telink_build_artifacts/b91_ot_echo_client_pm_retention.bin
         cp ../build_retention_mars_b91/zephyr/zephyr.bin            telink_build_artifacts/b91_retention_mars.bin
+        cp ../build_retention_usb_dongle_b91/zephyr/zephyr.bin      telink_build_artifacts/b91_retention_usb_dongle.bin
         cp ../build_mcuboot_usb_dfu_b91/zephyr/zephyr.bin           telink_build_artifacts/b91_mcuboot_usb_dfu.bin
         cp ../build_blinky_usb_dfu_b91/zephyr/zephyr.signed.bin     telink_build_artifacts/b91_blinky_usb_dfu.signed.bin
         cp ../build_ot_cli_b91/zephyr/zephyr.bin                    telink_build_artifacts/b91_ot_cli.bin

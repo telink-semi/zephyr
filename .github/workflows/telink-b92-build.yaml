@@ -99,10 +99,10 @@ jobs:
         cd ..
         west build -b tlsr9528a                  -d build_ot_coprocessor_rcp_usb_b92    zephyr/samples/net/openthread/coprocessor                -- -DDTC_OVERLAY_FILE="usb.overlay boards/tlsr9528a-dongle.overlay" -DOVERLAY_CONFIG=overlay-rcp-usb-telink.conf
 
-    - name: Build B92 boards/tlsr9528a_retention/basic
+    - name: Build B92 boards/tlsr9x_retention/basic
       run: |
         cd ..
-        west build -b tlsr9528a_retention        -d build_retention_basic_b92           zephyr/samples/boards/tlsr9528a_retention/basic          -- -DCONFIG_BOARD_TLSR9X_NON_RETENTION_RAM_CODE=y
+        west build -b tlsr9528a_retention        -d build_retention_basic_b92           zephyr/samples/boards/tlsr9x_retention/basic          -- -DCONFIG_BOARD_TLSR9X_NON_RETENTION_RAM_CODE=y
 
     - name: Build B92 net/sockets/echo_client for OpenThread with PM deep-sleep
       run: |

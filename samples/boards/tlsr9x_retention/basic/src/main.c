@@ -12,7 +12,7 @@ int main(void)
 {
 	uint32_t cnt = 0;
 
-	printk("retention demo start\n");
+	printk("Telink B9x retention demo start\n");
 	/******************************************************************************
 	 * Artificial delay (~2S @ 48MHz) to have a possibility to flash using ICEman *
 	 * - press and hold both reset buttons (flash and MCU)                        *
