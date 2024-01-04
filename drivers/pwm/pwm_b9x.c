@@ -10,6 +10,7 @@
 #include <clock.h>
 #include <zephyr/drivers/pwm.h>
 #include <zephyr/drivers/pinctrl.h>
+#include <zephyr/pm/device.h>
 
 struct pwm_b9x_config {
 	const struct pinctrl_dev_config *pcfg;
@@ -119,6 +120,37 @@ static int pwm_b9x_get_cycles_per_sec(const struct device *dev,
 	return 0;
 }
 
+static int pwm_b9x_pm_action(const struct device *dev, enum pm_device_action action)
+{
+	switch (action) {
+	case PM_DEVICE_ACTION_RESUME:
+		extern volatile bool b9x_deep_sleep_retention;
+		if (b9x_deep_sleep_retention) {
+			pwm_b9x_init(dev);
+		}
+		break;
+
+	case PM_DEVICE_ACTION_SUSPEND:
+
+	break;
+	default:
+		return -ENOTSUP;
+	break;
+	}
+	return 0;
+}
+
+#if (defined CONFIG_PM_DEVICE && (defined(CONFIG_BOARD_TLSR9518ADK80D_RETENTION) \
+|| defined(CONFIG_BOARD_TLSR9528A_RETENTION)))
+#define PM_DEVICE_INST_DEFINE(n, gpio_b9x_pm_action)  \
+PM_DEVICE_DT_INST_DEFINE(n, gpio_b9x_pm_action);
+#define PM_DEVICE_INST_GET(n) PM_DEVICE_DT_INST_GET(n)
+#else
+#define PM_DEVICE_INST_DEFINE(n, gpio_b9x_pm_action)
+#define PM_DEVICE_INST_GET(n)  NULL
+#endif
+
+
 /* PWM driver APIs structure */
 static const struct pwm_driver_api pwm_b9x_driver_api = {
 	.set_cycles = pwm_b9x_set_cycles,
@@ -127,8 +159,9 @@ static const struct pwm_driver_api pwm_b9x_driver_api = {
 
 /* PWM driver registration */
 #define PWM_b9x_INIT(n)							       \
+	PM_DEVICE_INST_DEFINE(n, pwm_b9x_pm_action); \
 	PINCTRL_DT_INST_DEFINE(n);					       \
-									       \
+									       		\
 	static const struct pwm_b9x_config config##n = {		       \
 		.pcfg = PINCTRL_DT_INST_DEV_CONFIG_GET(n),		       \
 		.clock_frequency = DT_INST_PROP(n, clock_frequency),	       \
@@ -143,7 +176,7 @@ static const struct pwm_driver_api pwm_b9x_driver_api = {
 	};								       \
 									       \
 	DEVICE_DT_INST_DEFINE(n, pwm_b9x_init,				       \
-			      NULL, NULL, &config##n,			       \
+			      PM_DEVICE_INST_GET(n), NULL, &config##n,			       \
 			      POST_KERNEL, CONFIG_PWM_INIT_PRIORITY,	       \
 			      &pwm_b9x_driver_api);
 
