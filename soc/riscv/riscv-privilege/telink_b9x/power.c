@@ -85,6 +85,10 @@ static void set_mtime(uint64_t time)
 volatile bool b9x_deep_sleep_retention;
 #endif
 
+volatile bool wait_radio = false;
+extern void profiler_mark0(void);
+extern void profiler_mark0_aux(bool state);
+
 /**
  * @brief PM state set API implementation.
  */
@@ -108,17 +112,20 @@ __weak void pm_state_set(enum pm_state state, uint8_t substate_id)
 		if (stimer_sleep_ticks > SYSTICKS_MAX_SLEEP) {
 			stimer_sleep_ticks = SYSTICKS_MAX_SLEEP;
 		}
+		profiler_mark0_aux(true);
 		if (b9x_suspend(tl_sleep_tick + stimer_sleep_ticks)) {
 			current_time +=
 				systicks_to_mticks(stimer_get_tick() - tl_sleep_tick);
 			set_mtime(current_time);
 		}
+		profiler_mark0_aux(false);
 		break;
 #if defined(CONFIG_BOARD_TLSR9518ADK80D_RETENTION) || defined(CONFIG_BOARD_TLSR9528A_RETENTION)
 	case PM_STATE_STANDBY:
 		if (stimer_sleep_ticks > SYSTICKS_MAX_SLEEP) {
 			stimer_sleep_ticks = SYSTICKS_MAX_SLEEP;
 		}
+		profiler_mark0();
 		if (b9x_deep_sleep(tl_sleep_tick + stimer_sleep_ticks)) {
 			current_time +=
 				systicks_to_mticks(stimer_get_tick() - tl_sleep_tick);
@@ -126,6 +133,8 @@ __weak void pm_state_set(enum pm_state state, uint8_t substate_id)
 			set_mtime(current_time);
 			b9x_deep_sleep_retention = true;
 		}
+		profiler_mark0();
+		wait_radio = true;
 		break;
 #endif
 	default:

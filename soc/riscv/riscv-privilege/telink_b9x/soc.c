@@ -288,3 +288,33 @@ static int soc_b9x_check_flash(void)
 SYS_INIT(soc_b9x_init, PRE_KERNEL_1, 0);
 
 SYS_INIT(soc_b9x_check_flash, POST_KERNEL, 0);
+
+void profiler_mark0(void)
+{
+	gpio_set_low_level(GPIO_PC4);
+	gpio_function_en(GPIO_PC4);
+	gpio_output_en(GPIO_PC4);
+	gpio_set_high_level(GPIO_PC4);
+}
+
+void profiler_mark0_aux(bool state)
+{
+	state ? gpio_set_low_level(GPIO_PC4) : gpio_set_high_level(GPIO_PC4);
+	gpio_function_en(GPIO_PC4);
+	gpio_output_en(GPIO_PC4);
+}
+
+void profiler_mark1(bool state)
+{
+	state ? gpio_set_low_level(GPIO_PC3) : gpio_set_high_level(GPIO_PC3);
+	gpio_function_en(GPIO_PC3);
+	gpio_output_en(GPIO_PC3);
+}
+
+void profiler_mark2(bool state)
+{
+	state ? gpio_set_low_level(GPIO_PC2) : gpio_set_high_level(GPIO_PC2);
+	gpio_function_en(GPIO_PC2);
+	gpio_output_en(GPIO_PC2);
+}
+

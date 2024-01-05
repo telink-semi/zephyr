@@ -34,6 +34,9 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
 #include "ieee802154_b9x_frame.c"
 
+extern volatile bool wait_radio;
+extern void profiler_mark1(bool state);
+
 
 #ifdef CONFIG_OPENTHREAD_FTD
 /* B9X radio source match table structure */
@@ -986,6 +989,10 @@ static int b9x_set_txpower(const struct device *dev, int16_t dbm)
 /* API implementation: start */
 static int b9x_start(const struct device *dev)
 {
+	if (wait_radio) {
+		wait_radio = false;
+		profiler_mark1(true);
+	}
 	struct b9x_data *b9x = dev->data;
 
 	b9x_disable_pm(dev);
@@ -1020,6 +1027,10 @@ static int b9x_start(const struct device *dev)
 /* API implementation: stop */
 static int b9x_stop(const struct device *dev)
 {
+	if (!wait_radio) {
+		profiler_mark1(false);
+	}
+
 	struct b9x_data *b9x = dev->data;
 
 	/* check if RF is already stopped */
