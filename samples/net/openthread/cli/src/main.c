@@ -73,3 +73,17 @@ void main(void)
 
 	openthread_state_changed_cb_register(openthread_get_default_context(), &ot_state_cahnge);
 }
+
+#if CONFIG_TRACING && CONFIG_TRACING_USER
+
+void sys_trace_thread_switched_in_user(struct k_thread *thread)
+{
+	printk("+%s\n", thread->name);
+}
+
+void sys_trace_thread_switched_out_user(struct k_thread *thread)
+{
+	printk("-%s\n", thread->name);
+}
+
+#endif /* CONFIG_TRACING && CONFIG_TRACING_USER */

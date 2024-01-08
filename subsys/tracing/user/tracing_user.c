@@ -55,7 +55,7 @@ void sys_trace_thread_name_set(struct k_thread *thread)
 void sys_trace_k_thread_switched_in(void)
 {
 /* FIXME: Limitation of the current x86 EFI cosnole implementation. */
-#if !defined(CONFIG_X86_EFI_CONSOLE) && !defined(CONFIG_UART_CONSOLE)
+#if !defined(CONFIG_X86_EFI_CONSOLE) || !defined(CONFIG_UART_CONSOLE)
 
 	unsigned int key = irq_lock();
 
@@ -69,7 +69,7 @@ void sys_trace_k_thread_switched_in(void)
 
 void sys_trace_k_thread_switched_out(void)
 {
-#if !defined(CONFIG_X86_EFI_CONSOLE) && !defined(CONFIG_UART_CONSOLE)
+#if !defined(CONFIG_X86_EFI_CONSOLE) || !defined(CONFIG_UART_CONSOLE)
 	unsigned int key = irq_lock();
 
 	__ASSERT_NO_MSG(nested_interrupts[_current_cpu->id] == 0);
