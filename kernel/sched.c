@@ -1891,6 +1891,16 @@ bool z_sched_wake(_wait_q_t *wait_q, int swap_retval, void *swap_data)
 	struct k_thread *thread;
 	bool ret = false;
 
+	if (swap_data == NULL) {
+		printk("ERROR: swap_data == NULL\n");
+		return ret;
+	}
+
+	if (wait_q == NULL) {
+		printk("ERROR: wait_q == NULL\n");
+		return ret;
+	}
+
 	LOCKED(&sched_spinlock) {
 		thread = _priq_wait_best(&wait_q->waitq);
 
