@@ -1893,12 +1893,12 @@ bool z_sched_wake(_wait_q_t *wait_q, int swap_retval, void *swap_data)
 
 	if (swap_data == NULL) {
 		printk("ERROR: swap_data == NULL\n");
-		return ret;
+		// return ret;
 	}
 
 	if (wait_q == NULL) {
 		printk("ERROR: wait_q == NULL\n");
-		return ret;
+		// return ret;
 	}
 
 	LOCKED(&sched_spinlock) {
