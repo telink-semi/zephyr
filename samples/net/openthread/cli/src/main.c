@@ -76,14 +76,38 @@ void main(void)
 
 #if CONFIG_TRACING && CONFIG_TRACING_USER
 
+extern void profiler_mark2(bool state);
+extern void profiler_mark3(bool state);
+extern void profiler_mark4(bool state);
+extern void profiler_mark5(bool state);
+
 void sys_trace_thread_switched_in_user(struct k_thread *thread)
 {
-	printk("+%s\n", thread->name);
+
+	if (!strcmp(thread->name, "idle")) {
+		profiler_mark2(true);
+	} else if (!strcmp(thread->name, "openthread")) {
+		profiler_mark3(true);
+	} else if (!strcmp(thread->name, "ot_radio_workq")) {
+		profiler_mark4(true);
+	} else {
+		profiler_mark5(true);
+	}
+	// printk("+%s\n", thread->name);
 }
 
 void sys_trace_thread_switched_out_user(struct k_thread *thread)
 {
-	printk("-%s\n", thread->name);
+	if (!strcmp(thread->name, "idle")) {
+		profiler_mark2(false);
+	} else if (!strcmp(thread->name, "openthread")) {
+		profiler_mark3(false);
+	} else if (!strcmp(thread->name, "ot_radio_workq")) {
+		profiler_mark4(false);
+	} else {
+		profiler_mark5(false);
+	}
+	// printk("-%s\n", thread->name);
 }
 
 #endif /* CONFIG_TRACING && CONFIG_TRACING_USER */

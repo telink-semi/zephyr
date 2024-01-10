@@ -318,3 +318,23 @@ void profiler_mark2(bool state)
 	gpio_output_en(GPIO_PC2);
 }
 
+void profiler_mark3(bool state)
+{
+	state ? gpio_set_low_level(GPIO_PC1) : gpio_set_high_level(GPIO_PC1);
+	gpio_function_en(GPIO_PC1);
+	gpio_output_en(GPIO_PC1);
+}
+
+void profiler_mark4(bool state)
+{
+	state ? gpio_set_low_level(GPIO_PC0) : gpio_set_high_level(GPIO_PC0);
+	gpio_function_en(GPIO_PC0);
+	gpio_output_en(GPIO_PC0);
+}
+
+void profiler_mark5(bool state)
+{
+	state ? gpio_set_low_level(GPIO_PB7) : gpio_set_high_level(GPIO_PB7);
+	gpio_function_en(GPIO_PB7);
+	gpio_output_en(GPIO_PB7);
+}
