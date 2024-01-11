@@ -79,35 +79,34 @@ void main(void)
 extern void profiler_mark2(bool state);
 extern void profiler_mark3(bool state);
 extern void profiler_mark4(bool state);
-extern void profiler_mark5(bool state);
 
 void sys_trace_thread_switched_in_user(struct k_thread *thread)
 {
 
 	if (!strcmp(thread->name, "idle")) {
 		profiler_mark2(true);
-	} else if (!strcmp(thread->name, "openthread")) {
-		profiler_mark3(true);
-	} else if (!strcmp(thread->name, "ot_radio_workq")) {
-		profiler_mark4(true);
 	} else {
-		profiler_mark5(true);
+		profiler_mark3(true);
 	}
-	// printk("+%s\n", thread->name);
 }
 
 void sys_trace_thread_switched_out_user(struct k_thread *thread)
 {
 	if (!strcmp(thread->name, "idle")) {
 		profiler_mark2(false);
-	} else if (!strcmp(thread->name, "openthread")) {
-		profiler_mark3(false);
-	} else if (!strcmp(thread->name, "ot_radio_workq")) {
-		profiler_mark4(false);
 	} else {
-		profiler_mark5(false);
+		profiler_mark3(false);
 	}
-	// printk("-%s\n", thread->name);
+}
+
+void sys_trace_isr_enter_user(int nested_interrupts)
+{
+	profiler_mark4(true);
+}
+
+void sys_trace_isr_exit_user(int nested_interrupts)
+{
+	profiler_mark4(false);
 }
 
 #endif /* CONFIG_TRACING && CONFIG_TRACING_USER */
