@@ -11,6 +11,13 @@
 #include <zephyr/devicetree.h>
 #include <zephyr/linker/linker-tool.h>
 
+MEMORY
+{
+#if CONFIG_BOARD_TLSR9118BDK40D
+	RAMILM       (rwx) : ORIGIN = DT_REG_ADDR(DT_NODELABEL(ram_ilm)),              LENGTH = DT_REG_SIZE(DT_NODELABEL(ram_ilm))
+#endif /* CONFIG_BOARD_TLSR9518ADK80D */
+}
+
 #include <zephyr/arch/riscv/common/linker.ld>
 
 #ifdef CONFIG_MCUBOOT

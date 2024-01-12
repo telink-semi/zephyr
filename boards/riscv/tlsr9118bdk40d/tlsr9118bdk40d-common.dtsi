@@ -16,7 +16,6 @@
 
 	chosen {
 		zephyr,sram = &ram_dlm;
-		zephyr,ipc_shm = &sram0_shared;
 		zephyr,flash = &flash;
 		zephyr,flash-controller = &flash_mspi;
 		zephyr,entropy = &trng0;
@@ -28,17 +27,30 @@
 		#size-cells = <1>;
 		ranges;
 
-		sram0_shared: memory@40000000 {
-			/* SRAM allocated to shared memory */
-			reg = <0x40000000 0x20000>;
+		sram_tx: memory@0022E000 {
+			reg = <0x0022E000 0x1000>;
+		};
+
+		sram_rx: memory@0022F000 {
+			reg = <0x0022F000 0x1000>;
 		};
 	};
 
-	mbox: ipc: mbox@2a000 {
+	mbox: mbox {
 		compatible = "telink,mbox-ipc-w91";
-		reg = <0x2a000 0x1000>;
 		#mbox-cells = <1>;
 		status = "okay";
+	};
+
+	ipc {
+		ipc0: ipc0 {
+			compatible = "zephyr,ipc-icmsg";
+			tx-region = <&sram_tx>;
+			rx-region = <&sram_rx>;
+			mboxes = <&mbox 0>, <&mbox 1>;
+			mbox-names = "tx", "rx";
+			status = "okay";
+		};
 	};
 };
 
