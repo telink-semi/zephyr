@@ -19,8 +19,6 @@
 #include "driver_w91.h"
 #include "debug.h"
 
-#define CORE_NAME "D25 core -> "
-
 static bool led_state;
 
 /***************************************************************************************
@@ -73,7 +71,7 @@ int main(void)
 	read_csr(hartid, NDS_MHARTID);
 	read_csr(vendor, NDS_MVENDORID);
 	read_csr(arch, NDS_MARCHID);
-	debug_printf(CORE_NAME " [%u] vendor %08x, arch %08x\n", hartid, vendor, arch);
+	debug_printf("D25-> [%u] vendor %08x, arch %08x\n", hartid, vendor, arch);
 
 	/* blink red LED */
 	enable_gpio_out(20);
@@ -84,7 +82,7 @@ int main(void)
 	for (;;) {
 		led_state = !led_state;
 		control_gpio_out(20, led_state);
-		debug_printf(CORE_NAME "led state = %u\n", led_state);
+		debug_printf("D25-> led state = %u\n", led_state);
 		k_msleep(SLEEP_TIME_MS);
 	}
 	return 0;

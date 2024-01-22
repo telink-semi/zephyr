@@ -16,7 +16,7 @@
 #define LOG_MODULE_NAME ipc_dispatcher
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
-#define IPC_BOUND_TIMEOUT_IN_MS 		K_MSEC(1000)
+#define IPC_BOUND_TIMEOUT_IN_MS			K_MSEC(1000)
 
 struct ipc_dispatcher_elem {
 	sys_snode_t node;
@@ -73,6 +73,7 @@ int ipc_dispatcher_start(void)
 	sys_slist_init(&ipc_elem_list);
 
 	int ret = ipc_service_register_endpoint(ipc_instance, &ept, &ept_cfg);
+
 	if (ret < 0) {
 		LOG_ERR("Failed to register IPC endpoint: %d", ret);
 		return ret;
@@ -129,6 +130,7 @@ void ipc_dispatcher_rm_elem(enum ipc_dispatcher_id id)
 int ipc_dispatcher_send(const void *data, size_t len)
 {
 	int ret = ipc_service_send(&ept, data, len);
+
 	if (ret != len) {
 		LOG_ERR("IPC send error");
 		return -EPERM;

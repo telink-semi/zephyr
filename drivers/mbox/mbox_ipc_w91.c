@@ -17,9 +17,9 @@ LOG_MODULE_REGISTER(mbox_ipc_w91);
 #define SW_IRQ_EN_REG		(*(volatile uint32_t*)(DT_INST_PROP(0, sw_irq_en)))
 #define SW_IRQ_CLAIM_REG	(*(volatile uint32_t*)(DT_INST_PROP(0, sw_irq_claim)))
 
-#define MAX_CHANNEL_NUM	 	DT_INST_PROP(0, max_channels)
+#define MAX_CHANNEL_NUM		DT_INST_PROP(0, max_channels)
 
-#define GET_SW_IRQ_NUMB(channel) 			(channel + 1)
+#define GET_SW_IRQ_NUMB(channel)			(channel + 1)
 #define GET_CHANNEL_NUMB(sw_irq_source)		(sw_irq_source - 1)
 
 struct mbox_w91_data {
@@ -103,7 +103,7 @@ static int mbox_w91_set_enabled(const struct device *dev, uint32_t channel, bool
 	if (enable) {
 		SW_IRQ_EN_REG |= BIT(GET_SW_IRQ_NUMB(channel));
 	} else {
-		SW_IRQ_EN_REG &= (~ BIT(GET_SW_IRQ_NUMB(channel)));
+		SW_IRQ_EN_REG &= (~BIT(GET_SW_IRQ_NUMB(channel)));
 	}
 
 	return 0;

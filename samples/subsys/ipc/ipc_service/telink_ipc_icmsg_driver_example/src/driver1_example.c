@@ -7,10 +7,10 @@
 #include "driver1_example.h"
 #include "ipc_dispatcher.h"
 
-#define RESPONCE_TIMEOUT_IN_MS	K_MSEC(1)
+#define RESPONSE_TIMEOUT_IN_MS	K_MSEC(1)
 
 static struct k_mutex mutex;
-static K_SEM_DEFINE(responce_sem, 0, 1);
+static K_SEM_DEFINE(response_sem, 0, 1);
 
 static size_t pack_set_time_test_func(struct time_value *data, uint8_t *buff)
 {
@@ -27,10 +27,11 @@ static size_t pack_set_time_test_func(struct time_value *data, uint8_t *buff)
 		PACK_FIELD(buff, data->year);
 	}
 
-	return len;	
+	return len;
 }
 
-static void unpack_set_time_test_func(struct time_value_resp *data, const uint8_t *buff, size_t lenBuff)
+static void unpack_set_time_test_func(struct time_value_resp *data,
+		const uint8_t *buff, size_t lenBuff)
 {
 	size_t len = sizeof(enum ipc_dispatcher_id) + sizeof(int) + sizeof(uint32_t) +
 			sizeof(uint8_t) + sizeof(uint16_t) + sizeof(uint16_t);
@@ -51,19 +52,20 @@ struct time_value_resp driver1_set_time_test_func(struct time_value *time)
 {
 	struct time_value_resp time_value_resp;
 
-	/* Nested callback */
-	void set_time_test_func_cb(const void *data, size_t len) {
-		unpack_set_time_test_func(&time_value_resp, (uint8_t *)data, len);
-		k_sem_give(&responce_sem);
-	}
+/* Nested callback */
+void set_time_test_func_cb(const void *data, size_t len)
+{
+	unpack_set_time_test_func(&time_value_resp, (uint8_t *)data, len);
+	k_sem_give(&response_sem);
+}
 
 	/* Packing ipc id (unit_offset + api_offset) and packed arguments */
 	uint8_t packed_data[pack_set_time_test_func(NULL, NULL)];
 	size_t len = pack_set_time_test_func(time, packed_data);
-	enum ipc_dispatcher_id id = *(enum ipc_dispatcher_id*)packed_data;
+	enum ipc_dispatcher_id id = *(enum ipc_dispatcher_id *)packed_data;
 
 	k_mutex_lock(&mutex, K_FOREVER);
-	k_sem_reset(&responce_sem);
+	k_sem_reset(&response_sem);
 	ipc_dispatcher_add_elem(id, set_time_test_func_cb);
 
 	if (ipc_dispatcher_send(packed_data, len)) {
@@ -71,7 +73,7 @@ struct time_value_resp driver1_set_time_test_func(struct time_value *time)
 		return time_value_resp;
 	}
 
-	k_sem_take(&responce_sem, RESPONCE_TIMEOUT_IN_MS);
+	k_sem_take(&response_sem, RESPONSE_TIMEOUT_IN_MS);
 	ipc_dispatcher_rm_elem(id);
 	k_mutex_unlock(&mutex);
 
