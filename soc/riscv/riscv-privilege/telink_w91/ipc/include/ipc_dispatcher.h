@@ -11,7 +11,7 @@
 #include <zephyr/kernel.h>
 
 /* Data types */
-typedef enum __attribute__((__packed__)) {
+enum __attribute__((__packed__)) ipc_dispatcher_id {
     IPC_DISPATCHER_SYS_1                    = 0,
     IPC_DISPATCHER_SYS_SET_TIME_TEST1_FUNC,
 
@@ -23,29 +23,26 @@ typedef enum __attribute__((__packed__)) {
     IPC_DISPATCHER_GPIO                     = 0x300,
 
     IPC_DISPATCHER_PWM                      = 0x400,
-} ipc_dispatcher_id_t;
+};
 
 typedef void (*ipc_dispatcher_cb_t)(const void *data, size_t len);
 
-typedef struct {
-	sys_snode_t node;
-	ipc_dispatcher_id_t id;
-	ipc_dispatcher_cb_t cb;
-} ipc_dispatcher_elem_t;
-
-void ipc_dispatcher_init(void);
 int ipc_dispatcher_start(void);
-void ipc_dispatcher_add_elem(ipc_dispatcher_elem_t *p_elem);
-void ipc_dispatcher_rm_elem(ipc_dispatcher_elem_t *p_elem);
+void ipc_dispatcher_add_elem(enum ipc_dispatcher_id id, ipc_dispatcher_cb_t cb);
+void ipc_dispatcher_rm_elem(enum ipc_dispatcher_id id);
 int ipc_dispatcher_send(const void *data, size_t len);
 
 /* Macros for packaging the different types */
-#define PACK_FIELD(buff, field)           \
-    memcpy(buff, &field, sizeof(field));  \
-    buff += sizeof(field);
+#define PACK_FIELD(buff, field)                 \
+    do {                                        \
+        memcpy(buff, &field, sizeof(field));    \
+        buff += sizeof(field);                  \
+    } while (0)
 
-#define UNPACK_FIELD(buff, field)         \
-    memcpy(&field, buff, sizeof(field));  \
-    buff += sizeof(field);
+#define UNPACK_FIELD(buff, field)               \
+    do {                                        \
+        memcpy(&field, buff, sizeof(field));    \
+        buff += sizeof(field);                  \
+    } while (0)
 
 #endif /* IPC_DISPATCHER_H */

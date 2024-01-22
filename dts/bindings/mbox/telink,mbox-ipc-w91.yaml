@@ -7,5 +7,26 @@ compatible: "telink,mbox-ipc-w91"
 
 include: [base.yaml, mailbox-controller.yaml]
 
+properties:
+  max-channels:
+    type: int
+    required: true
+    description: Maximum number of channels
+
+  sw-irq-pending:
+    type: int
+    required: true
+    description: Address of the SW IRQ Pending register
+
+  sw-irq-en:
+    type: int
+    required: true
+    description: Address of the SW IRQ Enable register
+
+  sw-irq-claim:
+    type: int
+    required: true
+    description: Address of the SW IRQ Claim register
+
 mbox-cells:
   - channel

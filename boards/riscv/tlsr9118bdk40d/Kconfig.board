@@ -4,3 +4,10 @@
 config BOARD_TLSR9118BDK40D
 	bool "Telink W91 Platform"
 	depends on SOC_RISCV_TELINK_W91
+
+config IPC_DISPATCHER_PRIORITY
+	int "Telink IPC dispatcher priority"
+	depends on SOC_SERIES_RISCV_TELINK_W91 && BOARD_TLSR9118BDK40D
+	help
+		Telink IPC dispatcher priority must be more than
+		the System Workqueue initialisation priority (k_sys_work_q_init)

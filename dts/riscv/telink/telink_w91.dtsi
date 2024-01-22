@@ -51,6 +51,15 @@
 			interrupt-parent = <&plic0>;
 		};
 
+		mbox: mbox {
+			compatible = "telink,mbox-ipc-w91";
+			#mbox-cells = <1>;
+			max-channels = <2>;
+			sw-irq-pending = <0xe6401000>;
+			sw-irq-en = <0xe6402000>;
+			sw-irq-claim = <0xe6600004>;
+		};
+
 		flash_mspi: flash-controller@A3FFFF00 {
 			compatible = "telink,w91-flash-controller";
 			reg = <0xA3FFFF00 0x100>;

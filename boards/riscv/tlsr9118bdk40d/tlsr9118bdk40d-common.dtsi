@@ -25,21 +25,14 @@
 	reserved-memory {
 		#address-cells = <1>;
 		#size-cells = <1>;
-		ranges;
 
-		sram_tx: memory@0022E000 {
-			reg = <0x0022E000 0x1000>;
+		sram_tx: memory@22E000 {
+			reg = <0x22E000 0x1000>;
 		};
 
-		sram_rx: memory@0022F000 {
-			reg = <0x0022F000 0x1000>;
+		sram_rx: memory@22F000 {
+			reg = <0x22F000 0x1000>;
 		};
-	};
-
-	mbox: mbox {
-		compatible = "telink,mbox-ipc-w91";
-		#mbox-cells = <1>;
-		status = "okay";
 	};
 
 	ipc {

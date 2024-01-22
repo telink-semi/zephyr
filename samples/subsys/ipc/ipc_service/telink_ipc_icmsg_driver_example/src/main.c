@@ -25,8 +25,8 @@ static struct k_thread test_thread1_data;
 K_THREAD_STACK_DEFINE(test_thread2_stack, 2048);
 static struct k_thread test_thread2_data;
 
-volatile bool test_thread1_status = true;
-volatile bool test_thread2_status = true;
+volatile uint32_t thread1_comm_failed_cnt = 0;
+volatile uint32_t thread2_comm_failed_cnt = 0;
 
 static void test_thread1_func()
 {
@@ -47,9 +47,7 @@ static void test_thread1_func()
 		if (resp_time.error || (resp_time.mSecSet != req_time.mSec) ||
 				(resp_time.hourSet != req_time.hour) || (resp_time.daySet != req_time.day) ||
 				(resp_time.yearSet != req_time.year)) {
-			debug_printf(CORE_NAME "test_thread1_func: update time INCORRECT (step = %d) \n", i);
-			test_thread1_status = false;
-			return;
+			thread1_comm_failed_cnt++;
 		}
 
 		if (i == 100) {
@@ -59,7 +57,7 @@ static void test_thread1_func()
 			i++;
 		}
 
-		k_usleep(2);
+		k_msleep(2);
 	}
 }
 
@@ -82,9 +80,7 @@ static void test_thread2_func()
 		if (resp_time.error || (resp_time.mSecSet != req_time.mSec) ||
 				(resp_time.hourSet != req_time.hour) || (resp_time.daySet != req_time.day) ||
 				(resp_time.yearSet != req_time.year)) {
-			debug_printf(CORE_NAME "test_thread2_func: update time INCORRECT (step = %d) \n", i);
-			test_thread2_status = false;
-			return;
+			thread2_comm_failed_cnt++;
 		}
 
 		if (i == 100) {
@@ -94,7 +90,7 @@ static void test_thread2_func()
 			i++;
 		}
 
-		k_usleep(3);
+		k_msleep(6);
 	}
 }
 
@@ -104,12 +100,12 @@ int main(void)
 
 	(void)k_thread_create(&test_thread1_data,
 		test_thread1_stack, K_THREAD_STACK_SIZEOF(test_thread1_stack),
-		test_thread1_func, NULL, NULL, NULL, K_PRIO_PREEMPT(9), 0, K_NO_WAIT);
+		test_thread1_func, NULL, NULL, NULL, K_PRIO_PREEMPT(2), 0, K_NO_WAIT);
 	(void)k_thread_name_set(&test_thread1_data, "test_thread1");
 
 	(void)k_thread_create(&test_thread2_data,
 		test_thread2_stack, K_THREAD_STACK_SIZEOF(test_thread2_stack),
-		test_thread2_func, NULL, NULL, NULL, K_PRIO_PREEMPT(10), 0, K_NO_WAIT);
+		test_thread2_func, NULL, NULL, NULL, K_PRIO_PREEMPT(1), 0, K_NO_WAIT);
 	(void)k_thread_name_set(&test_thread2_data, "test_thread2");
 	
 	driver1_examp_init();
@@ -122,7 +118,8 @@ int main(void)
 
 	for(;;) {
 		k_msleep(1000);
-		debug_printf(CORE_NAME "status updates: thread1 = %d, thread2 = %d\n", test_thread1_status, test_thread2_status);
+		debug_printf(CORE_NAME "t1_fail_cnt = %lu, t2_fail_cnt = %lu\n",
+				thread1_comm_failed_cnt, thread2_comm_failed_cnt);
 	}
 
 	return 0;

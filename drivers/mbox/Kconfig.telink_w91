@@ -3,7 +3,7 @@
 
 config MBOX_TELINK_W91_IPC
 	bool "Telink W91 Message Receive Unit (MRU) driver"
-	default n
+	default y
 	depends on BOARD_TLSR9118BDK40D
 	help
 	  Driver for Telink W91 Message Receive Unit (MRU).

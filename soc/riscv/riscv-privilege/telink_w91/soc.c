@@ -9,8 +9,6 @@
 #include <zephyr/device.h>
 #include <zephyr/storage/flash_map.h>
 
-#include "ipc_dispatcher.h"
-
 /* List of supported CCLK frequencies */
 #define CLK_160MHZ                  160000000u
 
@@ -29,8 +27,6 @@ static int soc_w91_init(void)
 	/* Done by FreeRTOS clock_init() and clock_postinit() */
 	/* hal/soc/scm2010/soc.c (hal/drivers/clk/clk-scm2010.c) */
 
-	ipc_dispatcher_init();
-
 	return 0;
 }
 
@@ -47,5 +43,4 @@ void sys_arch_reboot(int type)
 }
 
 SYS_INIT(soc_w91_init, PRE_KERNEL_1, 0);
-SYS_INIT(ipc_dispatcher_start, APPLICATION, 0);
 /* SYS_INIT(soc_w91_check_flash, POST_KERNEL, 0); */

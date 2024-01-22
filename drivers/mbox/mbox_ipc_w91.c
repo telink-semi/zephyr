@@ -5,16 +5,19 @@
  */
 
 #include <zephyr/drivers/mbox.h>
-#include <plic.h>
-
-#define LOG_LEVEL CONFIG_MBOX_LOG_LEVEL
 #include <zephyr/logging/log.h>
 #include <zephyr/irq.h>
+
+#define LOG_LEVEL CONFIG_MBOX_LOG_LEVEL
 LOG_MODULE_REGISTER(mbox_ipc_w91);
 
 #define DT_DRV_COMPAT telink_mbox_ipc_w91
 
-#define MAX_CHANNEL_NUM 					2
+#define SW_IRQ_PENDING_REG	(*(volatile uint32_t*)(DT_INST_PROP(0, sw_irq_pending)))
+#define SW_IRQ_EN_REG		(*(volatile uint32_t*)(DT_INST_PROP(0, sw_irq_en)))
+#define SW_IRQ_CLAIM_REG	(*(volatile uint32_t*)(DT_INST_PROP(0, sw_irq_claim)))
+
+#define MAX_CHANNEL_NUM	 	DT_INST_PROP(0, max_channels)
 
 #define GET_SW_IRQ_NUMB(channel) 			(channel + 1)
 #define GET_CHANNEL_NUMB(sw_irq_source)		(sw_irq_source - 1)
@@ -22,11 +25,7 @@ LOG_MODULE_REGISTER(mbox_ipc_w91);
 struct mbox_w91_data {
 	mbox_callback_t cb[MAX_CHANNEL_NUM];
 	void *user_data[MAX_CHANNEL_NUM];
-	const struct device *dev;
-	uint32_t enabled_mask;
 };
-
-static struct mbox_w91_data w91_mbox_data;
 
 static int mbox_w91_send(const struct device *dev, uint32_t channel,
 			 const struct mbox_msg *msg)
@@ -39,21 +38,23 @@ static int mbox_w91_send(const struct device *dev, uint32_t channel,
 		LOG_WRN("Sending data not supported");
 	}
 
-	plic_sw_set_pending(GET_SW_IRQ_NUMB(channel));
+	SW_IRQ_PENDING_REG = BIT(GET_SW_IRQ_NUMB(channel));
 
 	return 0;
 }
 
-static void mbox_dispatcher(uint32_t source)
+static void mbox_dispatcher(const struct device *dev)
 {
+	uint32_t source = SW_IRQ_CLAIM_REG;
 	uint32_t channel = GET_CHANNEL_NUMB(source);
-	struct mbox_w91_data *data = &w91_mbox_data;
+	struct mbox_w91_data *data = dev->data;
 
 	if ((channel < MAX_CHANNEL_NUM) &&
-			(data->enabled_mask & BIT(channel)) &&
-			(data->cb[channel] != NULL)) {
-		data->cb[channel](data->dev, channel, data->user_data[channel], NULL);
+			(SW_IRQ_EN_REG & BIT(source)) && (data->cb[channel] != NULL)) {
+		data->cb[channel](dev, channel, data->user_data[channel], NULL);
 	}
+
+	SW_IRQ_CLAIM_REG = source;
 }
 
 static int mbox_w91_register_callback(const struct device *dev, uint32_t channel,
@@ -67,8 +68,6 @@ static int mbox_w91_register_callback(const struct device *dev, uint32_t channel
 
 	data->cb[channel] = cb;
 	data->user_data[channel] = user_data;
-
-	plic_sw_set_callback(GET_SW_IRQ_NUMB(channel), mbox_dispatcher);
 
 	return 0;
 }
@@ -92,8 +91,8 @@ static int mbox_w91_set_enabled(const struct device *dev, uint32_t channel, bool
 
 	struct mbox_w91_data *data = dev->data;
 
-	if ((!enable && (!(data->enabled_mask & BIT(channel)))) ||
-		(enable && (data->enabled_mask & BIT(channel)))) {
+	if ((!enable && (!(SW_IRQ_EN_REG & BIT(GET_SW_IRQ_NUMB(channel))))) ||
+		(enable && (SW_IRQ_EN_REG & BIT(GET_SW_IRQ_NUMB(channel))))) {
 		return -EALREADY;
 	}
 
@@ -102,11 +101,9 @@ static int mbox_w91_set_enabled(const struct device *dev, uint32_t channel, bool
 	}
 
 	if (enable) {
-		data->enabled_mask |= BIT(channel);
-		plic_sw_interrupt_enable(GET_SW_IRQ_NUMB(channel));
+		SW_IRQ_EN_REG |= BIT(GET_SW_IRQ_NUMB(channel));
 	} else {
-		plic_sw_interrupt_disable(GET_SW_IRQ_NUMB(channel));
-		data->enabled_mask &= ~BIT(channel);
+		SW_IRQ_EN_REG &= (~ BIT(GET_SW_IRQ_NUMB(channel)));
 	}
 
 	return 0;
@@ -114,13 +111,8 @@ static int mbox_w91_set_enabled(const struct device *dev, uint32_t channel, bool
 
 static int mbox_w91_init(const struct device *dev)
 {
-	struct mbox_w91_data *data = dev->data;
-
-	data->dev = dev;
-
 	/* Enable sw interrupt */
-	core_interrupt_enable();
-	IRQ_CONNECT(RISCV_MACHINE_SOFT_IRQ, 0, plic_irq_trap_handler, NULL, 0);
+	IRQ_CONNECT(RISCV_MACHINE_SOFT_IRQ, 0, mbox_dispatcher, DEVICE_DT_INST_GET(0), 0);
 	irq_enable(RISCV_MACHINE_SOFT_IRQ);
 
 	return 0;
@@ -134,6 +126,8 @@ static const struct mbox_driver_api mbox_w91_driver_api = {
 	.set_enabled = mbox_w91_set_enabled,
 };
 
+static struct mbox_w91_data w91_mbox_data;
+
 DEVICE_DT_INST_DEFINE(0, mbox_w91_init, NULL, &w91_mbox_data, NULL,
-		    POST_KERNEL, CONFIG_MBOX_INIT_PRIORITY,
+		    PRE_KERNEL_1, CONFIG_MBOX_INIT_PRIORITY,
 		    &mbox_w91_driver_api);

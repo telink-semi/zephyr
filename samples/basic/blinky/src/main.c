@@ -21,9 +21,6 @@
 
 #define CORE_NAME "D25 core -> "
 
-static uint32_t request_sw_irq_cntr;
-static uint32_t response_sw_irq_cntr;
-
 static bool led_state;
 
 /***************************************************************************************
@@ -69,14 +66,6 @@ static void control_gpio_out(uint8_t gpio, bool state)
 	update_reg(GPIO_BASE_ADDR + 0x14, 1 << gpio, state);
 }
 
-void irq_sw_handler(uint32_t source)
-{
-	led_state = !led_state;
-	control_gpio_out(20, led_state);
-
-	debug_printf(CORE_NAME "sw irq handler id = 1: cnt = %u\n", ++response_sw_irq_cntr);
-}
-
 int main(void)
 {
 	unsigned long hartid, vendor, arch;
@@ -89,20 +78,13 @@ int main(void)
 	/* blink red LED */
 	enable_gpio_out(20);
 
-	/* Enable sw interrupt */
-	core_interrupt_enable();
-	IRQ_CONNECT(RISCV_MACHINE_SOFT_IRQ, 0, plic_irq_trap_handler, NULL, 0);
-	irq_enable(RISCV_MACHINE_SOFT_IRQ);
-	plic_sw_set_callback(1, irq_sw_handler);
-	plic_sw_interrupt_enable(1);
-
 	/* Waiting init N22 core */
 	k_msleep(SLEEP_TIME_MS);
 
 	for (;;) {
-		debug_printf(CORE_NAME "sw irq request: cnt = %u\n", ++request_sw_irq_cntr);
-		plic_sw_set_pending(1);
-		plic_sw_set_pending(2);
+		led_state = !led_state;
+		control_gpio_out(20, led_state);
+		debug_printf(CORE_NAME "led state = %u\n", led_state);
 		k_msleep(SLEEP_TIME_MS);
 	}
 	return 0;

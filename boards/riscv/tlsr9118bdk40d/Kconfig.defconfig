@@ -33,4 +33,7 @@ config MCUBOOT_SIGNATURE_KEY_FILE
 config MCUBOOT_EXTRA_IMGTOOL_ARGS
 	default "--max-sectors 4096" if BOOTLOADER_MCUBOOT
 
+config IPC_DISPATCHER_PRIORITY
+	default 45
+
 endif
