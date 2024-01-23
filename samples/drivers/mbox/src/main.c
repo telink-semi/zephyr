@@ -9,7 +9,11 @@
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/mbox.h>
 
-#define TX_ID (1)
+#include <debug.h>
+
+#define printk(format, ...)            debug_printf(format, ##__VA_ARGS__)
+
+#define TX_ID (0)
 #define RX_ID (0)
 
 static void callback(const struct device *dev, uint32_t channel,
