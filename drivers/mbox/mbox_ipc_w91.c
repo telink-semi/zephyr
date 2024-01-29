@@ -206,6 +206,8 @@ static int mbox_w91_init(const struct device *dev)
 		return -ENOMEM;
 	}
 
+	LOG_INF("mbox_w91_init");
+
 	return 0;
 }
 

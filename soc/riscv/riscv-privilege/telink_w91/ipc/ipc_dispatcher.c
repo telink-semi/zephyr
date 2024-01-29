@@ -81,7 +81,10 @@ static int ipc_dispatcher_start(void)
 		if (ret < 0) {
 			LOG_ERR("IPC endpoint bind timed out: %d", ret);
 		}
+		ret = 0;
 	}
+
+	LOG_INF("ipc_dispatcher_start");
 
 	return ret;
 }
