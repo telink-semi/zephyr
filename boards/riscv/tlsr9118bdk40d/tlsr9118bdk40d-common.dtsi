@@ -18,6 +18,7 @@
 		zephyr,sram = &ram_dlm;
 		zephyr,flash = &flash;
 		zephyr,flash-controller = &flash_mspi;
+		telink,ipc-interface = &ipc0;
 		zephyr,entropy = &trng0;
 		zephyr,code-partition = &slot0_partition;
 	};
@@ -25,14 +26,6 @@
 
 &cpu0 {
 	clock-frequency = <160000000>;
-};
-
-&ram_ilm {
-	reg = <0x00000000 0x00008000>;
-};
-
-&ram_dlm {
-	reg = <0x00200000 0x00030000>;
 };
 
 &flash {

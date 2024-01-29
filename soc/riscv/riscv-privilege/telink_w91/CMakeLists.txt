@@ -14,6 +14,12 @@ zephyr_sources(
 	debug.c
 )
 
+if(CONFIG_TELINK_W91_IPC_DISPATCHER)
+zephyr_sources(
+	ipc/ipc_dispatcher.c
+)
+endif()
+
 # Force using BFD-LD
 zephyr_ld_options(-fuse-ld=bfd)
 

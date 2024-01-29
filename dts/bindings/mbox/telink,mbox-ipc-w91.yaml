@@ -10,3 +10,6 @@ include: [base.yaml, mailbox-controller.yaml]
 properties:
   reg:
     required: true
+
+mbox-cells:
+  - channel
