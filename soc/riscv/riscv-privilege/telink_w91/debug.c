@@ -95,3 +95,9 @@ void debug_printf(const char *format, ...)
 	va_end(args);
 	debug_puts(buf);
 }
+
+int arch_printk_char_out(int c)
+{
+	debug_putch(c);
+	return 0;
+}

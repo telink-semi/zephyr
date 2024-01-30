@@ -14,12 +14,6 @@ zephyr_sources(
 	debug.c
 )
 
-if(CONFIG_SOC_RISCV_TELINK_W91)
-zephyr_sources(
-	idle.c
-)
-endif()
-
 # Force using BFD-LD
 zephyr_ld_options(-fuse-ld=bfd)
 
