@@ -35,7 +35,6 @@ jobs:
         cd ..
         west init -l zephyr
         west update
-        west blobs fetch hal_telink
         west zephyr-export
         pip install -r zephyr/scripts/requirements.txt
 

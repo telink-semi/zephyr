@@ -7,7 +7,7 @@
 #include <offsets.h>
 #include <zephyr/toolchain.h>
 
-#include <soc.h>
+#include "soc.h"
 
 /* Exports */
 #ifdef CONFIG_RISCV_SOC_CONTEXT_SAVE

@@ -3,7 +3,7 @@
 
 config LOG_BACKEND_TELINK_W91
 	bool "Telink W91 backend"
-	depends on SOC_SERIES_RISCV_TELINK_W91
+	depends on TELINK_W91_DEBUG_ENABLE
 	default y
 	select LOG_OUTPUT
 	help

@@ -104,5 +104,12 @@
 			reg = <0x80101800 0x20>;
 			status = "disabled";
 		};
+
+		gpio0: gpio0 {
+			compatible = "telink,w91-gpio";
+			gpio-controller;
+			status = "disabled";
+			#gpio-cells = <2>;
+		};
 	};
 };

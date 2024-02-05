@@ -9,7 +9,8 @@
 
 #include <soc_common.h>
 
-/* Include CSRs available for Telink w91 SoCs */
-#include "csr_utils.h"
+#define NDS_MXSTATUS                0x7c4
+#define NDS_MCACHE_CTL              0x7ca
+#define NDS_MMISC_CTL               0x7d0
 
 #endif /* RISCV_TELINK_W91_SOC_H */
