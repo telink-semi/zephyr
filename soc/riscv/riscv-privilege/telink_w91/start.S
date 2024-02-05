@@ -4,9 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <soc.h>
 #include <zephyr/devicetree.h>
 #include <zephyr/toolchain.h>
+
+#include "soc.h"
 
 #define N22_CORE_START (DT_REG_ADDR(DT_CHOSEN(zephyr_flash)) + DT_REG_SIZE(DT_CHOSEN(zephyr_flash)))
 

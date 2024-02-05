@@ -14,6 +14,19 @@
 	model = "telink,w91";
 	compatible = "telink,tlsr9118bdk40d";
 
+	aliases {
+		led0 = &led_red;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		led_red: led_0 {
+			gpios = <&gpio0 20 0>;
+			label = "LED Red";
+		};
+	};
+
 	chosen {
 		zephyr,sram = &ram_dlm;
 		zephyr,flash = &flash;
@@ -60,5 +73,9 @@
 };
 
 &trng0 {
+	status = "okay";
+};
+
+&gpio0 {
 	status = "okay";
 };
