@@ -190,18 +190,25 @@ static int mbox_w91_init(const struct device *dev)
 	const struct mbox_w91_config *config = dev->config;
 	struct mbox_w91_data *mbox_data = dev->data;
 
-	mbox_data->num_channels = mbox_w91_num_isr_target(config->base_addr) & 0xffff;
-	if (!mbox_data->num_channels) {
+	size_t num_channels = mbox_w91_num_isr_target(config->base_addr) & 0xffff;
+
+	if (!num_channels) {
 		return -EIO;
 	}
 
-	mbox_data->channel = k_malloc(sizeof(struct mbox_w91_channel) * mbox_data->num_channels);
+	for (size_t i = 0; i < num_channels; i++) {
+		mbox_w91_enable_interrupt(config->base_addr, i + 1, false);
+	}
+
+	mbox_data->channel = k_malloc(sizeof(struct mbox_w91_channel) * num_channels);
 
 	if (mbox_data->channel) {
-		for (size_t i = 0; i < mbox_data->num_channels; i++) {
+		for (size_t i = 0; i < num_channels; i++) {
 			mbox_data->channel[i].callback = NULL;
 			mbox_data->channel[i].callback_data = NULL;
 		}
+		compiler_barrier();
+		mbox_data->num_channels = num_channels;
 	} else {
 		return -ENOMEM;
 	}

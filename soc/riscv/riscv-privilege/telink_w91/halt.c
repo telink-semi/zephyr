@@ -5,6 +5,7 @@
  */
 
 #include <zephyr/kernel.h>
+#include <zephyr/sys/reboot.h>
 
 FUNC_NORETURN void arch_system_halt(unsigned int reason)
 {
@@ -16,15 +17,17 @@ FUNC_NORETURN void arch_system_halt(unsigned int reason)
 	(void)arch_irq_lock();
 
 #ifdef CONFIG_TELINK_W91_REBOOT_ON_FAULT
-	printk("!!! reboot\n\n");
 #if CONFIG_TELINK_W91_REBOOT_ON_FAULT_DELAY
-	delay_ms(CONFIG_TELINK_W91_REBOOT_ON_FAULT_DELAY);
-#endif /* CONFIG_TELINK_W91_REBOOT_ON_FAULT_DELAY */
-	extern void sys_arch_reboot(int type);
-	sys_arch_reboot(0);
-#endif /* CONFIG_TELINK_W91_REBOOT_ON_FAULT */
+	printk("!!! reboot in %u mS\n", CONFIG_TELINK_W91_REBOOT_ON_FAULT_DELAY);
+	uint64_t start_tick  = sys_clock_cycle_get_64();
 
-	for (;;) {
-		/* Spin endlessly */
+	while (sys_clock_cycle_get_64() - start_tick <
+		((uint64_t)CONFIG_TELINK_W91_REBOOT_ON_FAULT_DELAY *
+		CONFIG_SYS_CLOCK_HW_CYCLES_PER_SEC) / 1000) {
 	}
+
+#endif /* CONFIG_TELINK_W91_REBOOT_ON_FAULT_DELAY */
+	printk("!!! reboot\n");
+	sys_reboot(0);
+#endif /* CONFIG_TELINK_W91_REBOOT_ON_FAULT */
 }
