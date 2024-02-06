@@ -93,4 +93,7 @@ config TELINK_W91_2_WIRE_SPI_ENABLE
 	bool
 	default n
 
+config REBOOT
+	default y
+
 endif # SOC_SERIES_RISCV_TELINK_W91
