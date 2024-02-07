@@ -29,5 +29,10 @@ FUNC_NORETURN void arch_system_halt(unsigned int reason)
 #endif /* CONFIG_TELINK_W91_REBOOT_ON_FAULT_DELAY */
 	printk("!!! reboot\n");
 	sys_reboot(0);
+	printk("!!! reboot failed: spin endlessly\n");
 #endif /* CONFIG_TELINK_W91_REBOOT_ON_FAULT */
+	for (;;) {
+		/* Spin endlessly */
+		__asm volatile("nop");
+	}
 }

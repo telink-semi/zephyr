@@ -17,7 +17,7 @@
 
 #define SYS_BASE                          0xf1700000
 #define SYS_CORE_RESET_CTRL               0x218
-#define __write_reg32(addr, value)        (*(volatile uint32_t*)(addr) = (uint32_t)(value))
+#define __write_reg32(addr, value)        (*(volatile uint32_t *)(addr) = (uint32_t)(value))
 
 /**
  * @brief Perform basic initialization at boot.
