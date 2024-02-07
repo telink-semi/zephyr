@@ -18,8 +18,8 @@
 
 #define GPIO_BASE_ADDR                     0xf0700000
 
-#define __read_reg32(addr)                 (*(volatile uint32_t*)(addr))
-#define __write_reg32(addr, value)         (*(volatile uint32_t*)(addr) = (uint32_t)(value))
+#define __read_reg32(addr)                 (*(volatile uint32_t *)(addr))
+#define __write_reg32(addr, value)         (*(volatile uint32_t *)(addr) = (uint32_t)(value))
 
 #define F_REQ                              40000000
 

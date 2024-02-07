@@ -19,6 +19,7 @@ struct ipc_dispatcher_record {
 	sys_snode_t              node;
 	enum ipc_dispatcher_id   id;
 	ipc_dispatcher_cb_t      callback;
+	void                    *param;
 };
 
 static struct ipc_ept  ept;
@@ -42,7 +43,7 @@ static void endpoint_received(const void *data, size_t len, void *priv)
 		SYS_SLIST_FOR_EACH_CONTAINER(&ipc_records, record, node) {
 			if (record->id == *id && record->callback) {
 				processed = true;
-				record->callback(data, len);
+				record->callback(data, len, record->param);
 				break;
 			}
 		}
@@ -86,13 +87,14 @@ static int ipc_dispatcher_start(void)
 	return ret;
 }
 
-void ipc_dispatcher_add(enum ipc_dispatcher_id id, ipc_dispatcher_cb_t cb)
+void ipc_dispatcher_add(enum ipc_dispatcher_id id, ipc_dispatcher_cb_t cb, void *param)
 {
 	struct ipc_dispatcher_record *record = malloc(sizeof(struct ipc_dispatcher_record));
 
 	if (record) {
 		record->id = id;
 		record->callback = cb;
+		record->param = param;
 
 		bool exist_elem = false;
 		struct ipc_dispatcher_record *list_record;
