@@ -34,7 +34,7 @@
 			label = "LED Green";
 		};
 	};
-	/* Short TL_Key4 (J20 pin 17) to ground */
+	/* Short TL_Key1 (J20 pin 11) to ground (J20 pin 25-35) */
 	keys {
 		compatible = "gpio-keys";
 
