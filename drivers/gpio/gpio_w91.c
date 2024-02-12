@@ -6,16 +6,19 @@
 
 #include <zephyr/drivers/gpio/gpio_utils.h>
 #include <zephyr/drivers/gpio.h>
+#include <ipc/ipc_based_driver.h>
 #include <zephyr/logging/log.h>
 
 #define LOG_LEVEL CONFIG_GPIO_LOG_LEVEL
 LOG_MODULE_REGISTER(gpio_w91);
 
-#include <ipc/ipc_dispatcher.h>
-IPC_DISPATCHER_HOST_INIT;
-
 /* Driver dts compatibility: telink,w91_gpio */
 #define DT_DRV_COMPAT telink_w91_gpio
+
+/* Sainity checker: to keep instance in in uint8_t */
+#if DT_NUM_INST_STATUS_OKAY(DT_DRV_COMPAT) > UINT8_MAX
+	#error Number of driver instances is more than UINT8_MAX
+#endif
 
 /* Max gpio pin number */
 #define GPIO_PIN_NUM_MAX         ((uint8_t)25u)
@@ -45,8 +48,17 @@ enum {
 	IPC_DISPATCHER_GPIO_PIN_IRQ_EVENT,
 };
 
+struct gpio_w91_config {
+	/* gpio_driver_config needs to be first */
+	struct gpio_driver_config common;
+	gpio_pin_t pins_num;            /* pins number */
+	uint8_t instance_id;            /* instance id */
+};
+
 struct gpio_w91_data {
-	struct gpio_driver_data common; /* driver data */
+	/* gpio_driver_data needs to be first */
+	struct gpio_driver_data common;
+	struct ipc_based_driver ipc;    /* ipc driver part */
 	sys_slist_t callbacks;          /* list of callbacks */
 };
 
@@ -75,16 +87,16 @@ struct gpio_w91_port_set_masked_raw_req {
 };
 
 /* APIs implementation: pin configure */
-static size_t pack_gpio_w91_pin_configure(void *unpack_data, uint8_t *pack_data)
+static size_t pack_gpio_w91_pin_configure(uint8_t inst, void *unpack_data, uint8_t *pack_data)
 {
 	struct gpio_w91_pin_config_req *p_pin_config_req = unpack_data;
 
-	size_t pack_data_len = sizeof(enum ipc_dispatcher_id) +
+	size_t pack_data_len = sizeof(uint32_t) +
 			sizeof(p_pin_config_req->pin) + sizeof(p_pin_config_req->output) +
 			sizeof(p_pin_config_req->output_init) + sizeof(p_pin_config_req->bias);
 
 	if (pack_data != NULL) {
-		enum ipc_dispatcher_id id = IPC_DISPATCHER_GPIO_PIN_CONFIG;
+		uint32_t id = IPC_DISPATCHER_MK_ID(IPC_DISPATCHER_GPIO_PIN_CONFIG, inst);
 
 		IPC_DISPATCHER_PACK_FIELD(pack_data, id);
 		IPC_DISPATCHER_PACK_FIELD(pack_data, p_pin_config_req->pin);
@@ -105,7 +117,7 @@ static int gpio_w91_pin_configure(const struct device *dev,
 	struct gpio_w91_pin_config_req pin_config_req;
 
 	/* Check input parameters: pin number */
-	if (pin > GPIO_PIN_NUM_MAX) {
+	if (pin >= ((struct gpio_w91_config *)dev->config)->pins_num) {
 		return -ENOTSUP;
 	}
 
@@ -143,7 +155,11 @@ static int gpio_w91_pin_configure(const struct device *dev,
 		pin_config_req.bias = GPIO_PIN_DEFAULT;
 	}
 
-	IPC_DISPATCHER_HOST_SEND_DATA(gpio_w91_pin_configure, &pin_config_req, &err,
+	struct ipc_based_driver *ipc_data = &((struct gpio_w91_data *)dev->data)->ipc;
+	uint8_t inst = ((struct gpio_w91_config *)dev->config)->instance_id;
+
+	IPC_DISPATCHER_HOST_SEND_DATA(ipc_data, inst,
+		gpio_w91_pin_configure, &pin_config_req, &err,
 		CONFIG_GPIO_TELINK_W91_IPC_RESPONSE_TIMEOUT_MS);
 
 	return err;
@@ -156,7 +172,7 @@ static void unpack_gpio_w91_port_get_raw(void *unpack_data,
 		const uint8_t *pack_data, size_t pack_data_len)
 {
 	struct gpio_w91_port_get_raw_resp *p_port_get_raw_resp = unpack_data;
-	size_t expect_len = sizeof(enum ipc_dispatcher_id) +
+	size_t expect_len = sizeof(uint32_t) +
 			sizeof(p_port_get_raw_resp->err) + sizeof(p_port_get_raw_resp->value);
 
 	if (expect_len != pack_data_len) {
@@ -164,7 +180,7 @@ static void unpack_gpio_w91_port_get_raw(void *unpack_data,
 		return;
 	}
 
-	pack_data += sizeof(enum ipc_dispatcher_id);
+	pack_data += sizeof(uint32_t);
 	IPC_DISPATCHER_UNPACK_FIELD(pack_data, p_port_get_raw_resp->err);
 	IPC_DISPATCHER_UNPACK_FIELD(pack_data, p_port_get_raw_resp->value);
 }
@@ -173,7 +189,11 @@ static int gpio_w91_port_get_raw(const struct device *dev, gpio_port_value_t *va
 {
 	struct gpio_w91_port_get_raw_resp port_get_raw_resp;
 
-	IPC_DISPATCHER_HOST_SEND_DATA(gpio_w91_port_get_raw, NULL, &port_get_raw_resp,
+	struct ipc_based_driver *ipc_data = &((struct gpio_w91_data *)dev->data)->ipc;
+	uint8_t inst = ((struct gpio_w91_config *)dev->config)->instance_id;
+
+	IPC_DISPATCHER_HOST_SEND_DATA(ipc_data, inst,
+		gpio_w91_port_get_raw, NULL, &port_get_raw_resp,
 		CONFIG_GPIO_TELINK_W91_IPC_RESPONSE_TIMEOUT_MS);
 
 	if (!port_get_raw_resp.err) {
@@ -184,16 +204,16 @@ static int gpio_w91_port_get_raw(const struct device *dev, gpio_port_value_t *va
 }
 
 /* API implementation: set pins value */
-static size_t pack_gpio_w91_port_set_masked_raw(void *unpack_data, uint8_t *pack_data)
+static size_t pack_gpio_w91_port_set_masked_raw(uint8_t inst, void *unpack_data, uint8_t *pack_data)
 {
 	struct gpio_w91_port_set_masked_raw_req *p_port_set_masked_raw_req = unpack_data;
 
-	size_t pack_data_len = sizeof(enum ipc_dispatcher_id) +
+	size_t pack_data_len = sizeof(uint32_t) +
 			sizeof(p_port_set_masked_raw_req->mask) +
 			sizeof(p_port_set_masked_raw_req->value);
 
 	if (pack_data != NULL) {
-		enum ipc_dispatcher_id id = IPC_DISPATCHER_GPIO_PORT_SET_MASKED_RAW;
+		uint32_t id = IPC_DISPATCHER_MK_ID(IPC_DISPATCHER_GPIO_PORT_SET_MASKED_RAW, inst);
 
 		IPC_DISPATCHER_PACK_FIELD(pack_data, id);
 		IPC_DISPATCHER_PACK_FIELD(pack_data, p_port_set_masked_raw_req->mask);
@@ -215,21 +235,25 @@ static int gpio_w91_port_set_masked_raw(const struct device *dev,
 	port_set_masked_raw_req.mask = mask;
 	port_set_masked_raw_req.value = value;
 
-	IPC_DISPATCHER_HOST_SEND_DATA(gpio_w91_port_set_masked_raw, &port_set_masked_raw_req, &err,
+	struct ipc_based_driver *ipc_data = &((struct gpio_w91_data *)dev->data)->ipc;
+	uint8_t inst = ((struct gpio_w91_config *)dev->config)->instance_id;
+
+	IPC_DISPATCHER_HOST_SEND_DATA(ipc_data, inst,
+		gpio_w91_port_set_masked_raw, &port_set_masked_raw_req, &err,
 		CONFIG_GPIO_TELINK_W91_IPC_RESPONSE_TIMEOUT_MS);
 
 	return err;
 }
 
 /* API implementation: set pins */
-static size_t pack_gpio_w91_port_set_bits_raw(void *unpack_data, uint8_t *pack_data)
+static size_t pack_gpio_w91_port_set_bits_raw(uint8_t inst, void *unpack_data, uint8_t *pack_data)
 {
 	gpio_port_pins_t *p_mask = unpack_data;
 
-	size_t pack_data_len = sizeof(enum ipc_dispatcher_id) +  sizeof(*p_mask);
+	size_t pack_data_len = sizeof(uint32_t) +  sizeof(*p_mask);
 
 	if (pack_data != NULL) {
-		enum ipc_dispatcher_id id = IPC_DISPATCHER_GPIO_PORT_SET_BITS_RAW;
+		uint32_t id = IPC_DISPATCHER_MK_ID(IPC_DISPATCHER_GPIO_PORT_SET_BITS_RAW, inst);
 
 		IPC_DISPATCHER_PACK_FIELD(pack_data, id);
 		IPC_DISPATCHER_PACK_FIELD(pack_data, *p_mask);
@@ -244,21 +268,24 @@ static int gpio_w91_port_set_bits_raw(const struct device *dev, gpio_port_pins_t
 {
 	int err;
 
-	IPC_DISPATCHER_HOST_SEND_DATA(gpio_w91_port_set_bits_raw, &mask, &err,
+	struct ipc_based_driver *ipc_data = &((struct gpio_w91_data *)dev->data)->ipc;
+	uint8_t inst = ((struct gpio_w91_config *)dev->config)->instance_id;
+
+	IPC_DISPATCHER_HOST_SEND_DATA(ipc_data, inst, gpio_w91_port_set_bits_raw, &mask, &err,
 		CONFIG_GPIO_TELINK_W91_IPC_RESPONSE_TIMEOUT_MS);
 
 	return err;
 }
 
 /* API implementation: clear pins */
-static size_t pack_gpio_w91_port_clear_bits_raw(void *unpack_data, uint8_t *pack_data)
+static size_t pack_gpio_w91_port_clear_bits_raw(uint8_t inst, void *unpack_data, uint8_t *pack_data)
 {
 	gpio_port_pins_t *p_mask = unpack_data;
 
-	size_t pack_data_len = sizeof(enum ipc_dispatcher_id) +  sizeof(*p_mask);
+	size_t pack_data_len = sizeof(uint32_t) +  sizeof(*p_mask);
 
 	if (pack_data != NULL) {
-		enum ipc_dispatcher_id id = IPC_DISPATCHER_GPIO_PORT_CLEAR_BITS_RAW;
+		uint32_t id = IPC_DISPATCHER_MK_ID(IPC_DISPATCHER_GPIO_PORT_CLEAR_BITS_RAW, inst);
 
 		IPC_DISPATCHER_PACK_FIELD(pack_data, id);
 		IPC_DISPATCHER_PACK_FIELD(pack_data, *p_mask);
@@ -273,21 +300,24 @@ static int gpio_w91_port_clear_bits_raw(const struct device *dev, gpio_port_pins
 {
 	int err;
 
-	IPC_DISPATCHER_HOST_SEND_DATA(gpio_w91_port_clear_bits_raw, &mask, &err,
+	struct ipc_based_driver *ipc_data = &((struct gpio_w91_data *)dev->data)->ipc;
+	uint8_t inst = ((struct gpio_w91_config *)dev->config)->instance_id;
+
+	IPC_DISPATCHER_HOST_SEND_DATA(ipc_data, inst, gpio_w91_port_clear_bits_raw, &mask, &err,
 		CONFIG_GPIO_TELINK_W91_IPC_RESPONSE_TIMEOUT_MS);
 
 	return err;
 }
 
 /* APIs implementation: toggle pins */
-static size_t pack_gpio_w91_port_toggle_bits(void *unpack_data, uint8_t *pack_data)
+static size_t pack_gpio_w91_port_toggle_bits(uint8_t inst, void *unpack_data, uint8_t *pack_data)
 {
 	gpio_port_pins_t *p_mask = unpack_data;
 
-	size_t pack_data_len = sizeof(enum ipc_dispatcher_id) +  sizeof(*p_mask);
+	size_t pack_data_len = sizeof(uint32_t) +  sizeof(*p_mask);
 
 	if (pack_data != NULL) {
-		enum ipc_dispatcher_id id = IPC_DISPATCHER_GPIO_PORT_TOGGLE_BITS;
+		uint32_t id = IPC_DISPATCHER_MK_ID(IPC_DISPATCHER_GPIO_PORT_TOGGLE_BITS, inst);
 
 		IPC_DISPATCHER_PACK_FIELD(pack_data, id);
 		IPC_DISPATCHER_PACK_FIELD(pack_data, *p_mask);
@@ -302,22 +332,26 @@ static int gpio_w91_port_toggle_bits(const struct device *dev, gpio_port_pins_t 
 {
 	int err;
 
-	IPC_DISPATCHER_HOST_SEND_DATA(gpio_w91_port_toggle_bits, &mask, &err,
+	struct ipc_based_driver *ipc_data = &((struct gpio_w91_data *)dev->data)->ipc;
+	uint8_t inst = ((struct gpio_w91_config *)dev->config)->instance_id;
+
+	IPC_DISPATCHER_HOST_SEND_DATA(ipc_data, inst, gpio_w91_port_toggle_bits, &mask, &err,
 		CONFIG_GPIO_TELINK_W91_IPC_RESPONSE_TIMEOUT_MS);
 
 	return err;
 }
 
 /* API implementation: pin interrupt configure */
-static size_t pack_gpio_w91_pin_interrupt_configure(void *unpack_data, uint8_t *pack_data)
+static size_t pack_gpio_w91_pin_interrupt_configure(
+	uint8_t inst, void *unpack_data, uint8_t *pack_data)
 {
 	struct gpio_w91_pin_irq_config_req *p_pin_irq_config = unpack_data;
 
-	size_t pack_data_len = sizeof(enum ipc_dispatcher_id) + sizeof(p_pin_irq_config->pin)
+	size_t pack_data_len = sizeof(uint32_t) + sizeof(p_pin_irq_config->pin)
 			+ sizeof(p_pin_irq_config->irq_enable) + sizeof(p_pin_irq_config->type);
 
 	if (pack_data != NULL) {
-		enum ipc_dispatcher_id id = IPC_DISPATCHER_GPIO_PIN_IRQ_CONFIG;
+		uint32_t id = IPC_DISPATCHER_MK_ID(IPC_DISPATCHER_GPIO_PIN_IRQ_CONFIG, inst);
 
 		IPC_DISPATCHER_PACK_FIELD(pack_data, id);
 		IPC_DISPATCHER_PACK_FIELD(pack_data, p_pin_irq_config->pin);
@@ -363,7 +397,11 @@ static int gpio_w91_pin_interrupt_configure(const struct device *dev,
 		return -ENOTSUP;
 	}
 
-	IPC_DISPATCHER_HOST_SEND_DATA(gpio_w91_pin_interrupt_configure, &pin_irq_config_req, &err,
+	struct ipc_based_driver *ipc_data = &((struct gpio_w91_data *)dev->data)->ipc;
+	uint8_t inst = ((struct gpio_w91_config *)dev->config)->instance_id;
+
+	IPC_DISPATCHER_HOST_SEND_DATA(ipc_data, inst,
+		gpio_w91_pin_interrupt_configure, &pin_irq_config_req, &err,
 		CONFIG_GPIO_TELINK_W91_IPC_RESPONSE_TIMEOUT_MS);
 
 	return err;
@@ -384,13 +422,13 @@ static bool unpack_gpio_w91_irq_cb(void *unpack_data,
 		const uint8_t *pack_data, size_t pack_data_len)
 {
 	uint8_t *p_pin = unpack_data;
-	size_t expect_len = sizeof(enum ipc_dispatcher_id) + sizeof(*p_pin);
+	size_t expect_len = sizeof(uint32_t) + sizeof(*p_pin);
 
 	if (expect_len != pack_data_len) {
 		return false;
 	}
 
-	pack_data += sizeof(enum ipc_dispatcher_id);
+	pack_data += sizeof(uint32_t);
 	IPC_DISPATCHER_UNPACK_FIELD(pack_data, *p_pin);
 	return true;
 }
@@ -409,7 +447,16 @@ static void gpio_w91_irq_cb(const void *data, size_t len, void *param)
 /* APIs implementation: gpio init */
 static int gpio_w91_init(const struct device *dev)
 {
-	ipc_dispatcher_add(IPC_DISPATCHER_GPIO_PIN_IRQ_EVENT, gpio_w91_irq_cb, (void *)dev);
+	struct gpio_w91_data *data = dev->data;
+
+	ipc_based_driver_init(&data->ipc);
+	sys_slist_init(&data->callbacks);
+
+	uint8_t inst = ((struct gpio_w91_config *)dev->config)->instance_id;
+
+	ipc_dispatcher_add(IPC_DISPATCHER_MK_ID(IPC_DISPATCHER_GPIO_PIN_IRQ_EVENT, inst),
+		gpio_w91_irq_cb, (void *)dev);
+
 	return 0;
 }
 
@@ -427,8 +474,12 @@ static const struct gpio_driver_api gpio_w91_driver_api = {
 
 /* GPIO driver registration */
 #define GPIO_W91_INIT(n)                                                \
-	static const struct gpio_driver_config gpio_w91_config_##n = {      \
-		.port_pin_mask = GPIO_PORT_PIN_MASK_FROM_DT_INST(n),            \
+	static const struct gpio_w91_config gpio_w91_config_##n = {         \
+		.common = {                                                     \
+			.port_pin_mask = GPIO_PORT_PIN_MASK_FROM_DT_INST(n),        \
+		},                                                              \
+		.pins_num = DT_INST_PROP(n, ngpios),                            \
+		.instance_id = n,                                               \
 	};                                                                  \
                                                                         \
 	static struct gpio_w91_data gpio_w91_data_##n;                      \

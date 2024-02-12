@@ -5,7 +5,6 @@
  */
 #include "ipc_dispatcher.h"
 
-
 #include <zephyr/kernel.h>
 #include <zephyr/ipc/ipc_service.h>
 #include <stdlib.h>
@@ -17,7 +16,7 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
 struct ipc_dispatcher_record {
 	sys_snode_t              node;
-	enum ipc_dispatcher_id   id;
+	uint32_t                 id;
 	ipc_dispatcher_cb_t      callback;
 	void                    *param;
 };
@@ -34,8 +33,8 @@ static void endpoint_bound(void *priv)
 
 static void endpoint_received(const void *data, size_t len, void *priv)
 {
-	if (len >= sizeof(enum ipc_dispatcher_id)) {
-		enum ipc_dispatcher_id *id = (enum ipc_dispatcher_id *)data;
+	if (len >= sizeof(uint32_t)) {
+		uint32_t *id = (uint32_t *)data;
 		bool processed = false;
 		struct ipc_dispatcher_record *record;
 
@@ -87,7 +86,7 @@ static int ipc_dispatcher_start(void)
 	return ret;
 }
 
-void ipc_dispatcher_add(enum ipc_dispatcher_id id, ipc_dispatcher_cb_t cb, void *param)
+void ipc_dispatcher_add(uint32_t id, ipc_dispatcher_cb_t cb, void *param)
 {
 	struct ipc_dispatcher_record *record = malloc(sizeof(struct ipc_dispatcher_record));
 
@@ -120,7 +119,7 @@ void ipc_dispatcher_add(enum ipc_dispatcher_id id, ipc_dispatcher_cb_t cb, void 
 	}
 }
 
-void ipc_dispatcher_rm(enum ipc_dispatcher_id id)
+void ipc_dispatcher_rm(uint32_t id)
 {
 	bool rm_elem = false;
 	struct ipc_dispatcher_record *record;

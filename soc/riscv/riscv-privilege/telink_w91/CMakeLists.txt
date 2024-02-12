@@ -16,6 +16,7 @@ zephyr_sources(
 if(CONFIG_TELINK_W91_IPC_DISPATCHER)
 zephyr_sources(
 	ipc/ipc_dispatcher.c
+	ipc/ipc_based_driver.c
 )
 endif()
 
