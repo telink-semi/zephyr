@@ -5,3 +5,14 @@
  */
 
 #include <zephyr/dt-bindings/pinctrl/w91-pinctrl.h>
+
+&pinctrl {
+    pad-mul-sel = <1>;
+
+    gpio0_default: gpio0_default {
+        pinmux = <W91_PINMUX_SET(W91_PIN_0, W91_FUNC_DEFAULT)>;
+    };
+    gpio1_default: gpio1_default {
+        pinmux = <W91_PINMUX_SET(W91_PIN_1, W91_FUNC_DEFAULT)>;
+    };
+};
