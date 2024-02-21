@@ -21,7 +21,7 @@
 		#size-cells = <0>;
 		cpu0: cpu@0 {
 			reg = <0>;
-			clock-frequency = <24000000>;
+			clock-frequency = <60000000>;
 			compatible ="telink,b9x", "riscv";
 			cpu-power-states = <&state0>;
 		};
@@ -73,7 +73,7 @@
 		power: power@80140180 {
 			compatible = "telink,b95-power";
 			reg = <0x80140180 0x40>;
-			power-mode = "DCDC_1P4_LDO_2P0";
+			power-mode = "LDO_0P94_LDO_1P8";
 			vbat-type = "VBAT_MAX_VALUE_GREATER_THAN_3V6";
 			status = "okay";
 		};

@@ -100,11 +100,11 @@
 };
 
 &cpu0 {
-	clock-frequency = <48000000>;
+	clock-frequency = <60000000>;
 };
 
 &ram_ilm {
-	reg = <0x00000000 0x00040000>;
+	reg = <0x00040000 0x00040000>;
 };
 
 &ram_dlm {
