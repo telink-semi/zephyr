@@ -15,6 +15,7 @@ enum ipc_dispatcher_id {
 	IPC_DISPATCHER_UART                     = 0x100,
 	IPC_DISPATCHER_GPIO                     = 0x200,
 	IPC_DISPATCHER_PWM                      = 0x300,
+	IPC_DISPATCHER_PINCTRL                  = 0x400,
 } __attribute__((__packed__));
 
 typedef void (*ipc_based_driver_unpack_t)(void *result, const uint8_t *data, size_t len);

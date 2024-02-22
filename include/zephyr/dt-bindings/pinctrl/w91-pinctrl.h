@@ -36,17 +36,33 @@
 #define W91_PIN_23       23
 #define W91_PIN_24       24
 
-/* IDs for GPIO BANKs  */
-
-#define W91_BANK_0       0
-#define W91_BANK_1       1
-#define W91_BANK_2       2
-#define W91_BANK_3       3
-
 /* IDs for W91 GPIO functions */
-#define W91_FUNC_DEFAULT            0
 
-/* B9x pinctrl pull-up/down */
+#define W91_FUNC_DEFAULT    0
+#define W91_FUNC_UART_CTS   1
+#define W91_FUNC_UART_RTS   2
+#define W91_FUNC_UART_TXD   3
+#define W91_FUNC_UART_RXD   4
+#define W91_FUNC_PWM_0      5
+#define W91_FUNC_PWM_1      6
+#define W91_FUNC_PWM_2      7
+#define W91_FUNC_PWM_3      8
+#define W91_FUNC_SPI_CLK    9
+#define W91_FUNC_SPI_CS     10
+#define W91_FUNC_SPI_MOSI   11
+#define W91_FUNC_SPI_MISO   12
+#define W91_FUNC_SPI_WP     13
+#define W91_FUNC_SPI_HOLD   14
+#define W91_FUNC_SDIO_DATA0 15
+#define W91_FUNC_SDIO_DATA1 16
+#define W91_FUNC_SDIO_DATA2 17
+#define W91_FUNC_SDIO_DATA3 18
+#define W91_FUNC_SDIO_CLK   19
+#define W91_FUNC_SDIO_CMD   20
+#define W91_FUNC_I2C_SCL    21
+#define W91_FUNC_I2C_SDA    22
+
+/* W91 pinctrl pull-up/down */
 
 #define W91_PULL_NONE    0
 #define W91_PULL_DOWN    2
