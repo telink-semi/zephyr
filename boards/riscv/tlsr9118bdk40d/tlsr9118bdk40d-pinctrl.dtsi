@@ -15,4 +15,12 @@
     gpio1_default: gpio1_default {
         pinmux = <W91_PINMUX_SET(W91_PIN_1, W91_FUNC_DEFAULT)>;
     };
+
+    i2c_scl_default: i2c_scl_default {
+        pinmux = <W91_PINMUX_SET(W91_PIN_15, W91_FUNC_I2C_SCL)>;
+    };
+    
+    i2c_sda_default: i2c_sda_default {
+        pinmux = <W91_PINMUX_SET(W91_PIN_16, W91_FUNC_I2C_SDA)>;
+    };
 };

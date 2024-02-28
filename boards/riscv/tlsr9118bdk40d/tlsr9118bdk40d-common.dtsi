@@ -109,3 +109,10 @@
 	pinctrl-0 = <&gpio0_default>;
 	pinctrl-names = "default";
 };
+
+&i2c {
+	status = "okay";
+	clock-frequency = <I2C_BITRATE_FAST>;
+	pinctrl-0 = <&i2c_scl_default &i2c_sda_default>;
+	pinctrl-names = "default";
+};
