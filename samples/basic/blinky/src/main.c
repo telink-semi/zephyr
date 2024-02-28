@@ -28,17 +28,36 @@ static void led_toggle(void)
 	);
 }
 
+#define TEST_TIMER_EN 0
+
+#if TEST_TIMER_EN
+struct k_timer timer;
+
+volatile int timer_counter = 0;
+
+static void timer_expiry_cb(struct k_timer *timer)
+{
+	timer_counter++;
+
+	led_toggle();
+}
+#endif
+
 int main(void)
 {
-	uint32_t i;
-
 	led_init();
 
+#if TEST_TIMER_EN
+	k_timer_init(&timer, timer_expiry_cb, NULL);
+	k_timer_start(&timer, K_SECONDS(1), K_SECONDS(1));
+#endif
+
 	for (;;) {
-		for (i = 0; i < 5000000; i++) {
-			__asm__("nop");
-		}
+		k_msleep(1000);
+
+#if !TEST_TIMER_EN
 		led_toggle();
+#endif
 	}
 
 	return 0;
