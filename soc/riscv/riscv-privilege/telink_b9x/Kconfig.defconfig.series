@@ -37,7 +37,7 @@ config 2ND_LVL_ISR_TBL_OFFSET
 
 config PINCTRL
 	# fix me
-	default n 
+	default n
 
 config XIP
 	bool

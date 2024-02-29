@@ -13,8 +13,8 @@ static void led_init(void)
 		"li      t1, 0x10\n\t"
 		"addi    t0, t0, 0x600\n\t"
 		"addi    t0, t0, 0x600\n\t"
-		"sb      t2, 0x12(t0)\n\t" // [0x80140c12] PB OEN = 0xef
-		"sb      t1, 0x1c(t0)"     // [0x80140c1c] PB Output Set = 0x10
+		"sb      t2, 0x12(t0)\n\t" /* [0x80140c12] PB OEN = 0xef */
+		"sb      t1, 0x1c(t0)"     /* [0x80140c1c] PB Output Set = 0x10 */
 	);
 }
 
@@ -24,16 +24,16 @@ static void led_toggle(void)
 		"li      t1, 0x10\n\t"
 		"addi    t0, t0, 0x600\n\t"
 		"addi    t0, t0, 0x600\n\t"
-		"sb      t1, 0x1e(t0)" // [0x80140c1e]PB Output Toggle = 0x10
+		"sb      t1, 0x1e(t0)" /* [0x80140c1e]PB Output Toggle = 0x10 */
 	);
 }
 
-#define TEST_TIMER_EN 0
+#define TEST_TIMER_EN 1
 
 #if TEST_TIMER_EN
 struct k_timer timer;
 
-volatile int timer_counter = 0;
+volatile int timer_counter;
 
 static void timer_expiry_cb(struct k_timer *timer)
 {

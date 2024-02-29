@@ -7,8 +7,10 @@
 #include <sys.h>
 #include <clock.h>
 #include <gpio.h>
-// #include <ext_driver/ext_pm.h>
-// #include "rf.h"
+/*
+#include <ext_driver/ext_pm.h>
+#include "rf.h"
+*/
 #include "flash.h"
 #include <watchdog.h>
 
@@ -18,6 +20,8 @@
 #if (defined(CONFIG_BT_B9X) || defined(CONFIG_IEEE802154))
 #include "b9x_bt_flash.h"
 #endif
+
+#define ENABLE_FLASH_DRIVER 0
 
 /* Software reset defines */
 #define reg_reset  REG_ADDR8(0x1401ef)
@@ -80,15 +84,15 @@
 #endif
 
 /* Check System Clock value. */
-#if ((DT_PROP(DT_PATH(cpus, cpu_0), clock_frequency) != CLK_16MHZ) &&                              \
-     (DT_PROP(DT_PATH(cpus, cpu_0), clock_frequency) != CLK_24MHZ) &&                              \
-     (DT_PROP(DT_PATH(cpus, cpu_0), clock_frequency) != CLK_32MHZ) &&                              \
-     (DT_PROP(DT_PATH(cpus, cpu_0), clock_frequency) != CLK_48MHZ) &&                              \
-     (DT_PROP(DT_PATH(cpus, cpu_0), clock_frequency) != CLK_60MHZ) &&                              \
-     (DT_PROP(DT_PATH(cpus, cpu_0), clock_frequency) != CLK_80MHZ) &&                              \
-     (DT_PROP(DT_PATH(cpus, cpu_0), clock_frequency) != CLK_96MHZ) &&                              \
-     (DT_PROP(DT_PATH(cpus, cpu_0), clock_frequency) != CLK_120MHZ))
-#error "Unsupported clock-frequency. Supported values: 16, 24, 32, 48, 60, 80, 96 and 120 MHz"
+#if ((DT_PROP(DT_PATH(cpus, cpu_0), clock_frequency) != CLK_16MHZ) && \
+	(DT_PROP(DT_PATH(cpus, cpu_0), clock_frequency) != CLK_24MHZ) && \
+	(DT_PROP(DT_PATH(cpus, cpu_0), clock_frequency) != CLK_32MHZ) && \
+	(DT_PROP(DT_PATH(cpus, cpu_0), clock_frequency) != CLK_48MHZ) && \
+	(DT_PROP(DT_PATH(cpus, cpu_0), clock_frequency) != CLK_60MHZ) && \
+	(DT_PROP(DT_PATH(cpus, cpu_0), clock_frequency) != CLK_80MHZ) && \
+	(DT_PROP(DT_PATH(cpus, cpu_0), clock_frequency) != CLK_96MHZ) && \
+	(DT_PROP(DT_PATH(cpus, cpu_0), clock_frequency) != CLK_120MHZ))
+	#error "Unsupported clock-frequency. Supported values: 16, 24, 32, 48, 60, 80, 96 and 120 MHz"
 #endif
 
 #if (defined(CONFIG_BT_B9X) || defined(CONFIG_IEEE802154))
@@ -312,7 +316,7 @@ void soc_b9x_restore(void)
 	}
 }
 
-#if 0
+#if ENABLE_FLASH_DRIVER
 /**
  * @brief Check mounted flash size (should be greater than in .dts).
  */
@@ -341,7 +345,7 @@ static int soc_b9x_check_flash(void)
 	case FLASH_SIZE_16M:
 		hw_flash_size = 16 * 1024 * 1024;
 		break;
-#endif /* CONFIG_SOC_RISCV_TELINK_B92 */
+#endif
 	default:
 		break;
 	}
@@ -358,4 +362,4 @@ static int soc_b9x_check_flash(void)
 #endif
 
 SYS_INIT(soc_b9x_init, PRE_KERNEL_1, 0);
-// SYS_INIT(soc_b9x_check_flash, POST_KERNEL, 0);
+/* SYS_INIT(soc_b9x_check_flash, POST_KERNEL, 0); */
