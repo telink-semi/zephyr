@@ -41,6 +41,18 @@ struct i2c_ipc_cfg {
 	uint8_t pull_up_en;
 };
 
+struct i2c_master_tx_arg {
+	uint16_t addr;
+	uint8_t *tx_buf;
+	uint32_t tx_len;
+};
+
+struct i2c_master_rx_arg {
+	uint16_t addr;
+	uint8_t *rx_buf;
+	uint32_t rx_len;
+};
+
 /* I2C configuration structure */
 struct i2c_w91_cfg {
 	uint32_t bitrate;
@@ -54,11 +66,9 @@ struct i2c_w91_data {
 	struct ipc_based_driver ipc; /* ipc driver part */
 };
 
-
 /* APIs implementation: pin configure */
 static size_t pack_i2c_w91_ipc_configure(uint8_t inst, void *unpack_data, uint8_t *pack_data)
 {
-	// 2:
 	debug_msg("");
 	struct i2c_ipc_cfg *p_i2c_cfg = unpack_data;
 	size_t pack_data_len = sizeof(uint32_t) + 
@@ -84,7 +94,6 @@ IPC_DISPATCHER_UNPACK_FUNC_ONLY_WITH_ERROR_PARAM(i2c_w91_ipc_configure);
 
 static int i2c_w91_ipc_configure(const struct device *dev, uint32_t clock_speed)
 {
-	// 1:
 	debug_msg("clock_speed(%d)", clock_speed);
 	int err = 0;
 	struct i2c_ipc_cfg i2c_config;
@@ -103,7 +112,95 @@ static int i2c_w91_ipc_configure(const struct device *dev, uint32_t clock_speed)
 	IPC_DISPATCHER_HOST_SEND_DATA(ipc_data, inst,
 		i2c_w91_ipc_configure, &i2c_config, &err,
 		CONFIG_GPIO_TELINK_W91_IPC_RESPONSE_TIMEOUT_MS);
-	// end step
+	debug_msg("END");
+
+	return err;
+}
+
+/* APIs implementation: master_rx */
+static size_t pack_i2c_w91_ipc_master_read(uint8_t inst, void *unpack_data, uint8_t *pack_data)
+{
+	// 2:
+	debug_msg("");
+	struct i2c_master_rx_arg *p_i2c_master_rx = unpack_data;
+	size_t pack_data_len = sizeof(uint32_t) + 
+		sizeof(p_i2c_master_rx->addr) + sizeof(p_i2c_master_rx->rx_buf) +
+		sizeof(p_i2c_master_rx->rx_len);
+	if (pack_data != NULL) {
+		uint32_t id = IPC_DISPATCHER_MK_ID(IPC_DISPATCHER_I2C_MASTER_READ_EVENT, inst);
+		debug_msg("start packing");
+		IPC_DISPATCHER_PACK_FIELD(pack_data, id);
+		IPC_DISPATCHER_PACK_FIELD(pack_data, p_i2c_master_rx->addr);
+		IPC_DISPATCHER_PACK_FIELD(pack_data, p_i2c_master_rx->rx_buf);
+		IPC_DISPATCHER_PACK_FIELD(pack_data, p_i2c_master_rx->rx_len);
+		debug_msg("packing ended OK");
+	}
+	return pack_data_len;
+}
+
+IPC_DISPATCHER_UNPACK_FUNC_ONLY_WITH_ERROR_PARAM(i2c_w91_ipc_master_read);
+
+static int i2c_w91_ipc_master_read(const struct device *dev, uint16_t addr, uint8_t *rx_buf, uint32_t len)
+{
+	debug_msg("addr(0x%x) len(%d)", addr, len);
+	int err = 0;
+	struct i2c_master_rx_arg i2c_master_rx;
+
+	i2c_master_rx.addr = addr;
+	i2c_master_rx.rx_buf = rx_buf;
+	i2c_master_rx.rx_len = sizeof(i2c_master_rx.rx_buf);
+
+	struct ipc_based_driver *ipc_data = &((struct i2c_w91_data *)dev->data)->ipc;
+	uint8_t inst = ((struct i2c_w91_cfg *)dev->config)->instance_id;
+
+	debug_msg("HOST SEND DATA");
+	IPC_DISPATCHER_HOST_SEND_DATA(ipc_data, inst,
+		i2c_w91_ipc_master_read, &i2c_master_rx, &err,
+		CONFIG_GPIO_TELINK_W91_IPC_RESPONSE_TIMEOUT_MS);
+	debug_msg("END");
+
+	return err;
+}
+
+/* APIs implementation: master_tx */
+static size_t pack_i2c_w91_ipc_master_write(uint8_t inst, void *unpack_data, uint8_t *pack_data)
+{
+	debug_msg("");
+	struct i2c_master_tx_arg *p_i2c_master_tx = unpack_data;
+	size_t pack_data_len = sizeof(uint32_t) + 
+		sizeof(p_i2c_master_tx->addr) + sizeof(p_i2c_master_tx->tx_buf) +
+		sizeof(p_i2c_master_tx->tx_len);
+	if (pack_data != NULL) {
+		uint32_t id = IPC_DISPATCHER_MK_ID(IPC_DISPATCHER_I2C_MASTER_WRITE_EVENT, inst);
+		debug_msg("start packing");
+		IPC_DISPATCHER_PACK_FIELD(pack_data, id);
+		IPC_DISPATCHER_PACK_FIELD(pack_data, p_i2c_master_tx->addr);
+		IPC_DISPATCHER_PACK_FIELD(pack_data, p_i2c_master_tx->tx_buf);
+		IPC_DISPATCHER_PACK_FIELD(pack_data, p_i2c_master_tx->tx_len);
+		debug_msg("packing ended OK");
+	}
+	return pack_data_len;
+}
+
+IPC_DISPATCHER_UNPACK_FUNC_ONLY_WITH_ERROR_PARAM(i2c_w91_ipc_master_write);
+
+static int i2c_w91_ipc_master_write(const struct device *dev, uint16_t addr, uint8_t *tx_buf, uint32_t len)
+{
+	debug_msg("addr(0x%x) len(%d)", addr, len);
+	int err = 0;
+	struct i2c_master_tx_arg i2c_master_tx;
+
+	i2c_master_tx.addr = addr;
+	i2c_master_tx.tx_buf = tx_buf;
+	i2c_master_tx.tx_len = sizeof(i2c_master_tx.tx_buf);
+
+	struct ipc_based_driver *ipc_data = &((struct i2c_w91_data *)dev->data)->ipc;
+	uint8_t inst = ((struct i2c_w91_cfg *)dev->config)->instance_id;
+
+	debug_msg("HOST SEND DATA");
+	IPC_DISPATCHER_HOST_SEND_DATA(ipc_data, inst,
+		i2c_w91_ipc_master_write, &i2c_master_tx, &err,
+		CONFIG_GPIO_TELINK_W91_IPC_RESPONSE_TIMEOUT_MS);
 	debug_msg("END");
 
 	return err;
@@ -185,9 +282,9 @@ static int i2c_b9x_transfer(const struct device *dev,
 
 		/* transfer data */
 		if (msgs[i].flags & I2C_MSG_READ) {
-			// status = i2c_master_read(addr << 1, msgs[i].buf, msgs[i].len);
+			status = i2c_w91_ipc_master_read(dev, addr, msgs[i].buf, msgs[i].len);
 		} else {
-			// status = i2c_master_write(addr << 1, msgs[i].buf, msgs[i].len);
+			status = i2c_w91_ipc_master_write(dev, addr, msgs[i].buf, msgs[i].len);
 		}
 
 		/* check status */
@@ -254,6 +351,7 @@ BUILD_ASSERT(DT_NUM_INST_STATUS_OKAY(DT_DRV_COMPAT) <= 1,
 	static struct i2c_w91_cfg i2c_w91_cfg_##inst = {	      \
 		.bitrate = DT_INST_PROP(inst, clock_frequency),	      \
 		.pcfg = PINCTRL_DT_INST_DEV_CONFIG_GET(inst),	      \
+		.instance_id = inst,	      \
 	};							      \
 								      \
 	I2C_DEVICE_DT_INST_DEFINE(inst, i2c_w91_init,		      \
