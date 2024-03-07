@@ -1,10 +1,10 @@
-# Copyright (c) 2022-2024, Telink Semiconductor
+# Copyright (c) 2024, Telink Semiconductor
 # SPDX-License-Identifier: Apache-2.0
 
 description: |
     The Telink W91 pin controller is a singleton node responsible for
     controlling pin function selection and pin properties. For example, you can
-    use this node to route UART0 TX to pin PB2 and enable the pull-up resistor
+    use this node to route UART2 TX to pin P16 and enable the pull-up resistor
     on the pin.
 
     The node has the 'pinctrl' node label set in your SoC's devicetree,
@@ -22,22 +22,22 @@ description: |
        */
 
       /* include pre-defined pins and functions for the SoC used by the board */
-      #include <dt-bindings/pinctrl/b91-pinctrl.h>
+      #include <dt-bindings/pinctrl/w91-pinctrl.h>
 
       &pinctrl {
-        /* configuration for UART0 TX default state */
-        uart0_tx_pb2_default: uart0_tx_pb2_default {
-          /* configure PB2 as B91_FUNC_C */
+        /* configuration for UART2 TX default state */
+        uart2_tx_p15_default: uart2_tx_p15_default {
+          /* configure P16 as W91_FUNC_UART_TXD */
           pinmux = ...
         };
-        /* configuration for UART0 RX default state */
-        uart0_rx_pb3_default: uart0_rx_pb3_default {
-          /* configure PB2 as B91_FUNC_C */
+        /* configuration for UART2 RX default state */
+        uart2_rx_p15_default: uart2_rx_p15_default {
+          /* configure P15 as W91_FUNC_UART_RXD */
           pinmux = ...
         };
       };
 
-    The 'uart0_tx_pb2_default' child node encodes the pin configurations
+    The 'uart2_tx_p15_default' child node encodes the pin configurations
     for a particular state of a device; in this case, the default
     (that is, active) sate. You would specify the low-power configuration for
     the same device in a separate child node.
@@ -55,10 +55,9 @@ description: |
 
       #include "board-pinctrl.dtsi"
 
-      &uart0 {
-        pinctrl-0 = <&uart0_tx_pb2_default &uart0_rx_pb3_default>;
-        pinctrl-1 = <&uart0_tx_pb2_sleep &uart0_rx_pb3_sleep>;
-        pinctrl-names = "default", "sleep";
+      &uart2 {
+        pinctrl-0 = <&uart2_tx_p15_default &uart2_rx_p15_default>;
+        pinctrl-names = "default";
       };
 
 compatible: "telink,w91-pinctrl"
@@ -66,9 +65,6 @@ compatible: "telink,w91-pinctrl"
 include: base.yaml
 
 properties:
-  reg:
-    required: false
-
   pad-mul-sel:
     type: int
     required: true
@@ -76,7 +72,7 @@ properties:
         PinMux pad_mul_sel register value. Pin functions depend on it.
 
         For instance:
-        Function C of PB2 configs the pin to UART0_TX if pad_mul_sel is set to <1>.
+        Function C of P16 configs the pin to UART2_TX if pad_mul_sel is set to <1>.
         But, the same function configs the same pin to DAC_I_DAT2_I if pad_mul_sel is set to <0>.
 
         Refer to the Telink TLSR9 specs to get more information about pins configuration.

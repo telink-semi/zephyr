@@ -8,8 +8,6 @@
 #define ZEPHYR_W91_PINCTRL_COMMON_H_
 
 /* IDs for GPIO Pins */
-// reference: DS-TLSR9118-E4, Table 1-3 GPIO Pin Mux of TLSR9118A
-
 #define W91_PIN_0        0
 #define W91_PIN_1        1
 #define W91_PIN_2        2
@@ -37,46 +35,70 @@
 #define W91_PIN_24       24
 
 /* IDs for W91 GPIO functions */
-
-#define W91_FUNC_DEFAULT    0
-#define W91_FUNC_UART_CTS   1
-#define W91_FUNC_UART_RTS   2
-#define W91_FUNC_UART_TXD   3
-#define W91_FUNC_UART_RXD   4
-#define W91_FUNC_PWM_0      5
-#define W91_FUNC_PWM_1      6
-#define W91_FUNC_PWM_2      7
-#define W91_FUNC_PWM_3      8
-#define W91_FUNC_SPI_CLK    9
-#define W91_FUNC_SPI_CS     10
-#define W91_FUNC_SPI_MOSI   11
-#define W91_FUNC_SPI_MISO   12
-#define W91_FUNC_SPI_WP     13
-#define W91_FUNC_SPI_HOLD   14
-#define W91_FUNC_SDIO_DATA0 15
-#define W91_FUNC_SDIO_DATA1 16
-#define W91_FUNC_SDIO_DATA2 17
-#define W91_FUNC_SDIO_DATA3 18
-#define W91_FUNC_SDIO_CLK   19
-#define W91_FUNC_SDIO_CMD   20
-#define W91_FUNC_I2C_SCL    21
-#define W91_FUNC_I2C_SDA    22
+#define W91_FUNC_DEFAULT           0
+#define W91_FUNC_UART0_CTS         1
+#define W91_FUNC_UART0_RTS         2
+#define W91_FUNC_UART0_TXD         3
+#define W91_FUNC_UART0_RXD         4
+#define W91_FUNC_UART1_CTS         5
+#define W91_FUNC_UART1_RTS         6
+#define W91_FUNC_UART1_TXD         7
+#define W91_FUNC_UART1_RXD         8
+#define W91_FUNC_UART2_CTS         9
+#define W91_FUNC_UART2_RTS         10
+#define W91_FUNC_UART2_TXD         11
+#define W91_FUNC_UART2_RXD         12
+#define W91_FUNC_PWM_0             13
+#define W91_FUNC_PWM_1             14
+#define W91_FUNC_PWM_2             15
+#define W91_FUNC_PWM_3             16
+#define W91_FUNC_PWM_4             17
+#define W91_FUNC_PWM_5             18
+#define W91_FUNC_QSPI_CLK          19
+#define W91_FUNC_QSPI_CS           20
+#define W91_FUNC_QSPI_MOSI         21
+#define W91_FUNC_QSPI_MISO         22
+#define W91_FUNC_QSPI_WP           23
+#define W91_FUNC_QSPI_HOLD         24
+#define W91_FUNC_SPI1_CLK          25
+#define W91_FUNC_SPI1_CS           26
+#define W91_FUNC_SPI1_MOSI         27
+#define W91_FUNC_SPI1_MISO         28
+#define W91_FUNC_SPI1_WP           29
+#define W91_FUNC_SPI1_HOLD         30
+#define W91_FUNC_SPI2_CLK          31
+#define W91_FUNC_SPI2_CS           32
+#define W91_FUNC_SPI2_MOSI         33
+#define W91_FUNC_SPI2_MISO         34
+#define W91_FUNC_SPI2_WP           35
+#define W91_FUNC_SPI2_HOLD         36
+#define W91_FUNC_I2C0_SCL          37
+#define W91_FUNC_I2C0_SDA          38
+#define W91_FUNC_I2C1_SCL          39
+#define W91_FUNC_I2C1_SDA          40
+#define W91_FUNC_I2S_BCK_IO        41
+#define W91_FUNC_I2S_LR_OUT_IO     42
+#define W91_FUNC_I2S_DAT_OUT       43
+#define W91_FUNC_I2S_LR_IN_IO      44
+#define W91_FUNC_I2S_DAT_IN_I      45
+#define W91_FUNC_I2S_CLK           46
+#define W91_FUNC_SDIO_DATA0        47
+#define W91_FUNC_SDIO_DATA1        48
+#define W91_FUNC_SDIO_DATA2        49
+#define W91_FUNC_SDIO_DATA3        50
+#define W91_FUNC_SDIO_CLK          51
+#define W91_FUNC_SDIO_CMD          52
 
 /* W91 pinctrl pull-up/down */
-
 #define W91_PULL_NONE    0
 #define W91_PULL_DOWN    2
 #define W91_PULL_UP      3
 
 /* W91 pin configuration bit field positions and masks */
-
 #define W91_PULL_POS     21
 #define W91_PULL_MSK     0x3
 #define W91_FUNC_POS     16
-#define W91_FUNC_MSK     0x1F
-#define W91_PORT_POS     8
-#define W91_PORT_MSK     0xFF
-
+#define W91_FUNC_MSK     0xFF
 #define W91_PIN_POS      0
 #define W91_PIN_MSK      0xFFFF
 #define W91_PIN_ID_MSK   0xFF

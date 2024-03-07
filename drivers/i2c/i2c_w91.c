@@ -14,7 +14,7 @@ LOG_MODULE_REGISTER(i2c_telink);
 #include <zephyr/drivers/pinctrl.h>
 #include <ipc/ipc_based_driver.h>
 
-#define debug_msg(...) printk("[%s %d %s()]: ", "I2C_W91", __LINE__, __func__); printk(__VA_ARGS__); printk("\n")
+#define debug_msg(...) printk("%s:%d %s()\t", "I2C_W91", __LINE__, __func__); printk(__VA_ARGS__); printk("\n")
 
 enum {
 	IPC_DISPATCHER_I2C_CONFIGURE_EVENT = IPC_DISPATCHER_I2C,
@@ -77,7 +77,7 @@ static size_t pack_i2c_w91_ipc_configure(uint8_t inst, void *unpack_data, uint8_
 		sizeof(p_i2c_cfg->slave_addr) + sizeof(p_i2c_cfg->pull_up_en);
 	if (pack_data != NULL) {
 		uint32_t id = IPC_DISPATCHER_MK_ID(IPC_DISPATCHER_I2C_CONFIGURE_EVENT, inst);
-		debug_msg("start packing");
+		// debug_msg("start packing");
 		IPC_DISPATCHER_PACK_FIELD(pack_data, id);
 		IPC_DISPATCHER_PACK_FIELD(pack_data, p_i2c_cfg->role);
 		IPC_DISPATCHER_PACK_FIELD(pack_data, p_i2c_cfg->addr_len);
@@ -85,7 +85,7 @@ static size_t pack_i2c_w91_ipc_configure(uint8_t inst, void *unpack_data, uint8_
 		IPC_DISPATCHER_PACK_FIELD(pack_data, p_i2c_cfg->master_clock);
 		IPC_DISPATCHER_PACK_FIELD(pack_data, p_i2c_cfg->pull_up_en);
 		IPC_DISPATCHER_PACK_FIELD(pack_data, p_i2c_cfg->slave_addr);
-		debug_msg("packing ended OK");
+		debug_msg(" OK");
 	}
 	return pack_data_len;
 }
@@ -128,21 +128,41 @@ static size_t pack_i2c_w91_ipc_master_read(uint8_t inst, void *unpack_data, uint
 		sizeof(p_i2c_master_rx->rx_len);
 	if (pack_data != NULL) {
 		uint32_t id = IPC_DISPATCHER_MK_ID(IPC_DISPATCHER_I2C_MASTER_READ_EVENT, inst);
-		debug_msg("start packing");
+		// debug_msg("start packing");
 		IPC_DISPATCHER_PACK_FIELD(pack_data, id);
 		IPC_DISPATCHER_PACK_FIELD(pack_data, p_i2c_master_rx->addr);
 		IPC_DISPATCHER_PACK_FIELD(pack_data, p_i2c_master_rx->rx_buf);
 		IPC_DISPATCHER_PACK_FIELD(pack_data, p_i2c_master_rx->rx_len);
-		debug_msg("packing ended OK");
+		debug_msg(" OK");
 	}
 	return pack_data_len;
 }
 
-IPC_DISPATCHER_UNPACK_FUNC_ONLY_WITH_ERROR_PARAM(i2c_w91_ipc_master_read);
+static void unpack_i2c_w91_ipc_master_read(void *unpack_data,
+		const uint8_t *pack_data, size_t pack_data_len)
+{
+	struct i2c_master_rx_arg *p_i2c_master_rx_resp = unpack_data;
+
+	pack_data += sizeof(uint32_t);
+	IPC_DISPATCHER_UNPACK_FIELD(pack_data, p_i2c_master_rx_resp->addr);
+	IPC_DISPATCHER_UNPACK_ARRAY(pack_data, p_i2c_master_rx_resp->rx_buf,
+			p_i2c_master_rx_resp->rx_len);
+	IPC_DISPATCHER_UNPACK_FIELD(pack_data, p_i2c_master_rx_resp->rx_len);
+	size_t expect_len = sizeof(uint32_t) + sizeof(p_i2c_master_rx_resp->addr) +
+			sizeof(p_i2c_master_rx_resp->rx_len) + p_i2c_master_rx_resp->rx_len;
+	// size_t expect_len = sizeof(uint32_t) + sizeof(p_i2c_master_rx_resp->rx_len)
+	// 	+ p_i2c_master_rx_resp->rx_len;
+
+	if (expect_len != pack_data_len) {
+		debug_msg(" INVALID LENGTH(exp %d/ got %d)", expect_len, pack_data_len);
+		return;
+	}
+
+}
 
 static int i2c_w91_ipc_master_read(const struct device *dev, uint16_t addr, uint8_t *rx_buf, uint32_t len)
 {
-	debug_msg("addr(0x%x) len(%d)", addr, len);
+	// debug_msg("addr(0x%x) len(%d)", addr, len);
 	int err = 0;
 	struct i2c_master_rx_arg i2c_master_rx;
 
@@ -153,31 +173,32 @@ static int i2c_w91_ipc_master_read(const struct device *dev, uint16_t addr, uint
 	struct ipc_based_driver *ipc_data = &((struct i2c_w91_data *)dev->data)->ipc;
 	uint8_t inst = ((struct i2c_w91_cfg *)dev->config)->instance_id;
 
-	debug_msg("HOST SEND DATA");
+	debug_msg("HOST SEND DATA \t addr(0x%x) len(%d)", addr, len);
 	IPC_DISPATCHER_HOST_SEND_DATA(ipc_data, inst,
-		i2c_w91_ipc_master_read, &i2c_master_rx, &err,
-		CONFIG_GPIO_TELINK_W91_IPC_RESPONSE_TIMEOUT_MS);
-	debug_msg("END");
-
+		i2c_w91_ipc_master_read, &i2c_master_rx, &i2c_master_rx,
+		500);
+	debug_msg("END (0x%x)", *i2c_master_rx.rx_buf);
+	rx_buf = i2c_master_rx.rx_buf;
+	if (err == 0) return 1;
 	return err;
 }
 
 /* APIs implementation: master_tx */
 static size_t pack_i2c_w91_ipc_master_write(uint8_t inst, void *unpack_data, uint8_t *pack_data)
 {
-	debug_msg("");
+	// debug_msg("");
 	struct i2c_master_tx_arg *p_i2c_master_tx = unpack_data;
 	size_t pack_data_len = sizeof(uint32_t) + 
 		sizeof(p_i2c_master_tx->addr) + sizeof(p_i2c_master_tx->tx_buf) +
 		sizeof(p_i2c_master_tx->tx_len);
 	if (pack_data != NULL) {
 		uint32_t id = IPC_DISPATCHER_MK_ID(IPC_DISPATCHER_I2C_MASTER_WRITE_EVENT, inst);
-		debug_msg("start packing");
+		// debug_msg("start packing");
 		IPC_DISPATCHER_PACK_FIELD(pack_data, id);
 		IPC_DISPATCHER_PACK_FIELD(pack_data, p_i2c_master_tx->addr);
 		IPC_DISPATCHER_PACK_FIELD(pack_data, p_i2c_master_tx->tx_buf);
 		IPC_DISPATCHER_PACK_FIELD(pack_data, p_i2c_master_tx->tx_len);
-		debug_msg("packing ended OK");
+		debug_msg(" OK");
 	}
 	return pack_data_len;
 }
@@ -201,8 +222,8 @@ static int i2c_w91_ipc_master_write(const struct device *dev, uint16_t addr, uin
 	IPC_DISPATCHER_HOST_SEND_DATA(ipc_data, inst,
 		i2c_w91_ipc_master_write, &i2c_master_tx, &err,
 		CONFIG_GPIO_TELINK_W91_IPC_RESPONSE_TIMEOUT_MS);
-	debug_msg("END");
-
+	debug_msg("END(%d)", err);
+	if (err == 0) return 1;
 	return err;
 }
 
@@ -216,13 +237,13 @@ static int i2c_w91_configure(const struct device *dev, uint32_t dev_config)
 
 	/* check address size */
 	if (dev_config & I2C_ADDR_10_BITS) {
-		LOG_ERR("10-bits address is not supported");
+		debug_msg("10-bits address is not supported");
 		return -ENOTSUP;
 	}
 
 	/* check I2C Master/Slave configuration */
 	if (!(dev_config & I2C_MODE_CONTROLLER)) {
-		LOG_ERR("I2C slave is not implemented");
+		debug_msg("I2C slave is not implemented");
 		return -ENOTSUP;
 	}
 
@@ -240,12 +261,12 @@ static int i2c_w91_configure(const struct device *dev, uint32_t dev_config)
 	case I2C_SPEED_HIGH:
 	case I2C_SPEED_ULTRA:
 	default:
-		LOG_ERR("Unsupported I2C speed requested");
+		debug_msg("Unsupported I2C speed requested");
 		return -ENOTSUP;
 	}
 
 	/* init i2c */
-	i2c_w91_ipc_configure(dev, i2c_speed);
+	i2c_w91_ipc_configure(dev, 0);
 	/*
 	...
 	*/
@@ -254,7 +275,7 @@ static int i2c_w91_configure(const struct device *dev, uint32_t dev_config)
 }
 
 /* API implementation: transfer */
-static int i2c_b9x_transfer(const struct device *dev,
+static int i2c_w91_transfer(const struct device *dev,
 			    struct i2c_msg *msgs,
 			    uint8_t num_msgs,
 			    uint16_t addr)
@@ -271,7 +292,7 @@ static int i2c_b9x_transfer(const struct device *dev,
 	for (int i = 0; i < num_msgs; i++) {
 		/* check addr size */
 		if (msgs[i].flags & I2C_MSG_ADDR_10_BITS) {
-			LOG_ERR("10-bits address is not supported");
+			debug_msg("10-bits address is not supported");
 			k_sem_give(&data->mutex);
 			return -ENOTSUP;
 		}
@@ -289,7 +310,7 @@ static int i2c_b9x_transfer(const struct device *dev,
 
 		/* check status */
 		if (!status) {
-			LOG_ERR("Failed to transfer I2C messages\n");
+			debug_msg("Failed to transfer I2C messages\n");
 			k_sem_give(&data->mutex);
 			return -EIO;
 		}
@@ -315,6 +336,13 @@ static int i2c_w91_init(const struct device *dev)
 	/* init mutex */
 	k_sem_init(&data->mutex, 1, 1);
 
+	/* configure pins */
+	status = pinctrl_apply_state(cfg->pcfg, PINCTRL_STATE_DEFAULT);
+	if (status != 0) {
+		LOG_ERR("Failed to configure I2C pins");
+		return status;
+	}
+
 	/* config i2c on startup */
 	status = i2c_w91_configure(dev, dev_config);
 	if (status != 0) {
@@ -322,20 +350,14 @@ static int i2c_w91_init(const struct device *dev)
 		return status;
 	}
 
-	/* configure pins */
-	status = pinctrl_apply_state(cfg->pcfg, PINCTRL_STATE_DEFAULT);
-	if (status < 0) {
-		LOG_ERR("Failed to configure I2C pins");
-		return status;
-	}
-
-	return 0;
+	debug_msg("status(%d)", status);
+	return status;
 }
 
 /* I2C driver APIs structure */
 static const struct i2c_driver_api i2c_w91_api = {
 	.configure = i2c_w91_configure,
-	.transfer = i2c_b9x_transfer,
+	.transfer = i2c_w91_transfer,
 };
 
 BUILD_ASSERT(DT_NUM_INST_STATUS_OKAY(DT_DRV_COMPAT) <= 1,

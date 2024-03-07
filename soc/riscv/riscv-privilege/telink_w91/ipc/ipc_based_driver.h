@@ -15,8 +15,9 @@ enum ipc_dispatcher_id {
 	IPC_DISPATCHER_UART                     = 0x100,
 	IPC_DISPATCHER_GPIO                     = 0x200,
 	IPC_DISPATCHER_PWM                      = 0x300,
-	IPC_DISPATCHER_PINCTRL                  = 0x400,
-	IPC_DISPATCHER_I2C	                    = 0x500,
+	IPC_DISPATCHER_ENTROPY_TRNG             = 0x400,
+	IPC_DISPATCHER_PINCTRL                  = 0x500,
+	IPC_DISPATCHER_I2C                      = 0x600,
 } __attribute__((__packed__));
 
 typedef void (*ipc_based_driver_unpack_t)(void *result, const uint8_t *data, size_t len);
@@ -48,6 +49,12 @@ do {                                                                           \
 do {                                                                           \
 	memcpy(&field, buff, sizeof(field));                                       \
 	buff += sizeof(field);                                                     \
+} while (0)
+
+#define IPC_DISPATCHER_UNPACK_ARRAY(buff, array, len)                          \
+do {                                                                           \
+	memcpy(array, buff, len);                                                  \
+	buff += len;                                                               \
 } while (0)
 
 /* Macros for making ipc dispatcher id */

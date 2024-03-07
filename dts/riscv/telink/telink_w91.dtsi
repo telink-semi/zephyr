@@ -118,19 +118,17 @@
 			#gpio-cells = <2>;
 			ngpios = <25>;
 		};
+
 		pinctrl: pinctrl{
 			compatible = "telink,w91-pinctrl";
-			reg-names = "pin_mux",
-						"gpio_en",
-						"pull_up_en";
 			status = "okay";
 		};
-		adc: adc@ea {
-			compatible = "telink,w91-adc";
-			reg = <0xea 0x18>;
+
+		uart2: uart2 {
+			compatible = "telink,w91-uart";
 			status = "disabled";
-			#io-channel-cells = <1>;
 		};
+
 		i2c: i2c {
 			compatible = "telink,w91-i2c";
 			#address-cells = <1>;

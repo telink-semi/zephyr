@@ -102,13 +102,13 @@
 	status = "okay";
 };
 
-&adc {
-	status = "okay";
-	vref-internal-mv = <1200>;
-	sample-freq = <DT_FREQ_K(96)>;
-	pinctrl-0 = <&gpio0_default>;
-	pinctrl-names = "default";
-};
+// &adc {
+// 	status = "okay";
+// 	vref-internal-mv = <1200>;
+// 	sample-freq = <DT_FREQ_K(96)>;
+// 	pinctrl-0 = <&gpio0_default>;
+// 	pinctrl-names = "default";
+// };
 
 &i2c {
 	status = "okay";
