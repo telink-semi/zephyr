@@ -9,6 +9,7 @@
 
 #include "ipc_dispatcher.h"
 #include <zephyr/kernel.h>
+#include <string.h>
 
 enum ipc_dispatcher_id {
 	IPC_DISPATCHER_SYS                      = 0x0,
@@ -43,6 +44,12 @@ int ipc_based_driver_send(struct ipc_based_driver *drv,
 do {                                                                           \
 	memcpy(buff, &field, sizeof(field));                                       \
 	buff += sizeof(field);                                                     \
+} while (0)
+
+#define IPC_DISPATCHER_PACK_ARRAY(buff, array, len)                            \
+do {                                                                           \
+	memcpy(buff, array, len);                                                  \
+	buff += len;                                                               \
 } while (0)
 
 #define IPC_DISPATCHER_UNPACK_FIELD(buff, field)                               \
@@ -99,7 +106,7 @@ static void unpack_##name(void *unpack_data,                                   \
 #define IPC_DISPATCHER_HOST_SEND_DATA(ipc, inst, name,                         \
 	tx_buff, rx_buff, timeout_ms)                                              \
 do {                                                                           \
-	uint8_t packed_data[pack_##name(inst, NULL, NULL)];                        \
+	uint8_t packed_data[pack_##name(inst, tx_buff, NULL)];                     \
 	size_t packed_len = pack_##name(inst, tx_buff, packed_data);               \
 	struct ipc_based_driver_ctx ctx = {                                        \
 		.unpack = unpack_##name,                                               \
@@ -107,7 +114,7 @@ do {                                                                           \
 	};                                                                         \
                                                                                \
 	int ipc_err = ipc_based_driver_send(ipc, packed_data, packed_len,          \
-		&ctx, CONFIG_GPIO_TELINK_W91_IPC_RESPONSE_TIMEOUT_MS);                 \
+		&ctx, timeout_ms);                                                     \
                                                                                \
 	if (ipc_err) {                                                             \
 		return ipc_err;                                                        \

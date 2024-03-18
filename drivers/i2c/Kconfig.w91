@@ -7,3 +7,13 @@ config I2C_TELINK_W91
 	depends on DT_HAS_TELINK_W91_I2C_ENABLED
 	help
 	  Enables Telink W91 I2C driver.
+
+if I2C_TELINK_W91
+
+config I2C_TELINK_W91_IPC_RESPONSE_TIMEOUT_MS
+	int "Telink IPC dispatcher timeout while waiting from the endpoint response"
+	default 100
+	help
+		This option sets Telink IPC dispatcher response driver timeout in mS.
+
+endif # I2C_TELINK_W91
