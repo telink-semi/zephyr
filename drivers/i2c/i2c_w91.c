@@ -151,12 +151,11 @@ static int i2c_w91_ipc_master_read(const struct device *dev, uint16_t addr, uint
 		.err = -1,
 		.buffer = rx_buf,
 	};
-
 	struct ipc_based_driver *ipc_data = &((struct i2c_w91_data *)dev->data)->ipc;
 	uint8_t inst = ((struct i2c_w91_cfg *)dev->config)->instance_id;
 
 	IPC_DISPATCHER_HOST_SEND_DATA(ipc_data, inst, i2c_w91_ipc_master_read, &rx_req, &rx_resp,
-				      CONFIG_I2C_TELINK_W91_IPC_RESPONSE_TIMEOUT_MS);
+				      CONFIG_I2C_TELINK_W91_IPC_MASTER_RX_RESPONSE_TIMEOUT_MS);
 	if (rx_resp.err != 0) {
 		LOG_ERR("RX failed, ret(%d)", rx_resp.err);
 	}
