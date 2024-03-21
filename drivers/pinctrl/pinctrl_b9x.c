@@ -10,6 +10,8 @@
 #include <zephyr/dt-bindings/pinctrl/b91-pinctrl.h>
 #elif CONFIG_SOC_RISCV_TELINK_B92
 #include <zephyr/dt-bindings/pinctrl/b92-pinctrl.h>
+#elif CONFIG_SOC_RISCV_TELINK_B95
+#include <zephyr/dt-bindings/pinctrl/b95-pinctrl.h>
 #endif
 #include <zephyr/pm/device.h>
 
@@ -51,7 +53,7 @@
 						(((pin >> 8) == 5) ? 0x26          : 0) +	 \
 						((pin & 0x0f0)     ? 1             : 0)))
 
-#elif CONFIG_SOC_RISCV_TELINK_B92
+#elif CONFIG_SOC_RISCV_TELINK_B92 || CONFIG_SOC_RISCV_TELINK_B95
 /**
  *      Function Multiplexer Register
  *         ADDR              PINS
@@ -93,8 +95,7 @@
 				       ((pin & 0xf0) ? 1 : 0)))
 
 
-#if (defined(CONFIG_BOARD_TLSR9518ADK80D_RETENTION) || defined(CONFIG_BOARD_TLSR9528A_RETENTION)) \
-						&& defined(CONFIG_PM_DEVICE)
+#if CONFIG_PM_DEVICE && CONFIG_SOC_SERIES_RISCV_TELINK_B9X_RETENTION
 
 static int pinctrl_b9x_init(const struct device *dev)
 {
@@ -132,6 +133,7 @@ static int pinctrl_b9x_pm_action(const struct device *dev, enum pm_device_action
 PM_DEVICE_DEFINE(pinctrl_b9x_pm, pinctrl_b9x_pm_action);
 DEVICE_DEFINE(pinctrl_b9x, "pinctrl_b9x", pinctrl_b9x_init, PM_DEVICE_GET(pinctrl_b9x_pm),
 	NULL, NULL, PRE_KERNEL_1, CONFIG_KERNEL_INIT_PRIORITY_DEFAULT, NULL);
+
 #else
 
 /* Pinctrl driver initialization */
@@ -146,7 +148,7 @@ static int pinctrl_b9x_init(void)
 
 SYS_INIT(pinctrl_b9x_init, PRE_KERNEL_1, CONFIG_KERNEL_INIT_PRIORITY_DEFAULT);
 
-#endif
+#endif /* CONFIG_PM_DEVICE && CONFIG_SOC_SERIES_RISCV_TELINK_B9X_RETENTION */
 
 /* Act as GPIO function disable */
 static inline void pinctrl_b9x_gpio_function_disable(uint32_t pin)
@@ -220,6 +222,8 @@ static int pinctrl_configure_pin(const pinctrl_soc_pin_t *pinctrl)
 	reg_pin_mux(pin) = (reg_pin_mux(pin) & mask) | func;
 #elif CONFIG_SOC_RISCV_TELINK_B92
 	reg_pin_mux(pin) = (reg_pin_mux(pin) & (~B92_PIN_FUNC_POS)) | (func & B92_PIN_FUNC_POS);
+#elif CONFIG_SOC_RISCV_TELINK_B95
+	reg_pin_mux(pin) = (reg_pin_mux(pin) & (~B95_PIN_FUNC_POS)) | (func & B95_PIN_FUNC_POS);
 #endif
 
 	/* set pull value */
