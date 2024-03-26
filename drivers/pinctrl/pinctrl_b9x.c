@@ -17,6 +17,7 @@
 
 #define DT_DRV_COMPAT telink_b9x_pinctrl
 
+#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
 /**
  *      GPIO Function Enable Register
  *         ADDR              PINS
@@ -29,6 +30,20 @@
  */
 #define reg_gpio_en(pin) (*(volatile uint8_t *)((uint32_t)DT_INST_REG_ADDR_BY_NAME(0, gpio_en) + \
 						((pin >> 8) * 8)))
+#elif CONFIG_SOC_RISCV_TELINK_B95
+/**
+ *      GPIO Function Enable Register
+ *      ADDR                 PINS
+ *      gpio_en + 0*0x10:    PORT_A[0-7]
+ *      gpio_en + 1*0x10:    PORT_B[0-7]
+ *      gpio_en + 2*0x10:    PORT_C[0-7]
+ *      gpio_en + 3*0x10:    PORT_D[0-7]
+ *      gpio_en + 4*0x10:    PORT_E[0-7]
+ *      gpio_en + 5*0x10:    PORT_F[0-7]
+ */
+#define reg_gpio_en(pin) (*(volatile uint8_t *)((uint32_t)DT_INST_REG_ADDR_BY_NAME(0, gpio_en) + \
+						((pin >> 8) * 0x10)))
+#endif
 
 #if CONFIG_SOC_RISCV_TELINK_B91
 /**
