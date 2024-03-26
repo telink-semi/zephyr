@@ -59,6 +59,11 @@ jobs:
         cd ..
         west build -b tlsr9258a                  -d build_watchdog_b95                  zephyr/samples/drivers/watchdog
 
+    - name: Build B95 sensor/sht3xd
+      run: |
+        cd ..
+        west build -b tlsr9258a                  -d build_sht3xd_b95                    zephyr/samples/sensor/sht3xd
+
     - name: Collect artifacts
       run: |
         mkdir telink_build_artifacts
@@ -66,6 +71,7 @@ jobs:
         cp ../build_blinky_pwm_b95/zephyr/zephyr.bin                telink_build_artifacts/b95_blinky_pwm.bin
         cp ../build_hello_b95/zephyr/zephyr.bin                     telink_build_artifacts/b95_hello.bin
         cp ../build_watchdog_b95/zephyr/zephyr.bin                  telink_build_artifacts/b95_watchdog.bin
+        cp ../build_sht3xd_b95/zephyr/zephyr.bin                    telink_build_artifacts/b95_sht3xd.bin
         cp ../modules/hal/telink/zephyr/blobs/liblt_9258_zephyr.a   telink_build_artifacts/liblt_9258_zephyr.a
 
     - name: Publish artifacts
