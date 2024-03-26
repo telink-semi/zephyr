@@ -29,12 +29,6 @@ static int pwm_b9x_init(const struct device *dev)
 
 	uint32_t pwm_clk_div;
 
-	/* set the clk first */
-#if CONFIG_SOC_RISCV_TELINK_B95
-	BM_SET(reg_rst0, FLD_RST0_PWM);
-	BM_SET(reg_clk_en0, FLD_CLK0_PWM_EN);
-#endif
-
 	/* Calculate and check PWM clock divider */
 	pwm_clk_div = sys_clk.pclk * 1000 * 1000 / config->clock_frequency - 1;
 	if (pwm_clk_div > 255) {
