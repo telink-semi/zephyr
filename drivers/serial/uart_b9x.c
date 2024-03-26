@@ -188,8 +188,6 @@ static void uart_b9x_init(volatile struct uart_b9x_t *uart, uint16_t divider,
 			  uint8_t bwpc, uint8_t parity, uint8_t stop_bit)
 {
 #if CONFIG_SOC_RISCV_TELINK_B95
-	BM_SET(reg_rst0, FLD_RST0_UART0);
-	BM_SET(reg_clk_en0, FLD_CLK0_UART0_EN);
 	uart->ctrl0 = ((uart->ctrl0 & (~FLD_UART_BPWC_O)) | bwpc);
 #else
 	uart->ctrl0 = bwpc;
