@@ -96,6 +96,11 @@ static int wdt_b9x_init(const struct device *dev)
 {
 	ARG_UNUSED(dev);
 
+#if CONFIG_SOC_RISCV_TELINK_B95
+	BM_SET(reg_rst2, FLD_RST2_TIMER);
+	BM_SET(reg_clk_en2, FLD_CLK2_TIMER_EN);
+#endif
+
 	return 0;
 }
 
