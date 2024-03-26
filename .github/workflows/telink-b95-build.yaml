@@ -64,6 +64,26 @@ jobs:
         cd ..
         west build -b tlsr9258a                  -d build_sht3xd_b95                    zephyr/samples/sensor/sht3xd
 
+    - name: Build B95 net/openthread/cli
+      run: |
+        cd ..
+        west build -b tlsr9258a                  -d build_ot_cli_b95                    zephyr/samples/net/openthread/cli                        -- -DOVERLAY_CONFIG=overlay-telink-fixed-mac.conf
+
+    - name: Build B95 net/openthread/coprocessor in RCP configuration with UART interface
+      run: |
+        cd ..
+        west build -b tlsr9258a                  -d build_ot_coprocessor_rcp_uart_b95   zephyr/samples/net/openthread/coprocessor                -- -DOVERLAY_CONFIG=overlay-rcp.conf
+
+    - name: Build B95 net/sockets/echo_server for OpenThread
+      run: |
+        cd ..
+        west build -b tlsr9258a                  -d build_ot_echo_server_b95            zephyr/samples/net/sockets/echo_server                   -- -DOVERLAY_CONFIG=overlay-ot.conf -DCONFIG_OPENTHREAD_NETWORKKEY=\"09:24:01:56:04:4a:45:0b:23:22:1e:0e:3b:0d:0e:61:2f:1b:2c:24\"
+
+    - name: Build B95 net/sockets/echo_client for OpenThread
+      run: |
+        cd ..
+        west build -b tlsr9258a                  -d build_ot_echo_client_b95            zephyr/samples/net/sockets/echo_client                   -- -DOVERLAY_CONFIG=overlay-ot-sed.conf -DCONFIG_OPENTHREAD_NETWORKKEY=\"09:24:01:56:04:4a:45:0b:23:22:1e:0e:3b:0d:0e:61:2f:1b:2c:24\"
+
     - name: Collect artifacts
       run: |
         mkdir telink_build_artifacts
@@ -72,6 +92,10 @@ jobs:
         cp ../build_hello_b95/zephyr/zephyr.bin                     telink_build_artifacts/b95_hello.bin
         cp ../build_watchdog_b95/zephyr/zephyr.bin                  telink_build_artifacts/b95_watchdog.bin
         cp ../build_sht3xd_b95/zephyr/zephyr.bin                    telink_build_artifacts/b95_sht3xd.bin
+        cp ../build_ot_cli_b95/zephyr/zephyr.bin                    telink_build_artifacts/b95_ot_cli.bin
+        cp ../build_ot_coprocessor_rcp_uart_b95/zephyr/zephyr.bin   telink_build_artifacts/b95_ot_coprocessor_rcp_uart.bin
+        cp ../build_ot_echo_server_b95/zephyr/zephyr.bin            telink_build_artifacts/b95_ot_echo_server.bin
+        cp ../build_ot_echo_client_b95/zephyr/zephyr.bin            telink_build_artifacts/b95_ot_echo_client.bin
         cp ../modules/hal/telink/zephyr/blobs/liblt_9258_zephyr.a   telink_build_artifacts/liblt_9258_zephyr.a
 
     - name: Publish artifacts

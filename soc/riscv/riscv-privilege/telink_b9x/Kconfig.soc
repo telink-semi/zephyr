@@ -38,7 +38,7 @@ config TELINK_B9x_HWDSP
 config TELINK_B9X_MBEDTLS_HW_ACCELERATION
 	bool "Use Telink B9x platform mbedtls HW acceleration"
 	depends on SOC_SERIES_RISCV_TELINK_B9X && MBEDTLS
-	default y
+	default n
 	help
 		This option enables Telink B9x hardware accelerated mbedtls version.
 
