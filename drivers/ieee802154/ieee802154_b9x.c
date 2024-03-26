@@ -1008,6 +1008,9 @@ static int b9x_start(const struct device *dev)
 		riscv_plic_set_priority(DT_INST_IRQN(0) - CONFIG_2ND_LVL_ISR_TBL_OFFSET,
 			DT_INST_IRQ(0, priority));
 #endif /* CONFIG_DYNAMIC_INTERRUPTS */
+#ifdef CONFIG_SOC_RISCV_TELINK_B95
+		ske_dig_en();
+#endif
 		rf_mode_init();
 		rf_set_zigbee_250K_mode();
 		rf_set_tx_dma(1, B9X_TRX_LENGTH);
@@ -1042,8 +1045,6 @@ static int b9x_stop(const struct device *dev)
 		}
 		riscv_plic_irq_disable(DT_INST_IRQN(0) - CONFIG_2ND_LVL_ISR_TBL_OFFSET);
 		rf_set_tx_rx_off();
-		rf_baseband_reset();
-		rf_reset_dma();
 		b9x->is_started = false;
 		if (b9x->event_handler) {
 			b9x->event_handler(dev, IEEE802154_EVENT_SLEEP, NULL);
