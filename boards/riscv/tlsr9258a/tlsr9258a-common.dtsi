@@ -217,7 +217,7 @@
 &i2c {
 	status = "okay";
 	clock-frequency = <I2C_BITRATE_FAST>;
-	pinctrl-0 = <&i2c_scl_pe4_default &i2c_sda_pe5_default>;
+	pinctrl-0 = <&i2c_scl_pe6_default &i2c_sda_pe7_default>;
 	pinctrl-names = "default";
 };
 
