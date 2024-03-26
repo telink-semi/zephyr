@@ -18,7 +18,8 @@
 		pinmux = <B9x_PINMUX_SET(B9x_PORT_B, B9x_PIN_2, (B95_FUNC_UART0_TX | B95_PULL_UP))>;
 	};
 	uart0_rx_pb3_default: uart0_rx_pb3_default {
-		pinmux = <B9x_PINMUX_SET(B9x_PORT_B, B9x_PIN_3, (B95_FUNC_UART0_RTX_IO | B95_PULL_UP))>;
+		pinmux = <B9x_PINMUX_SET(B9x_PORT_B, B9x_PIN_3,
+				(B95_FUNC_UART0_RTX_IO | B95_PULL_UP))>;
 	};
 	uart0_rts_pb4_default: uart0_rts_pb4_default {
 		pinmux = <B9x_PINMUX_SET(B9x_PORT_B, B9x_PIN_4, B95_FUNC_UART0_RTS)>;
