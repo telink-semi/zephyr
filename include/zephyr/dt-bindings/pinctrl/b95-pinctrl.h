@@ -82,6 +82,7 @@
 #define B9x_PORT_D       0x03
 #define B9x_PORT_E       0x04
 #define B9x_PORT_F       0x05
+#define B9x_PORT_G       0x06
 
 /* IDs for GPIO Pins */
 
