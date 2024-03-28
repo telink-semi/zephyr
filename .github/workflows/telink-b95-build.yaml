@@ -44,10 +44,16 @@ jobs:
         cd ..
         west build -b tlsr9258a                  -d build_blinky_b95                    zephyr/samples/basic/blinky
 
+    - name: Build B95 hello_world
+      run: |
+        cd ..
+        west build -b tlsr9258a                  -d build_hello_b95                     zephyr/samples/hello_world
+
     - name: Collect artifacts
       run: |
         mkdir telink_build_artifacts
         cp ../build_blinky_b95/zephyr/zephyr.bin                    telink_build_artifacts/b95_blinky.bin
+        cp ../build_hello_b95/zephyr/zephyr.bin                     telink_build_artifacts/b95_hello.bin
         cp ../modules/hal/telink/zephyr/blobs/liblt_9258_zephyr.a   telink_build_artifacts/liblt_9258_zephyr.a
 
     - name: Publish artifacts
