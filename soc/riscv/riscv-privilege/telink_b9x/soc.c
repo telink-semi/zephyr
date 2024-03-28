@@ -21,8 +21,6 @@
 #include "b9x_bt_flash.h"
 #endif
 
-#define ENABLE_FLASH_DRIVER 1
-
 /* Software reset defines */
 #define reg_reset                   REG_ADDR8(0x1401ef)
 #define SOFT_RESET                  0x20u
@@ -315,7 +313,15 @@ void soc_b9x_restore(void)
 	}
 }
 
-#if ENABLE_FLASH_DRIVER
+static inline uint32_t read_flash_mid(void)
+{
+#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
+	return flash_read_mid();
+#else
+	return flash_read_mid(SLAVE0);
+#endif
+}
+
 /**
  * @brief Check mounted flash size (should be greater than in .dts).
  */
@@ -325,7 +331,7 @@ static int soc_b9x_check_flash(void)
 	size_t hw_flash_size = 0;
 
 	const flash_capacity_e hw_flash_cap =
-		(flash_read_mid() & FLASH_MID_SIZE_MASK) >> FLASH_MID_SIZE_OFFSET;
+		(read_flash_mid() & FLASH_MID_SIZE_MASK) >> FLASH_MID_SIZE_OFFSET;
 
 	switch (hw_flash_cap) {
 	case FLASH_SIZE_1M:
@@ -360,7 +366,7 @@ static int soc_b9x_check_flash(void)
 
 	return 0;
 }
-#endif
 
 SYS_INIT(soc_b9x_init, PRE_KERNEL_1, 0);
+
 SYS_INIT(soc_b9x_check_flash, POST_KERNEL, 0);
