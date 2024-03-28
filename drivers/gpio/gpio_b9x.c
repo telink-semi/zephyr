@@ -79,13 +79,11 @@
 #endif
 
 #if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
-#define GPIO_SET_LOW_LEVEL(gpio, pin) WRITE_BIT(gpio->output, pin, 0)
-#define GPIO_SET_HIGH_LEVEL(gpio, pin) WRITE_BIT(gpio->output, pin, 1)
-#else
-#define GPIO_MASK_SET_LOW_LEVEL(gpio, mask) { gpio->out_clear = (mask); }
-#define GPIO_MASK_SET_HIGH_LEVEL(gpio, mask) { gpio->output = (mask); }
-#define GPIO_SET_LOW_LEVEL(gpio, pin) { gpio->out_clear = (1<<pin); }
-#define GPIO_SET_HIGH_LEVEL(gpio, pin) { gpio->output = (1<<pin); }
+#define GPIO_SET_LOW_LEVEL(gpio, pin)   WRITE_BIT(gpio->output, pin, 0)
+#define GPIO_SET_HIGH_LEVEL(gpio, pin)  WRITE_BIT(gpio->output, pin, 1)
+#elif CONFIG_SOC_RISCV_TELINK_B95
+#define GPIO_SET_LOW_LEVEL(gpio, pin)   WRITE_BIT(gpio->output_clr, pin, 1)
+#define GPIO_SET_HIGH_LEVEL(gpio, pin)  WRITE_BIT(gpio->output, pin, 1)
 #endif
 
 /* GPIO Wakeup Enable registers */
@@ -112,13 +110,13 @@
 #define INTR_FALLING_EDGE        ((uint8_t)1u)
 
 /* Supported IRQ numbers */
-#if CONFIG_SOC_RISCV_TELINK_B91 | CONFIG_SOC_RISCV_TELINK_B92
+#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
 #define IRQ_GPIO                 ((uint8_t)25u)
 #endif
 #define IRQ_GPIO2_RISC0          ((uint8_t)26u)
 #define IRQ_GPIO2_RISC1          ((uint8_t)27u)
 
-#if CONFIG_SOC_RISCV_TELINK_B91 | CONFIG_SOC_RISCV_TELINK_B92
+#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
 /* b9x GPIO registers structure */
 struct gpio_b9x_t {
 	uint8_t input;                  /* Input: read GPI input */
@@ -135,18 +133,19 @@ struct gpio_b9x_t {
 	uint8_t input;                  /* Input: read GPI input */
 	uint8_t ie;                     /* IE: input enable, high active. 1: enable, 0: disable */
 	uint8_t oen;                    /* OEN: output enable, low active. 0: enable, 1: disable */
-	uint8_t unuse1;
+	uint8_t rsvd0;                  /* reserve */
 	uint8_t polarity;               /* Polarity: interrupt polarity: rising, falling */
 	uint8_t ds;                     /* DS: drive strength. 1: maximum (default), 0: minimal */
 	uint8_t actas_gpio;             /* Act as GPIO: enable (1) or disable (0) GPIO function */
-	uint8_t irq_en;
-	uint8_t irq_risc0_en;
-	uint8_t irq_risc1_en;
-	uint8_t pd;
-	uint8_t pu;
-	uint8_t output;                 /* Output: configure GPIO output */
-	uint8_t out_clear;              /* Output: configure GPIO output */
-	uint8_t out_toggle;             /* Output: configure GPIO output */
+	uint8_t irq_en;                 /* IRQ_EN:GPIO interrupt */
+	uint8_t irq_risc0_en;           /* IRQ_RISC0_EN:GPIO2RISC[0] interrupt */
+	uint8_t irq_risc1_en;           /* IRQ_RISC1_EN:GPIO2RISC[1] interrupt */
+	uint8_t pulldown;               /* PULLDOWN: */
+	uint8_t pullup;                 /* PULLDOWN: */
+	uint8_t output;                 /* Output: GPIO output set */
+	uint8_t output_clr;             /* Output: GPIO output clear */
+	uint8_t output_toggle;          /* Output: GPIO output toggle */
+	uint8_t rsvd2;                  /* reserve */
 };
 #endif
 
@@ -375,11 +374,10 @@ static void gpio_b9x_up_down_res_set(volatile struct gpio_b9x_t *gpio,
 		analog_reg = 0x0e + (GET_PORT_NUM(gpio) << 1) + ((pin & 0xf0) ? 1 : 0);
 	}
 	#elif CONFIG_SOC_RISCV_TELINK_B95
-	if (IS_PORT_G(gpio)) {
-		analog_reg = 0x23 + ((pin & 0xf0) ? 1 : 0);
-	} else {
-		analog_reg = 0x0e + (GET_PORT_NUM(gpio) << 1) + ((pin & 0xf0) ? 1 : 0);
+	if ((IS_PORT_F(gpio)) || (IS_PORT_G(gpio))) {
+		return;
 	}
+	analog_reg = 0x17 + (GET_PORT_NUM(gpio) << 1) + ((pin & 0xf0) ? 1 : 0);
 	#endif
 
 	if (pin & 0x11) {
@@ -529,8 +527,8 @@ static int gpio_b9x_port_set_masked_raw(const struct device *dev,
 #if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
 	gpio->output = (gpio->output & ~mask) | (value & mask);
 #elif CONFIG_SOC_RISCV_TELINK_B95
-	GPIO_MASK_SET_LOW_LEVEL(gpio, mask);
-	GPIO_MASK_SET_HIGH_LEVEL(gpio, (value & mask));
+	gpio->output_clr = (mask);
+	gpio->output = (value & mask);
 #endif
 	return 0;
 }
@@ -543,7 +541,7 @@ static int gpio_b9x_port_set_bits_raw(const struct device *dev,
 #if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
 	gpio->output |= mask;
 #elif CONFIG_SOC_RISCV_TELINK_B95
-	GPIO_MASK_SET_HIGH_LEVEL(gpio, mask);
+	gpio->output = (mask);
 #endif
 	return 0;
 }
@@ -556,7 +554,7 @@ static int gpio_b9x_port_clear_bits_raw(const struct device *dev,
 #if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
 	gpio->output &= ~mask;
 #elif CONFIG_SOC_RISCV_TELINK_B95
-	GPIO_MASK_SET_LOW_LEVEL(gpio, mask);
+	gpio->output_clr = (mask);
 #endif
 	return 0;
 }
@@ -571,7 +569,7 @@ static int gpio_b9x_port_toggle_bits(const struct device *dev,
 #elif CONFIG_SOC_RISCV_TELINK_B95
 	uint8_t bits = (mask & 0xff);
 
-	gpio->out_toggle = bits;
+	gpio->output_toggle = bits;
 #endif
 
 	return 0;
@@ -866,7 +864,7 @@ static void gpio_b9x_irq_connect_4(void)
 }
 #endif
 
-/* If instance 4 is present and has interrupt enabled, connect IRQ */
+/* If instance 5 is present and has interrupt enabled, connect IRQ */
 #if DT_NUM_INST_STATUS_OKAY(DT_DRV_COMPAT) > 5
 static void gpio_b9x_irq_connect_5(void)
 {
@@ -874,6 +872,18 @@ static void gpio_b9x_irq_connect_5(void)
 	IRQ_CONNECT(DT_INST_IRQN(5), DT_INST_IRQ(5, priority),
 		    gpio_b9x_irq_handler,
 		    DEVICE_DT_INST_GET(5), 0);
+	#endif
+}
+#endif
+
+/* If instance 6 is present and has interrupt enabled, connect IRQ */
+#if DT_NUM_INST_STATUS_OKAY(DT_DRV_COMPAT) > 6
+static void gpio_b9x_irq_connect_6(void)
+{
+	#if IS_INST_IRQ_EN(6)
+	IRQ_CONNECT(DT_INST_IRQN(6), DT_INST_IRQ(6, priority),
+		    gpio_b9x_irq_handler,
+		    DEVICE_DT_INST_GET(6), 0);
 	#endif
 }
 #endif

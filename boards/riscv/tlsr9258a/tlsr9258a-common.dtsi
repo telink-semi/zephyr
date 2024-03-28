@@ -71,15 +71,15 @@
 		};
 		key_2: button_2 {
 			label = "User KEY2";
-			gpios = <&gpiod 7 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			gpios = <&gpiod 6 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
 		};
 		key_3: button_3 {
 			label = "User KEY3";
-			gpios = <&gpiod 6 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			gpios = <&gpiod 5 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
 		};
 		key_4: button_4 {
 			label = "User KEY4";
-			gpios = <&gpiod 5 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			gpios = <&gpiod 7 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
 		};
 		key_dfu: button_dfu {
 			label = "USB DFU";
