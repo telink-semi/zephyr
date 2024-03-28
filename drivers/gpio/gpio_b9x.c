@@ -57,10 +57,10 @@
 #endif
 
 /* Check that gpio is port G */
-#if  CONFIG_SOC_RISCV_TELINK_B95
-#define IS_PORT_G(gpio)         ((uint32_t)gpio == DT_REG_ADDR(DT_NODELABEL(gpiog)))
-#else
+#if  CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
 #define IS_PORT_G(gpio)         0
+#elif CONFIG_SOC_RISCV_TELINK_B95
+#define IS_PORT_G(gpio)         ((uint32_t)gpio == DT_REG_ADDR(DT_NODELABEL(gpiog)))
 #endif
 
 /* Check that 'inst' has only 1 interrupt selected in dts */
@@ -367,7 +367,7 @@ static void gpio_b9x_up_down_res_set(volatile struct gpio_b9x_t *gpio,
 
 	pin = BIT(pin);
 	val = up_down_res & 0x03;
-	#if CONFIG_SOC_RISCV_TELINK_B92
+	#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
 	if (IS_PORT_F(gpio)) {
 		analog_reg = 0x23 + ((pin & 0xf0) ? 1 : 0);
 	} else {
@@ -864,6 +864,7 @@ static void gpio_b9x_irq_connect_4(void)
 }
 #endif
 
+#if CONFIG_SOC_RISCV_TELINK_B95
 /* If instance 5 is present and has interrupt enabled, connect IRQ */
 #if DT_NUM_INST_STATUS_OKAY(DT_DRV_COMPAT) > 5
 static void gpio_b9x_irq_connect_5(void)
@@ -886,6 +887,8 @@ static void gpio_b9x_irq_connect_6(void)
 		    DEVICE_DT_INST_GET(6), 0);
 	#endif
 }
+#endif
+
 #endif
 
 #if CONFIG_PM_DEVICE && CONFIG_SOC_SERIES_RISCV_TELINK_B9X_RETENTION

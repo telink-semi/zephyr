@@ -604,11 +604,11 @@ b9x_ieee802154_get_data(const uint8_t *payload,
  */
 
 #ifdef CONFIG_IEEE802154_2015
-#ifdef CONFIG_SOC_RISCV_TELINK_B95
+#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
+#include <aes.h>
+#elif CONFIG_SOC_RISCV_TELINK_B95
 #include <ske.h>
 #include <ske_portable.h>
-#else
-#include <aes.h>
 #endif
 
 
@@ -618,11 +618,11 @@ ieee802154_b9x_crypto_ecb(
 	const uint8_t inp[IEEE802154_CRYPTO_LENGTH_AES_BLOCK],
 	uint8_t out[IEEE802154_CRYPTO_LENGTH_AES_BLOCK])
 {
-#ifdef CONFIG_SOC_RISCV_TELINK_B95
+#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
+	(void)aes_encrypt((uint8_t *)key, (uint8_t *)inp, out);
+#elif CONFIG_SOC_RISCV_TELINK_B95
 	(void)ske_lp_crypto(SKE_ALG_AES_128, SKE_MODE_ECB,
 	SKE_CRYPTO_ENCRYPT, (uint8_t *)key, 0, NULL, (uint8_t *)inp, out, 16);
-#else
-	(void)aes_encrypt((uint8_t *)key, (uint8_t *)inp, out);
 #endif
 }
 

@@ -7,10 +7,8 @@
 #include <sys.h>
 #include <clock.h>
 #include <gpio.h>
-/*
 #include <ext_driver/ext_pm.h>
 #include "rf.h"
-*/
 #include "flash.h"
 #include <watchdog.h>
 
@@ -22,10 +20,10 @@
 #endif
 
 /* Software reset defines */
-#ifdef CONFIG_SOC_RISCV_TELINK_B95
-#define reg_reset                   REG_ADDR8(0x14082f)
-#else
+#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
 #define reg_reset                   REG_ADDR8(0x1401ef)
+#elif CONFIG_SOC_RISCV_TELINK_B95
+#define reg_reset                   REG_ADDR8(0x14082f)
 #endif
 #define SOFT_RESET                  0x20u
 
@@ -73,7 +71,7 @@
 		#define POWER_MODE      DCDC_0P94_DCDC_1P8
 	#else
 	#error "Wrong value for power-mode parameter"
-#endif
+	#endif
 #endif
 
 /* Vbat Type value */
@@ -109,7 +107,6 @@ _attribute_data_retention_sec_ struct {
  */
 void soc_load_rf_parameters_normal(void)
 {
-	/**
 	if (!blt_miscParam.ext_cap_en) {
 		unsigned char cap_freq_ofset;
 
@@ -121,7 +118,6 @@ void soc_load_rf_parameters_normal(void)
 			rf_update_internal_cap(soc_nvParam.cap_freq_offset_value);
 		}
 	}
-	**/
 }
 
 /**
@@ -129,11 +125,9 @@ void soc_load_rf_parameters_normal(void)
  */
 void soc_load_rf_parameters_deep_retention(void)
 {
-	/**
 	if (soc_nvParam.cap_freq_offset_value) {
 		rf_update_internal_cap(soc_nvParam.cap_freq_offset_value);
 	}
-	**/
 }
 #endif
 
@@ -325,7 +319,7 @@ static inline uint32_t read_flash_mid(void)
 {
 #if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
 	return flash_read_mid();
-#else
+#elif CONFIG_SOC_RISCV_TELINK_B95
 	return flash_read_mid(SLAVE0);
 #endif
 }
@@ -364,10 +358,8 @@ static int soc_b9x_check_flash(void)
 	}
 
 	if (hw_flash_size < dts_flash_size) {
-		/**
 		printk("!!! flash error: expected (.dts) %u, actually %u\n",
 			dts_flash_size, hw_flash_size);
-		**/
 		extern void abort(void);
 		abort();
 	}
