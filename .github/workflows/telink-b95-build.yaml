@@ -64,6 +64,11 @@ jobs:
         cd ..
         west build -b tlsr9258a                  -d build_sht3xd_b95                    zephyr/samples/sensor/sht3xd
 
+    - name: Build B95 bluetooth/peripheral_ht
+      run: |
+        cd ..
+        west build -b tlsr9258a                  -d build_peripheral_ht_b95             zephyr/samples/bluetooth/peripheral_ht
+
     - name: Build B95 net/openthread/cli
       run: |
         cd ..
@@ -92,6 +97,7 @@ jobs:
         cp ../build_hello_b95/zephyr/zephyr.bin                     telink_build_artifacts/b95_hello.bin
         cp ../build_watchdog_b95/zephyr/zephyr.bin                  telink_build_artifacts/b95_watchdog.bin
         cp ../build_sht3xd_b95/zephyr/zephyr.bin                    telink_build_artifacts/b95_sht3xd.bin
+        cp ../build_peripheral_ht_b95/zephyr/zephyr.bin             telink_build_artifacts/b95_peripheral_ht.bin
         cp ../build_ot_cli_b95/zephyr/zephyr.bin                    telink_build_artifacts/b95_ot_cli.bin
         cp ../build_ot_coprocessor_rcp_uart_b95/zephyr/zephyr.bin   telink_build_artifacts/b95_ot_coprocessor_rcp_uart.bin
         cp ../build_ot_echo_server_b95/zephyr/zephyr.bin            telink_build_artifacts/b95_ot_echo_server.bin
