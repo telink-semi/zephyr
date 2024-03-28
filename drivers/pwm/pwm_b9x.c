@@ -29,6 +29,12 @@ static int pwm_b9x_init(const struct device *dev)
 
 	uint32_t pwm_clk_div;
 
+	/* set the clk first */
+#if CONFIG_SOC_RISCV_TELINK_B95
+	BM_SET(reg_rst0, FLD_RST0_PWM);
+	BM_SET(reg_clk_en0, FLD_CLK0_PWM_EN);
+#endif
+
 	/* Calculate and check PWM clock divider */
 	pwm_clk_div = sys_clk.pclk * 1000 * 1000 / config->clock_frequency - 1;
 	if (pwm_clk_div > 255) {
@@ -72,7 +78,11 @@ static int pwm_b9x_set_cycles(const struct device *dev, uint32_t channel,
 	pwm_set_tmax(channel, period_cycles);
 
 	/* start pwm */
+#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
 	pwm_start(channel);
+#elif CONFIG_SOC_RISCV_TELINK_B95
+	pwm_start((channel == 0)?FLD_PWM0_EN:BIT(channel));
+#endif
 
 	/* switch to 32K */
 	if (config->clk32k_ch_enable & BIT(channel)) {
