@@ -196,8 +196,7 @@
 &pwm0 {
 	status = "okay";
 	clock-frequency = <300000>;
-	pinctrl-0 = <&pwm_ch0_pb7_default>;
-	pinctrl-names = "default";
+	pinctrl-ch0 = <&pwm_ch0_pb7_default>;
 };
 
 &lspi {
