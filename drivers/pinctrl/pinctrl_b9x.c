@@ -83,20 +83,26 @@
  *      pin_mux + 0x2F:   PORT_F[7]
  */
 
-// Return the bit index of the lowest 1 in y.   ex:  0b00110111000  --> 3
-#define PINCTR_BIT_LOW_BIT(y)  (((y) & BIT(0))?0:(((y) & BIT(1))?1:(((y) & BIT(2))?2:(((y) & BIT(3))?3:			\
-						(((y) & BIT(4))?4:(((y) & BIT(5))?5:(((y) & BIT(6))?6:(((y) & BIT(7))?7:				\
-						(((y) & BIT(8))?8:(((y) & BIT(9))?9:(((y) & BIT(10))?10:(((y) & BIT(11))?11:			\
-						(((y) & BIT(12))?12:(((y) & BIT(13))?13:(((y) & BIT(14))?14:(((y) & BIT(15))?15:		\
-						(((y) & BIT(16))?16:(((y) & BIT(17))?17:(((y) & BIT(18))?18:(((y) & BIT(19))?19:		\
-						(((y) & BIT(20))?20:(((y) & BIT(21))?21:(((y) & BIT(22))?22:(((y) & BIT(23))?23:		\
-						(((y) & BIT(24))?24:(((y) & BIT(25))?25:(((y) & BIT(26))?26:(((y) & BIT(27))?27:		\
-						(((y) & BIT(28))?28:(((y) & BIT(29))?29:(((y) & BIT(30))?30:(((y) & BIT(31))?31:32		\
-						))))))))))))))))))))))))))))))))
+/* Return the bit index of the lowest 1 in y. ex: 0b00110111000 --> 3 */
+#define PINCTR_BIT_LOW_BIT(y) \
+		(((y) & BIT(0))  ? 0  : (((y) & BIT(1))  ?  1 : (((y) & BIT(2))  ?  2 : \
+		(((y) & BIT(3))  ? 3  : (((y) & BIT(4))  ?  4 : (((y) & BIT(5))  ?  5 : \
+		(((y) & BIT(6))  ? 6  : (((y) & BIT(7))  ?  7 : (((y) & BIT(8))  ?  8 : \
+		(((y) & BIT(9))  ? 9  : (((y) & BIT(10)) ? 10 : (((y) & BIT(11)) ? 11 : \
+		(((y) & BIT(12)) ? 12 : (((y) & BIT(13)) ? 13 : (((y) & BIT(14)) ? 14 : \
+		(((y) & BIT(15)) ? 15 : (((y) & BIT(16)) ? 16 : (((y) & BIT(17)) ? 17 : \
+		(((y) & BIT(18)) ? 18 : (((y) & BIT(19)) ? 19 : (((y) & BIT(20)) ? 20 : \
+		(((y) & BIT(21)) ? 21 : (((y) & BIT(22)) ? 22 : (((y) & BIT(23)) ? 23 : \
+		(((y) & BIT(24)) ? 24 : (((y) & BIT(25)) ? 25 : (((y) & BIT(26)) ? 26 : \
+		(((y) & BIT(27)) ? 27 : (((y) & BIT(28)) ? 28 : (((y) & BIT(29)) ? 29 : \
+		(((y) & BIT(30)) ? 30 : (((y) & BIT(31)) ? 31 : 32 \
+		))))))))))))))))))))))))))))))))
 
-#define reg_pin_mux(pin)  (*(volatile uint8_t *)((uint32_t)DT_INST_REG_ADDR_BY_NAME(0, pin_mux) + \
-                                                 ((pin >> 8) << 3)+PINCTR_BIT_LOW_BIT(pin)))
-
+#define reg_pin_mux(pin) \
+		(*(volatile uint8_t *)((uint32_t)DT_INST_REG_ADDR_BY_NAME(0, pin_mux) + \
+					((pin >> 8) * 8) + \
+					PINCTR_BIT_LOW_BIT(pin) \
+		))
 #endif
 
 /**
@@ -125,9 +131,10 @@
 static int pinctrl_b9x_init(const struct device *dev)
 {
 	ARG_UNUSED(dev);
+#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
 	/* set pad_mul_sel register value from dts */
 	reg_gpio_pad_mul_sel |= DT_INST_PROP(0, pad_mul_sel);
-
+#endif
 	return 0;
 }
 
@@ -140,8 +147,10 @@ static int pinctrl_b9x_pm_action(const struct device *dev, enum pm_device_action
 	switch (action) {
 	case PM_DEVICE_ACTION_RESUME:
 		if (b9x_deep_sleep_retention) {
+#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
 			/* set pad_mul_sel register value from dts */
 			reg_gpio_pad_mul_sel |= DT_INST_PROP(0, pad_mul_sel);
+#endif
 		}
 		break;
 
@@ -164,7 +173,7 @@ DEVICE_DEFINE(pinctrl_b9x, "pinctrl_b9x", pinctrl_b9x_init, PM_DEVICE_GET(pinctr
 /* Pinctrl driver initialization */
 static int pinctrl_b9x_init(void)
 {
-#if CONFIG_SOC_RISCV_TELINK_B91 | CONFIG_SOC_RISCV_TELINK_B92
+#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
 	/* set pad_mul_sel register value from dts */
 	reg_gpio_pad_mul_sel |= DT_INST_PROP(0, pad_mul_sel);
 #endif
