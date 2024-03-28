@@ -21,7 +21,7 @@
 #include "b9x_bt_flash.h"
 #endif
 
-#define ENABLE_FLASH_DRIVER 0
+#define ENABLE_FLASH_DRIVER 1
 
 /* Software reset defines */
 #define reg_reset                   REG_ADDR8(0x1401ef)
@@ -350,8 +350,10 @@ static int soc_b9x_check_flash(void)
 	}
 
 	if (hw_flash_size < dts_flash_size) {
+		/**
 		printk("!!! flash error: expected (.dts) %u, actually %u\n",
 			dts_flash_size, hw_flash_size);
+		**/
 		extern void abort(void);
 		abort();
 	}
@@ -361,4 +363,4 @@ static int soc_b9x_check_flash(void)
 #endif
 
 SYS_INIT(soc_b9x_init, PRE_KERNEL_1, 0);
-/* SYS_INIT(soc_b9x_check_flash, POST_KERNEL, 0); */
+SYS_INIT(soc_b9x_check_flash, POST_KERNEL, 0);
