@@ -158,7 +158,7 @@
 				0xc4200000 0x00010000 >;
 			reg-names = "prio", "irq_en", "reg";
 			riscv,max-priority = <3>;
-			riscv,ndev = <46>;
+			riscv,ndev = <52>;
 		};
 
 		uart0: serial@80140080 {
@@ -241,8 +241,8 @@
 
 		usbd: usbd@80118000 {
 			compatible = "telink,b9x-usbd";
-			reg = <0x80118000 0x50>;
-			interrupts = <19 1>, <20 1>, <21 1>, <22 1>, <23 1>, <36 1>, <42 1>;
+			reg = <0x80118000 0x70>;
+			interrupts = <19 1>, <20 1>, <21 1>, <22 1>, <23 1>, <36 1>, <42 1>, <43 1>;
 			interrupt-parent = <&plic0>;
 			num-bidir-endpoints = <1>;
 			num-in-endpoints = <6>;

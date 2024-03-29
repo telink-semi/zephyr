@@ -89,6 +89,11 @@ jobs:
         cd ..
         west build -b tlsr9258a                  -d build_ot_echo_client_b95            zephyr/samples/net/sockets/echo_client                   -- -DOVERLAY_CONFIG=overlay-ot-sed.conf -DCONFIG_OPENTHREAD_NETWORKKEY=\"09:24:01:56:04:4a:45:0b:23:22:1e:0e:3b:0d:0e:61:2f:1b:2c:24\"
 
+    - name: Build B95 subsys/usb/console for USB driver
+      run: |
+        cd ..
+        west build -b tlsr9258a             -d build_usb_console_b95               zephyr/samples/subsys/usb/console
+
     - name: Collect artifacts
       run: |
         mkdir telink_build_artifacts
@@ -102,6 +107,7 @@ jobs:
         cp ../build_ot_coprocessor_rcp_uart_b95/zephyr/zephyr.bin   telink_build_artifacts/b95_ot_coprocessor_rcp_uart.bin
         cp ../build_ot_echo_server_b95/zephyr/zephyr.bin            telink_build_artifacts/b95_ot_echo_server.bin
         cp ../build_ot_echo_client_b95/zephyr/zephyr.bin            telink_build_artifacts/b95_ot_echo_client.bin
+        cp ../build_usb_console_b95/zephyr/zephyr.bin               telink_build_artifacts/b95_usb_console.bin
         cp ../modules/hal/telink/zephyr/blobs/liblt_9258_zephyr.a   telink_build_artifacts/liblt_9258_zephyr.a
 
     - name: Publish artifacts
