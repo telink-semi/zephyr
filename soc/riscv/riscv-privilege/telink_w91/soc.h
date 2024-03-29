@@ -13,4 +13,7 @@
 #define NDS_MCACHE_CTL              0x7ca
 #define NDS_MMISC_CTL               0x7d0
 
+/* List of supported CCLK frequencies */
+#define CLK_160MHZ                  160000000u
+
 #endif /* RISCV_TELINK_W91_SOC_H */

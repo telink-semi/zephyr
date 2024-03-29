@@ -7,9 +7,6 @@
 #include <zephyr/kernel.h>
 #include <zephyr/init.h>
 
-/* List of supported CCLK frequencies */
-#define CLK_160MHZ                        160000000u
-
 /* Check System Clock value. */
 #if (DT_PROP(DT_PATH(cpus, cpu_0), clock_frequency) != CLK_160MHZ)
 	#error "Unsupported clock-frequency. Supported values: 160 MHz"

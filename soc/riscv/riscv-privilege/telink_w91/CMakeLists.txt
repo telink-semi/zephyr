@@ -10,6 +10,7 @@ zephyr_sources(
 	soc_irq.S
 	soc.c
 	halt.c
+	sw_sleep.c
 	sys_heap_alloc_wrap.c
 )
 
