@@ -3,8 +3,6 @@
 
 if SOC_SERIES_RISCV_TELINK_W91
 
-source "soc/riscv/riscv-privilege/telink_w91/ipc/Kconfig.ipc"
-
 config SOC_SERIES
 	string
 	default "telink_w91"
@@ -51,6 +49,10 @@ config MAIN_STACK_SIZE
 config IDLE_STACK_SIZE
 	int
 	default 1536
+
+config SYSTEM_WORKQUEUE_STACK_SIZE
+	int
+	default 4096
 
 config TEST_EXTRA_STACK_SIZE
 	int
