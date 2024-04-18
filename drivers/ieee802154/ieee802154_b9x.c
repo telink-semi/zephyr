@@ -1150,6 +1150,11 @@ static int b9x_tx(const struct device *dev,
 			break;
 		}
 
+		if (key_id == THREAD_DEFAULT_KEY_ID_MODE_2_KEY_INDEX) {
+			key_id = 0;
+			break;
+		}
+
 		const uint8_t *key = b9x_mac_keys_get(b9x->mac_keys, key_id);
 
 		if (!key) {
