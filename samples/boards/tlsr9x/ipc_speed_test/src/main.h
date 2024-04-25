@@ -14,6 +14,7 @@
 #define SLEEP_TIME_10_SEC     10000u
 
 #define SYS_TICK_TO_US_DIV    (10.0)
+#define IPC_SEND_DATA_TIMES   (uint8_t)10
 
 #define SEND_DATA_HEADER_SIZE (uint16_t)8
 #define SEND_DATA_16B         (uint16_t)(16 - SEND_DATA_HEADER_SIZE)
@@ -26,8 +27,8 @@
 
 #define SEND_DATA_SIZE_MAX    SEND_DATA_1KB
 #define RECEIVE_BUFF_SIZE     (uint16_t)(SEND_DATA_SIZE_MAX + SEND_DATA_HEADER_SIZE)
+#define IPC_TX_DATA_BUFF_SIZE (uint16_t)(SEND_DATA_SIZE_MAX + IPC_SEND_DATA_TIMES)
 #define IPC_DEV_INSTANCE      (uint8_t)0
-#define IPC_SEND_DATA_TIMES   (uint8_t)10
 
 #define RED_LED_PIN           (uint8_t)20
 #define GREEN_LED_PIN         (uint8_t)19

@@ -9,8 +9,10 @@
 #include "main.h"
 
 
-static uint8_t tx_data[SEND_DATA_SIZE_MAX]  = {[0 ... (SEND_DATA_SIZE_MAX-1)] = 0xFF};
-static uint8_t rx_buffer[RECEIVE_BUFF_SIZE] = {[0 ... (RECEIVE_BUFF_SIZE-1)] = 0x0};
+static uint8_t tx_data[IPC_TX_DATA_BUFF_SIZE] = {[0 ... (SEND_DATA_SIZE_MAX-1)] = 0xFF};
+static uint8_t tx_buffer[RECEIVE_BUFF_SIZE] = {[0 ... (RECEIVE_BUFF_SIZE-1)] = 0x0};
+
+size_t length [] = {10, 20, 30};
 
 static const uint16_t tx_data_len[SEND_DATA_LEN_TOT] = 
 {
@@ -24,12 +26,13 @@ static const uint16_t tx_data_len[SEND_DATA_LEN_TOT] =
 };
 
 static struct ipc_based_driver ipc_drv;    /* ipc driver part */
+static uint64_t sys_time = 0;
 
 static void clear_rx_buffer_content(void)
 {
     for (uint16_t i = 0; i < RECEIVE_BUFF_SIZE; i++)
     {
-        rx_buffer[i] = 0;
+        tx_buffer[i] = 0;
     }
 }
 
@@ -79,12 +82,23 @@ static size_t pack_ipc_send_data_test(
                                   ipc_data_tx->data_len);
     }
 
+    // Detect start of transfering data from D25 to N22 core
+    gpio_set_output(RED_LED_PIN, PIN_STATE_ON);
+    // Save start measure time
+    sys_time = sys_clock_cycle_get_64();
+
     return pack_data_len;
 }
 
 static void unpack_ipc_send_data_test(
     void *unpack_data, const uint8_t *pack_data, size_t pack_data_len)
 {
+    // Detect end of transfering data from N22 to D25 core
+    sys_time = sys_clock_cycle_get_64() - sys_time;
+    // Clear LED inputs to Low level
+    gpio_set_output(RED_LED_PIN, PIN_STATE_OFF);
+    gpio_set_output(GREEN_LED_PIN, PIN_STATE_OFF);
+
     ipc_data_tx_t* ipc_data_rx = unpack_data;
     size_t expected_len = sizeof(uint32_t) + sizeof(ipc_data_rx->error) +
         sizeof(ipc_data_rx->data_len) + ipc_data_rx->data_len;
@@ -111,7 +125,6 @@ static uint32_t ipc_send_data_test(
    uint16_t buff_len, uint16_t error, ipc_data_tx_t* ipc_respond
 )
 {
-    uint64_t sys_time        = 0;
     uint32_t measure_time_us = 0;
     uint8_t  count           = 0;             
 
@@ -125,18 +138,18 @@ static uint32_t ipc_send_data_test(
     for (count = 0; count < IPC_SEND_DATA_TIMES; count++)
     {
         clear_rx_buffer_content();
-        // Detect start of transfering data from D25 to N22 core
-        gpio_set_output(RED_LED_PIN, PIN_STATE_ON);
-        // Save start measure time
-        sys_time = sys_clock_cycle_get_64();
+        // // Detect start of transfering data from D25 to N22 core
+        // gpio_set_output(RED_LED_PIN, PIN_STATE_ON);
+        // // Save start measure time
+        // sys_time = sys_clock_cycle_get_64();
         IPC_DISPATCHER_HOST_SEND_DATA(ipc_drv, IPC_DEV_INSTANCE, ipc_send_data_test,
                                       &ipc_data_tx, ipc_respond, 2000);
 
-        // Detect end of transfering data from N22 to D25 core
-        sys_time = sys_clock_cycle_get_64() - sys_time;
-        // Clear LED inputs to Low level
-        gpio_set_output(RED_LED_PIN, PIN_STATE_OFF);
-        gpio_set_output(GREEN_LED_PIN, PIN_STATE_OFF);
+        // // Detect end of transfering data from N22 to D25 core
+        // sys_time = sys_clock_cycle_get_64() - sys_time;
+        // // Clear LED inputs to Low level
+        // gpio_set_output(RED_LED_PIN, PIN_STATE_OFF);
+        // gpio_set_output(GREEN_LED_PIN, PIN_STATE_OFF);
     
         if (ipc_respond->error == 0)
         {
@@ -188,6 +201,81 @@ void gpio_set_output(uint8_t gpio, bool state)
 }
 
 
+typedef struct
+{
+    uint32_t result_op;
+    uint32_t measure_time_us;
+    uint8_t* tx_data_buf;
+} ipc_data_send_ctx_t;
+
+typedef struct 
+{
+	struct k_sem *resp_sem;
+	struct ipc_data_send_ctx_t *ctx;
+} ipc_response_data_t;
+
+static void resp_cb(const void *data, size_t len, void *param)
+{
+	ipc_response_data_t* response_data = (ipc_response_data_t*)param;
+    uint8_t* received_data = (uint8_t*)data;
+	// if (response_data->ctx && response_data->ctx->unpack) {
+	// 	response_data->ctx->unpack(response_data->ctx->result, data, len);
+	// }
+    for (uint16_t i = 0; i < len; i++)
+    {
+        printk("data %d\n\r", received_data[i]);    
+    }
+    printk("IPC data CB\n\r");
+	k_sem_give(response_data->resp_sem);
+}
+
+static int ipc_data_send(
+    struct ipc_based_driver *drv, uint8_t* tx_data_ptr,
+    uint16_t tx_len, ipc_data_send_ctx_t *ctx, uint32_t timeout_ms)
+{
+	int result = 0;
+    uint8_t* tx_data_start_ptr = (uint8_t*)tx_data_ptr;
+    uint32_t id = IPC_DISPATCHER_MK_ID(IPC_DISPATCHER_TRNG_GET_TEST, IPC_DEV_INSTANCE);
+    uint16_t error = 0;
+    uint16_t data_len = tx_len;
+    size_t pack_data_len = sizeof(id) + sizeof(error) +
+        sizeof(data_len) + (size_t)data_len;
+
+	ipc_response_data_t response_data = {
+		.resp_sem = &drv->resp_sem,
+		.ctx = ctx,
+	};
+    // Fill fields in the packet
+    IPC_DISPATCHER_PACK_FIELD(tx_data_ptr, id);
+    IPC_DISPATCHER_PACK_FIELD(tx_data_ptr, error);
+    IPC_DISPATCHER_PACK_FIELD(tx_data_ptr, data_len);
+    IPC_DISPATCHER_PACK_ARRAY(tx_data_ptr, tx_data, tx_len);
+
+	k_mutex_lock(&drv->mutex, K_FOREVER);
+
+	k_sem_reset(&drv->resp_sem);
+	ipc_dispatcher_add(id, resp_cb, &response_data);
+
+	do {
+		if (ipc_dispatcher_send(tx_data_start_ptr, pack_data_len) != pack_data_len) {
+			printk("IPC data send error (id=%x)", id);
+			result = -ECANCELED;
+			break;
+		}
+
+		if (k_sem_take(&drv->resp_sem, K_MSEC(timeout_ms))) {
+			printk("IPC response timeout (id=%x)", id);
+			result = -ETIMEDOUT;
+			break;
+		}
+	} while (0);
+
+	ipc_dispatcher_rm(id);
+	k_mutex_unlock(&drv->mutex);
+
+	return result;
+}
+
 int main(void)
 {
     uint32_t measure_time_us = 0;
@@ -199,8 +287,10 @@ int main(void)
     {
         .error    = 0,
         .data_len = 0,
-        .data_arr = rx_buffer
+        .data_arr = tx_buffer
     };
+
+    ipc_data_send_ctx_t ctx;
 
     // Enable RED LED output and set it to the low level
     gpio_enable_output(RED_LED_PIN);
@@ -210,26 +300,31 @@ int main(void)
 
     k_msleep(SLEEP_TIME_1_SEC);
 
-    for (i = 0; i < SEND_DATA_LEN_TOT; i++)
+    for (i = 0; i < 1/*SEND_DATA_LEN_TOT*/; i++)
     {
+        ctx.result_op       = 0;
+        ctx.measure_time_us = 0;
+        ctx.tx_data_buf     = tx_data + i;
+        
         temp = 0;
         printk("Ensure that IPC Respond data is cleared by %d\n\rResult: %s.\n\r",
                temp, check_response_data(&ipc_respond, tx_data_len[i], temp));
 
         // Strarting transfer data to another core (D25)->(N22)
         printk("Strarting to transfer data: (D25)->(N22)\n\r");
-        printk("Sending %d Bytes of data ", tx_data_len[i]);
-        printk("with %d Bytes packet\n\r", (tx_data_len[i] + SEND_DATA_HEADER_SIZE));
+        //printk("Sending %d Bytes of data ", tx_data_len[i]);
+        //printk("with %d Bytes packet\n\r", (tx_data_len[i] + SEND_DATA_HEADER_SIZE));
 
         k_msleep(SLEEP_TIME_100_MS);
 
         ipc_respond.data_len = tx_data_len[i];
 
-        measure_time_us = ipc_send_data_test(&ipc_drv, tx_data, tx_data_len[i], 
-                                             0, &ipc_respond);
+        // measure_time_us = ipc_send_data_test(&ipc_drv, tx_data, tx_data_len[i], 
+        //                                      0, &ipc_respond);
+        ipc_data_send(&ipc_drv, tx_buffer, tx_data_len[i], &ctx, 100);
 
-        printk("Data has been sent %d times\n\r", IPC_SEND_DATA_TIMES);
-        printk("Average IPC measure time is: %d us.\n\r", measure_time_us);
+        //printk("Data has been sent %d times\n\r", IPC_SEND_DATA_TIMES);
+        //printk("Average IPC measure time is: %d us.\n\r", measure_time_us);
 
         temp = 0xFF;
         printk("Ensure that IPC Respond data is filled by %d\n\rResult: %s.\n\r",
