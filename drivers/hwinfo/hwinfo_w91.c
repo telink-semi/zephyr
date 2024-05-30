@@ -11,36 +11,37 @@
 #include <string.h>
 #include <stdint.h>
 
-#define SPI_FLASH_HWINFO_ID_LEN  ((size_t)4)
+#define SPI_FLASH_HWINFO_ID_LEN ((size_t)4)
 
 extern uint32_t flash_w91_get_id(uint32_t *flash_id);
 
 
 ssize_t z_impl_hwinfo_get_device_id(uint8_t *buffer, size_t length)
 {
-    ssize_t  result      = length;
-    uint32_t chip_id_val = 0;
-    
-    if (length < SPI_FLASH_HWINFO_ID_LEN) {
+	ssize_t result       = length;
+	uint32_t chip_id_val = 0;
+
+	if (length < SPI_FLASH_HWINFO_ID_LEN) 
+	{
 		printk("Not enougth buffer size to get the hwinfo (ID).\n\r");
 		result = 0;
+	} 
+	else
+	{
+		result = (size_t)flash_w91_get_id(&chip_id_val);
 	}
-    else
-    {
-        result = (size_t)flash_w91_get_id(&chip_id_val);
-    }
 
 	// Check device ID value and store it into the buffer
-    if ((chip_id_val != 0) && (result == (size_t)0))
-    {
-        memcpy(buffer, &chip_id_val, SPI_FLASH_HWINFO_ID_LEN);
-        result = SPI_FLASH_HWINFO_ID_LEN;
-    }
-    else
-    {
-        printk("Flash hw INFO get ID read failed!\n");
-        result = 0;
-    }
+	if ((chip_id_val != 0) && (result == (size_t)0))
+	{
+		memcpy(buffer, &chip_id_val, SPI_FLASH_HWINFO_ID_LEN);
+		result = SPI_FLASH_HWINFO_ID_LEN;
+	}
+	else
+	{
+		printk("Flash hw INFO get ID read failed!\n");
+		result = 0;
+	}
 
 	return result;
 }
