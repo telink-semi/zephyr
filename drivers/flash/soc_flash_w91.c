@@ -297,8 +297,7 @@ static void unpack_flash_w91_get_id(
 	size_t expect_len = sizeof(uint32_t) + sizeof(p_get_id_resp->err) +
 			sizeof(p_get_id_resp->chip_id);
 
-	if (expect_len != pack_data_len)
-	{
+	if (expect_len != pack_data_len) {
 		p_get_id_resp->err = -EINVAL;
 	}
 }
@@ -311,12 +310,9 @@ int flash_w91_get_id(uint32_t *flash_id)
 			flash_w91_get_id, NULL, &read_resp,
 			CONFIG_FLASH_TELINK_W91_IPC_RESPONSE_TIMEOUT_MS);
 
-	if (read_resp.err != 0)
-	{
+	if (read_resp.err != 0) {
 		LOG_ERR("Flash get ID operation failed");
-	}
-	else
-	{
+	} else {
 		*flash_id = read_resp.chip_id;
 	}
 

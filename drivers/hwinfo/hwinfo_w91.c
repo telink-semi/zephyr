@@ -21,24 +21,18 @@ ssize_t z_impl_hwinfo_get_device_id(uint8_t *buffer, size_t length)
 	ssize_t result       = length;
 	uint32_t chip_id_val = 0;
 
-	if (length < SPI_FLASH_HWINFO_ID_LEN) 
-	{
+	if (length < SPI_FLASH_HWINFO_ID_LEN) {
 		printk("Not enougth buffer size to get the hwinfo (ID).\n\r");
 		result = 0;
-	} 
-	else
-	{
+	} else {
 		result = (size_t)flash_w91_get_id(&chip_id_val);
 	}
 
-	// Check device ID value and store it into the buffer
-	if ((chip_id_val != 0) && (result == (size_t)0))
-	{
+	/* Check device ID value and store it into the buffer */
+	if ((chip_id_val != 0) && (result == (size_t)0)) {
 		memcpy(buffer, &chip_id_val, SPI_FLASH_HWINFO_ID_LEN);
 		result = SPI_FLASH_HWINFO_ID_LEN;
-	}
-	else
-	{
+	} else {
 		printk("Flash hw INFO get ID read failed!\n");
 		result = 0;
 	}
