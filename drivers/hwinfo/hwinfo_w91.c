@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <zephyr/device.h>
 #include <zephyr/drivers/hwinfo.h>
 #include <zephyr/drivers/flash.h>
 #include <zephyr/storage/flash_map.h>
@@ -13,19 +14,20 @@
 
 #define SPI_FLASH_HWINFO_ID_LEN ((size_t)4)
 
-extern uint32_t flash_w91_get_id(uint32_t *flash_id);
+extern uint32_t flash_w91_get_id(const struct device *dev, uint32_t *flash_id);
 
 
 ssize_t z_impl_hwinfo_get_device_id(uint8_t *buffer, size_t length)
 {
-	ssize_t result       = length;
+	ssize_t result = length;
 	uint32_t chip_id_val = 0;
+    const struct device *flash_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
 
 	if (length < SPI_FLASH_HWINFO_ID_LEN) {
 		printk("Not enougth buffer size to get the hwinfo (ID).\n\r");
 		result = 0;
 	} else {
-		result = (size_t)flash_w91_get_id(&chip_id_val);
+		result = (size_t)flash_w91_get_id(flash_dev, &chip_id_val);
 	}
 
 	/* Check device ID value and store it into the buffer */

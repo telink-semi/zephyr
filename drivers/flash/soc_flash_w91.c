@@ -18,8 +18,6 @@ LOG_MODULE_REGISTER(flash_w91);
 #define FLASH_ORIGIN        DT_REG_ADDR(DT_INST(0, soc_nv_flash))
 #define FLASH_BLOCK_SIZE    (0x1000u)
 
-#define IPC_FLASH_HWINFO_INSTANCE (uint8_t)0
-
 enum {
 	IPC_DISPATCHER_FLASH_ERASE = IPC_DISPATCHER_FLASH,
 	IPC_DISPATCHER_FLASH_WRITE,
@@ -70,16 +68,12 @@ struct flash_w91_get_id_resp {
 	uint32_t chip_id;
 };
 
-static struct ipc_based_driver ipc_flash_id;
-
 /* API implementation: driver initialization */
 static int flash_w91_init(const struct device *dev)
 {
 	struct flash_w91_data *data = dev->data;
 
 	ipc_based_driver_init(&data->ipc);
-
-	ipc_based_driver_init(&ipc_flash_id);
 
 	return 0;
 }
@@ -302,18 +296,20 @@ static void unpack_flash_w91_get_id(
 	}
 }
 
-int flash_w91_get_id(uint32_t *flash_id)
+int flash_w91_get_id(const struct device *dev, uint32_t *hw_id)
 {
+    struct ipc_based_driver *ipc_data = &((struct flash_w91_data *)dev->data)->ipc;
+	uint8_t inst = ((struct flash_w91_config *)dev->config)->instance_id;
 	struct flash_w91_get_id_resp read_resp;
 
-	IPC_DISPATCHER_HOST_SEND_DATA(&ipc_flash_id, IPC_FLASH_HWINFO_INSTANCE,
+	IPC_DISPATCHER_HOST_SEND_DATA(ipc_data, inst,
 			flash_w91_get_id, NULL, &read_resp,
 			CONFIG_FLASH_TELINK_W91_IPC_RESPONSE_TIMEOUT_MS);
 
 	if (read_resp.err != 0) {
 		LOG_ERR("Flash get ID operation failed");
 	} else {
-		*flash_id = read_resp.chip_id;
+		*hw_id = read_resp.chip_id;
 	}
 
 	return read_resp.err;
