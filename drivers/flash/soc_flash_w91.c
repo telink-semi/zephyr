@@ -298,7 +298,7 @@ static void unpack_flash_w91_get_id(
 
 int flash_w91_get_id(const struct device *dev, uint32_t *hw_id)
 {
-    struct ipc_based_driver *ipc_data = &((struct flash_w91_data *)dev->data)->ipc;
+	struct ipc_based_driver *ipc_data = &((struct flash_w91_data *)dev->data)->ipc;
 	uint8_t inst = ((struct flash_w91_config *)dev->config)->instance_id;
 	struct flash_w91_get_id_resp read_resp;
 

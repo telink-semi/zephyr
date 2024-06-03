@@ -21,7 +21,7 @@ ssize_t z_impl_hwinfo_get_device_id(uint8_t *buffer, size_t length)
 {
 	ssize_t result = length;
 	uint32_t chip_id_val = 0;
-    const struct device *flash_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
+	const struct device *flash_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
 
 	if (length < SPI_FLASH_HWINFO_ID_LEN) {
 		printk("Not enougth buffer size to get the hwinfo (ID).\n\r");
