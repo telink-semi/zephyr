@@ -63,9 +63,11 @@ struct flash_w91_read_resp {
 #define FLASH_READ_MAX_SIZE_IN_PACK                                                        \
 ((CONFIG_IPC_SERVICE_ICMSG_CB_BUF_SIZE) - sizeof(uint32_t) - sizeof(int) - sizeof(uint32_t))
 
+#define FLASH_CHIP_MAX_ID_LEN (uint8_t)6
 struct flash_w91_get_id_resp {
-	int      err;
-	uint32_t chip_id;
+	int err;
+	uint8_t chip_id_len;
+	uint8_t chip_id[FLASH_CHIP_MAX_ID_LEN];
 };
 
 /* API implementation: driver initialization */
@@ -286,12 +288,14 @@ static void unpack_flash_w91_get_id(
 
 	pack_data += sizeof(uint32_t);
 	IPC_DISPATCHER_UNPACK_FIELD(pack_data, p_get_id_resp->err);
-	IPC_DISPATCHER_UNPACK_FIELD(pack_data, p_get_id_resp->chip_id);
+	IPC_DISPATCHER_UNPACK_FIELD(pack_data, p_get_id_resp->chip_id_len);
 
 	size_t expect_len = sizeof(uint32_t) + sizeof(p_get_id_resp->err) +
-			sizeof(p_get_id_resp->chip_id);
+			sizeof(p_get_id_resp->chip_id_len) + p_get_id_resp->chip_id_len;
 
-	if (expect_len != pack_data_len) {
+	if (expect_len == pack_data_len) {
+		IPC_DISPATCHER_UNPACK_ARRAY(pack_data, p_get_id_resp->chip_id, p_get_id_resp->chip_id_len);
+	} else {
 		p_get_id_resp->err = -EINVAL;
 	}
 }
@@ -308,8 +312,8 @@ int flash_w91_get_id(const struct device *dev, uint32_t *hw_id)
 
 	if (read_resp.err != 0) {
 		LOG_ERR("Flash get ID operation failed");
-	} else {
-		*hw_id = read_resp.chip_id;
+	} else if (read_resp.chip_id_len == FLASH_CHIP_MAX_ID_LEN){
+		memcpy(hw_id, read_resp.chip_id, read_resp.chip_id_len);
 	}
 
 	return read_resp.err;

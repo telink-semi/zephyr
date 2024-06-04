@@ -12,7 +12,7 @@
 #include <string.h>
 #include <stdint.h>
 
-#define SPI_FLASH_HWINFO_ID_LEN ((size_t)4)
+#define SPI_FLASH_HWINFO_ID_LEN ((size_t)6)
 
 extern uint32_t flash_w91_get_id(const struct device *dev, uint32_t *flash_id);
 
