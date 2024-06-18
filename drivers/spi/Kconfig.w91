@@ -1,0 +1,25 @@
+# Copyright (c) 2024 Telink Semiconductor
+# SPDX-License-Identifier: Apache-2.0
+
+config SPI_TELINK_W91
+	bool "Telink Semiconductor W91 SPI driver"
+	default y
+	depends on DT_HAS_TELINK_W91_SPI_ENABLED
+	help
+	  Enables Telink W91 SPI driver.
+
+if SPI_TELINK_W91
+
+config SPI_TELINK_W91_IPC_RESPONSE_TIMEOUT_MS
+	int "Telink IPC dispatcher timeout while waiting from the endpoint response"
+	default 10
+	help
+		This option sets Telink IPC dispatcher response driver timeout in mS.
+
+config SPI_TELINK_W91_IPC_MASTER_RX_RESPONSE_TIMEOUT_MS
+	int "Telink IPC dispatcher SPI Master RX timeout waiting for endpoint response"
+	default 200
+	help
+		This option sets Telink IPC dispatcher master RX response timeout in mS.
+
+endif # SPI_TELINK_W91

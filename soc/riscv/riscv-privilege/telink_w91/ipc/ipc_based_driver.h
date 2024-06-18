@@ -25,6 +25,7 @@ enum ipc_dispatcher_id {
 	IPC_DISPATCHER_WIFI                     = 0x900,
 	IPC_DISPATCHER_BLOCKING                 = 0xA00,
 	IPC_DISPATCHER_HEARTBEAT                = 0xB00,
+	IPC_DISPATCHER_SPI                      = 0xC00,
 } __attribute__((__packed__));
 
 typedef void (*ipc_based_driver_unpack_t)(void *result, const uint8_t *data, size_t len);

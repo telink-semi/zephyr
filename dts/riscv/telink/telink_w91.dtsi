@@ -130,6 +130,16 @@
 			status = "disabled";
 		};
 
+		spi: spi {
+			compatible = "telink,w91-spi";
+			cs0-pin = "0";
+			cs1-pin = "0";
+			cs2-pin = "0";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
 		i2c: i2c {
 			compatible = "telink,w91-i2c";
 			#address-cells = <1>;

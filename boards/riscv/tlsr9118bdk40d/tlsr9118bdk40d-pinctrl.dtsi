@@ -26,6 +26,69 @@
 	uart2_cts_p17_default: uart2_cts_p17_default {
 		pinmux = <W91_PINMUX_SET(W91_PIN_17, W91_FUNC_UART2_CTS)>;
 	};
+
+	/* ATCSPI0 */
+	spi0_clk_default: spi0_clk_default {
+		pinmux = <W91_PINMUX_SET(W91_PIN_12, W91_FUNC_SPI1_CLK)>;
+	};
+	spi0_cs_default: spi0_cs_default {
+		pinmux = <W91_PINMUX_SET(W91_PIN_11, W91_FUNC_SPI1_CS)>;
+	};
+	spi0_mosi_default: spi0_mosi_default {
+		pinmux = <W91_PINMUX_SET(W91_PIN_13, W91_FUNC_SPI1_MOSI)>;
+	};
+	spi0_miso_default: spi0_miso_default {
+		pinmux = <W91_PINMUX_SET(W91_PIN_14, W91_FUNC_SPI1_MISO)>;
+	};
+
+	/* ATCSPI1 */
+	spi1_clk_default: spi1_clk_default {
+		pinmux = <W91_PINMUX_SET(W91_PIN_16, W91_FUNC_SPI1_CLK)>;
+	};
+	spi1_cs_default: spi1_cs_default {
+		pinmux = <W91_PINMUX_SET(W91_PIN_15, W91_FUNC_SPI1_CS)>;
+	};
+	spi1_mosi_default: spi1_mosi_default {
+		pinmux = <W91_PINMUX_SET(W91_PIN_17, W91_FUNC_SPI1_MOSI)>;
+	};
+	spi1_miso_default: spi1_miso_default {
+		pinmux = <W91_PINMUX_SET(W91_PIN_18, W91_FUNC_SPI1_MISO)>;
+	};
+
+	/* ATCSPI2 */
+	spi2_clk_default: spi2_clk_default {
+		pinmux = <W91_PINMUX_SET(W91_PIN_16, W91_FUNC_SPI2_CLK)>;
+	};
+	spi2_cs_default: spi2_cs_default {
+		pinmux = <W91_PINMUX_SET(W91_PIN_15, W91_FUNC_SPI2_CS)>;
+	};
+	spi2_mosi_default: spi2_mosi_default {
+		pinmux = <W91_PINMUX_SET(W91_PIN_17, W91_FUNC_SPI2_MOSI)>;
+	};
+	spi2_miso_default: spi2_miso_default {
+		pinmux = <W91_PINMUX_SET(W91_PIN_18, W91_FUNC_SPI2_MISO)>;
+	};
+/*
+SPI2 pinmux
+	MUX("clk", 3, 5),
+	MUX("cs",  2, 5),
+	MUX("mosi",4, 5),
+	MUX("miso",5, 5),
+	MUX("wp",  6, 5),
+	MUX("hold",7, 5),
+
+	MUX("clk", 16, 5),
+	MUX("cs",  15, 5),
+	MUX("mosi",17, 5),
+	MUX("miso",18, 5),
+	MUX("wp",19, 5),
+	MUX("hold",20, 5),
+
+	MUX("clk", 22, 5),
+	MUX("cs",  21, 5),
+	MUX("mosi",23, 5),
+	MUX("miso",24, 5),
+*/
 	i2c_scl_default: i2c_scl_default {
 		pinmux = <W91_PINMUX_SET(W91_PIN_15, W91_FUNC_I2C0_SCL)>;
 	};
