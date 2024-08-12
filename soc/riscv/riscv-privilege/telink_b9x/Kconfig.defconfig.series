@@ -79,6 +79,13 @@ config COMMON_LIBC_MALLOC
 config COMMON_LIBC_MALLOC_ARENA_SIZE
 	default 8192
 
+# Workaround for not being able to have commas in macro arguments
+DT_LABEL_Z_STORAGE := $(dt_nodelabel_path,storage_partition)
+
+# Set the sector count of NVS as the storage partition size divided by the sector size (4 KB)
+config SETTINGS_NVS_SECTOR_COUNT
+	default $(shell,expr $(dt_node_reg_size_int,$(DT_LABEL_Z_STORAGE),0,K) / 4)
+
 config OPENTHREAD_RADIO_WORKQUEUE_STACK_SIZE
 	default 2048 if NET_L2_OPENTHREAD && NETWORKING
 
