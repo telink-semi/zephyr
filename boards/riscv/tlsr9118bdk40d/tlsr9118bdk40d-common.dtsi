@@ -57,8 +57,6 @@
 
 	chosen {
 /* Note: use RAM_DLM for ".ram_dlm" when a shared SRAM will be used for "zephyr,sram" */
-		zephyr,console = &uart2;
-		zephyr,shell-uart = &uart2;
 		zephyr,sram = &ram_dlm;
 		zephyr,flash = &flash;
 		zephyr,flash-controller = &flash_mspi;

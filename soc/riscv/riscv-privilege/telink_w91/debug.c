@@ -10,8 +10,10 @@
 
 #if (CONFIG_TELINK_W91_DEBUG_PORT == 0)
 #define UART_BASE_ADDR                     0xf0200000
+#define UART_ISR_NUM                       8
 #elif (CONFIG_TELINK_W91_DEBUG_PORT == 1)
 #define UART_BASE_ADDR                     0xf0300000
+#define UART_ISR_NUM                       9
 #else
 #error unsupported debug backend
 #endif /* CONFIG_TELINK_W91_DEBUG_PORT */
@@ -38,7 +40,18 @@
 #define OFT_ATCUART_MSR                    0x38
 #define OFT_ATCUART_SCR                    0x3c
 
-static void debug_init(void)
+static void (*telink_w91_debug_isr_ondata)(char c);
+
+static void telink_w91_debug_isr(void)
+{
+	char ch = __read_reg32(UART_BASE_ADDR + OFT_ATCUART_RBR);
+
+	if (telink_w91_debug_isr_ondata) {
+		telink_w91_debug_isr_ondata(ch);
+	}
+}
+
+static void telink_w91_debug_init(void)
 {
 	static volatile bool debug_inited;
 
@@ -66,14 +79,34 @@ static void debug_init(void)
 
 			__write_reg32(UART_BASE_ADDR + OFT_ATCUART_LCR, 3);
 			__write_reg32(UART_BASE_ADDR + OFT_ATCUART_FCR, 7);
+
+			__write_reg32(UART_BASE_ADDR + OFT_ATCUART_IER, 0);
+
+			IRQ_CONNECT(CONFIG_2ND_LVL_ISR_TBL_OFFSET + UART_ISR_NUM, 0,
+				telink_w91_debug_isr, NULL, 0);
+			riscv_plic_set_priority(UART_ISR_NUM, 1);
 		}
 		arch_irq_unlock(keys);
 	}
 }
 
+void telink_w91_debug_isr_set(bool enabled, void (*ondata)(char c))
+{
+	telink_w91_debug_init();
+	if (enabled) {
+		telink_w91_debug_isr_ondata = ondata;
+		__write_reg32(UART_BASE_ADDR + OFT_ATCUART_IER, (1 << 0));
+		riscv_plic_irq_enable(UART_ISR_NUM);
+	} else {
+		riscv_plic_irq_disable(UART_ISR_NUM);
+		__write_reg32(UART_BASE_ADDR + OFT_ATCUART_IER, 0);
+		telink_w91_debug_isr_ondata = NULL;
+	}
+}
+
 int arch_printk_char_out(int c)
 {
-	debug_init();
+	telink_w91_debug_init();
 	while (!(__read_reg32(UART_BASE_ADDR + OFT_ATCUART_LSR) & (1 << 5))) {
 	}
 	__write_reg32(UART_BASE_ADDR + OFT_ATCUART_THR, c);
