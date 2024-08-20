@@ -40,14 +40,17 @@
 #define OFT_ATCUART_MSR                    0x38
 #define OFT_ATCUART_SCR                    0x3c
 
-static void (*telink_w91_debug_isr_ondata)(char c);
+static struct {
+	void (*on_rx)(char c, void *ctx);
+	void *ctx;
+} telink_w91_debug_isr_data;
 
 static void telink_w91_debug_isr(void)
 {
 	char ch = __read_reg32(UART_BASE_ADDR + OFT_ATCUART_RBR);
 
-	if (telink_w91_debug_isr_ondata) {
-		telink_w91_debug_isr_ondata(ch);
+	if (telink_w91_debug_isr_data.on_rx) {
+		telink_w91_debug_isr_data.on_rx(ch, telink_w91_debug_isr_data.ctx);
 	}
 }
 
@@ -90,17 +93,19 @@ static void telink_w91_debug_init(void)
 	}
 }
 
-void telink_w91_debug_isr_set(bool enabled, void (*ondata)(char c))
+void telink_w91_debug_isr_set(bool enabled, void (*on_rx)(char c, void *ctx), void *ctx)
 {
 	telink_w91_debug_init();
 	if (enabled) {
-		telink_w91_debug_isr_ondata = ondata;
+		telink_w91_debug_isr_data.on_rx = on_rx;
+		telink_w91_debug_isr_data.ctx = ctx;
 		__write_reg32(UART_BASE_ADDR + OFT_ATCUART_IER, (1 << 0));
 		riscv_plic_irq_enable(UART_ISR_NUM);
 	} else {
 		riscv_plic_irq_disable(UART_ISR_NUM);
 		__write_reg32(UART_BASE_ADDR + OFT_ATCUART_IER, 0);
-		telink_w91_debug_isr_ondata = NULL;
+		telink_w91_debug_isr_data.on_rx = NULL;
+		telink_w91_debug_isr_data.ctx = NULL;
 	}
 }
 

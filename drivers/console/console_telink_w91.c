@@ -11,17 +11,19 @@
 
 K_MSGQ_DEFINE(telink_w91_console_input, sizeof(char), TELINK_W91_CONSOLE_INPUT_BUF_SIZE, 1);
 
-extern void telink_w91_debug_isr_set(bool enabled, void (*ondata)(char c));
+extern void telink_w91_debug_isr_set(bool enabled, void (*on_rx)(char c, void *ctx), void *ctx);
 extern int arch_printk_char_out(int c);
 
-static void console_data_received(char c)
+static void console_data_received(char c, void *ctx)
 {
-	(void) k_msgq_put(&telink_w91_console_input, &c, K_NO_WAIT);
+	struct k_msgq *q = (struct k_msgq *)ctx;
+
+	(void) k_msgq_put(q, &c, K_NO_WAIT);
 }
 
 int console_init(void)
 {
-	telink_w91_debug_isr_set(true, console_data_received);
+	telink_w91_debug_isr_set(true, console_data_received, &telink_w91_console_input);
 	return 0;
 }
 
@@ -70,7 +72,7 @@ ssize_t console_read(void *dummy, void *buf, size_t size)
 void console_getline_init(void)
 {
 	k_msgq_purge(&telink_w91_console_input);
-	telink_w91_debug_isr_set(true, console_data_received);
+	telink_w91_debug_isr_set(true, console_data_received, &telink_w91_console_input);
 }
 
 char *console_getline(void)
