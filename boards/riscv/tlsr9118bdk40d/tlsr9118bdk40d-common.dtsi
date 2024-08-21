@@ -20,6 +20,7 @@
 		sw1 = &key_2;
 		pwm-led0 = &pwm_led_red;
 		pwm-0 = &pwm0;
+		watchdog0 = &wdt;
 	};
 
 	leds {
@@ -132,4 +133,8 @@
 	current-speed = <115200>;
 	pinctrl-0 = <&uart2_tx_p16_default &uart2_rx_p15_default>;
 	pinctrl-names = "default";
+};
+
+&wdt {
+	status = "okay";
 };
