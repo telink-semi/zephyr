@@ -15,20 +15,7 @@
 
 #define DT_DRV_COMPAT telink_tlx_pinctrl
 
-#if CONFIG_SOC_RISCV_TELINK_TL321X
-/**
- *      GPIO Function Enable Register
- *         ADDR              PINS
- *      gpio_en:          PORT_A[0-7]
- *      gpio_en + 1*8:    PORT_B[0-7]
- *      gpio_en + 2*8:    PORT_C[0-7]
- *      gpio_en + 3*8:    PORT_D[0-7]
- *      gpio_en + 4*8:    PORT_E[0-7]
- *      gpio_en + 5*8:    PORT_F[0-7]
- */
-#define reg_gpio_en(pin) (*(volatile uint8_t *)((uint32_t)DT_INST_REG_ADDR_BY_NAME(0, gpio_en) + \
-						((pin >> 8) * 8)))
-#elif CONFIG_SOC_RISCV_TELINK_B95
+#if CONFIG_SOC_RISCV_TELINK_B95 || CONFIG_SOC_RISCV_TELINK_TL321X
 /**
  *      GPIO Function Enable Register
  *      ADDR                 PINS
@@ -43,26 +30,7 @@
 						((pin >> 8) * 0x10)))
 #endif
 
-#if CONFIG_SOC_RISCV_TELINK_TL321X
-/**
- *      Function Multiplexer Register
- *         ADDR              PINS
- *      pin_mux:          PORT_A[0]
- *      pin_mux + 1:      PORT_A[1]
- *      ...........       ...........
- *      pin_mux + 0x2E:   PORT_F[6]
- *      pin_mux + 0x2F:   PORT_F[7]
- */
-#define reg_pin_mux(pin) (*(volatile uint8_t *)((uint32_t)DT_INST_REG_ADDR_BY_NAME(0, pin_mux) + \
-						((pin >> 8) * 8) +            \
-						((pin & TLX_PIN_1) ? 1 : 0) + \
-						((pin & TLX_PIN_2) ? 2 : 0) + \
-						((pin & TLX_PIN_3) ? 3 : 0) + \
-						((pin & TLX_PIN_4) ? 4 : 0) + \
-						((pin & TLX_PIN_5) ? 5 : 0) + \
-						((pin & TLX_PIN_6) ? 6 : 0) + \
-						((pin & TLX_PIN_7) ? 7 : 0)))
-#elif CONFIG_SOC_RISCV_TELINK_B95
+#if CONFIG_SOC_RISCV_TELINK_B95 || CONFIG_SOC_RISCV_TELINK_TL321X
 /**
  *      Function Multiplexer Register
  *         ADDR              PINS
@@ -121,7 +89,7 @@
 static int pinctrl_b9x_init(const struct device *dev)
 {
 	ARG_UNUSED(dev);
-#if CONFIG_SOC_RISCV_TELINK_TL321X
+#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
 	/* set pad_mul_sel register value from dts */
 	reg_gpio_pad_mul_sel |= DT_INST_PROP(0, pad_mul_sel);
 #endif
@@ -137,10 +105,7 @@ static int pinctrl_b9x_pm_action(const struct device *dev, enum pm_device_action
 	switch (action) {
 	case PM_DEVICE_ACTION_RESUME:
 		if (b9x_deep_sleep_retention) {
-#if CONFIG_SOC_RISCV_TELINK_TL321X
-			/* set pad_mul_sel register value from dts */
-			reg_gpio_pad_mul_sel |= DT_INST_PROP(0, pad_mul_sel);
-#endif
+
 		}
 		break;
 
@@ -163,10 +128,7 @@ DEVICE_DEFINE(pinctrl_b9x, "pinctrl_b9x", pinctrl_b9x_init, PM_DEVICE_GET(pinctr
 /* Pinctrl driver initialization */
 static int pinctrl_b9x_init(void)
 {
-#if CONFIG_SOC_RISCV_TELINK_TL321X
-	/* set pad_mul_sel register value from dts */
-	reg_gpio_pad_mul_sel |= DT_INST_PROP(0, pad_mul_sel);
-#endif
+
 	return 0;
 }
 
