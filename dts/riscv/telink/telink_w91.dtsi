@@ -162,5 +162,10 @@
 			instance-id = <2>;
 			status = "disabled";
 		};
+
+		wdt: watchdog {
+			compatible = "telink,w91-watchdog";
+			status = "disabled";
+		};
 	};
 };

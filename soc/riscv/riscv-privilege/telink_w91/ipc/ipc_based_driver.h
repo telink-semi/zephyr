@@ -26,6 +26,7 @@ enum ipc_dispatcher_id {
 	IPC_DISPATCHER_BLOCKING                 = 0xa00,
 	IPC_DISPATCHER_HEARTBEAT                = 0xb00,
 	IPC_DISPATCHER_CRYPTO_ECC               = 0xc00,
+	IPC_DISPATCHER_WATCHDOG                 = 0xd00,
 } __attribute__((__packed__));
 
 typedef void (*ipc_based_driver_unpack_t)(void *result, const uint8_t *data, size_t len);
