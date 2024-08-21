@@ -123,9 +123,26 @@ do {                                                                           \
 	int ipc_err = ipc_based_driver_send(ipc, packed_data, packed_len,          \
 		&ctx, timeout_ms);                                                     \
                                                                                \
-	if (ipc_err) {                                                             \
-		/* TODO: Add assert after IPv6 FreeRTOS implemented: assert(0); */     \
-	}                                                                          \
+	assert(!ipc_err);                                                          \
+} while (0)
+
+#define IPC_DISPATCHER_HOST_SEND_DATA_BY_HEAP(ipc, inst, name,                 \
+	tx_buff, rx_buff, timeout_ms)                                              \
+do {                                                                           \
+	uint8_t *packed_data = malloc(pack_##name(inst, tx_buff, NULL));           \
+	assert(packed_data != NULL);                                               \
+                                                                               \
+	size_t packed_len = pack_##name(inst, tx_buff, packed_data);               \
+	struct ipc_based_driver_ctx ctx = {                                        \
+		.unpack = unpack_##name,                                               \
+		.result = rx_buff,                                                     \
+	};                                                                         \
+                                                                               \
+	int ipc_err = ipc_based_driver_send(ipc, packed_data, packed_len,          \
+		&ctx, timeout_ms);                                                     \
+                                                                               \
+	free(packed_data);                                                         \
+	assert(!ipc_err);                                                          \
 } while (0)
 
 #endif /* IPC_BASED_DRIVER_H */
