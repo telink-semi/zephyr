@@ -123,7 +123,9 @@ do {                                                                           \
 	int ipc_err = ipc_based_driver_send(ipc, packed_data, packed_len,          \
 		&ctx, timeout_ms);                                                     \
                                                                                \
-	assert(!ipc_err);                                                          \
+	if (ipc_err) {                                                             \
+		assert(0);                                                             \
+	}                                                                          \
 } while (0)
 
 #define IPC_DISPATCHER_HOST_SEND_DATA_BY_HEAP(ipc, inst, name,                 \
@@ -142,7 +144,9 @@ do {                                                                           \
 		&ctx, timeout_ms);                                                     \
                                                                                \
 	free(packed_data);                                                         \
-	assert(!ipc_err);                                                          \
+	if (ipc_err) {                                                             \
+		assert(0);                                                             \
+	}                                                                          \
 } while (0)
 
 #endif /* IPC_BASED_DRIVER_H */
