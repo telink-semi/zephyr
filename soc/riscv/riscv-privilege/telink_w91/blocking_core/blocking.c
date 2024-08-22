@@ -7,7 +7,6 @@
 #include <zephyr/init.h>
 #include <zephyr/sys/atomic.h>
 #include <ipc/ipc_based_driver.h>
-#include <blocking_core/blocking.h>
 
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(blocking_core_w91);
@@ -31,11 +30,6 @@ enum {
 
 static atomic_t __GENERIC_SECTION(.ram_dlm) blocking_state = BLOCKING_INVALID_STATE;
 static struct ipc_based_driver ipc_data;    /* ipc driver data part */
-static uint32_t blocking_events;
-
-static struct k_thread blocking_thread_data;
-K_THREAD_STACK_DEFINE(blocking_thread_stack, CONFIG_TELINK_W91_BLOCKING_CORE_THREAD_STACK_SIZE);
-K_SEM_DEFINE(blocking_sem, 0, 1);
 
 /* API implementation: get Machine Timer value */
 static uint64_t __GENERIC_SECTION(.ram_code) get_mtime(void)
@@ -82,13 +76,6 @@ static int blocking_w91_set_state_addr(uint32_t addr)
 	return err;
 }
 
-static void blocking_w91_stop_core_req(const void *data, size_t len, void *param)
-{
-	if (atomic_get(&blocking_state) == BLOCKING_CORE_STOP_REQ_STATE) {
-		k_sem_give(&blocking_sem);
-	}
-}
-
 /* APIs implementation: core stop request event */
 static void __GENERIC_SECTION(.ram_code) __attribute__((noinline)) blocking_w91_stop_core(void)
 {
@@ -126,20 +113,13 @@ static void __GENERIC_SECTION(.ram_code) __attribute__((noinline)) blocking_w91_
 	}
 }
 
-static void blocking_w91_thread(void *p1, void *p2, void *p3)
+static void blocking_w91_stop_core_req(const void *data, size_t len, void *param)
 {
-	static volatile uint32_t ipc_events;
+	ARG_UNUSED(data);
+	ARG_UNUSED(len);
+	ARG_UNUSED(param);
 
-	while (1) {
-		k_sem_take(&blocking_sem, K_FOREVER);
-
-		/* Exclude the events that causes the blocking */
-		do {
-			ipc_events = ipc_based_driver_get_ipc_events();
-		} while (ipc_events > blocking_events);
-
-		blocking_w91_stop_core();
-	}
+	blocking_w91_stop_core();
 }
 
 static int blocking_w91_init(void)
@@ -147,11 +127,6 @@ static int blocking_w91_init(void)
 	int err;
 
 	ipc_based_driver_init(&ipc_data);
-
-	k_thread_create(&blocking_thread_data,
-		blocking_thread_stack, K_THREAD_STACK_SIZEOF(blocking_thread_stack),
-		blocking_w91_thread, NULL, NULL, NULL,
-		BLOCKING_THREAD_PRIORITY, 0, K_NO_WAIT);
 
 	ipc_dispatcher_add(IPC_DISPATCHER_MK_ID(IPC_DISPATCHER_BLOCKING_STOP_CORE_REQ, 0),
 		blocking_w91_stop_core_req, NULL);
@@ -169,18 +144,6 @@ static int blocking_w91_init(void)
 	atomic_set(&blocking_state, BLOCKING_CORE_ACTIVE_STATE);
 
 	return 0;
-}
-
-void blocking_event_add(void)
-{
-	blocking_events++;
-}
-
-void blocking_event_rm(void)
-{
-	if (blocking_events) {
-		blocking_events--;
-	}
 }
 
 SYS_INIT(blocking_w91_init, POST_KERNEL, CONFIG_TELINK_W91_IPC_PRE_DRIVERS_INIT_PRIORITY);
