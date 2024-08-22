@@ -7,7 +7,6 @@
 #include <zephyr/device.h>
 #include <zephyr/drivers/flash.h>
 #include <ipc/ipc_based_driver.h>
-#include <blocking_core/blocking.h>
 
 #define DT_DRV_COMPAT       telink_w91_flash_controller
 
@@ -112,13 +111,9 @@ static int flash_w91_erase(const struct device *dev, off_t offset, size_t len)
 	struct ipc_based_driver *ipc_data = &((struct flash_w91_data *)dev->data)->ipc;
 	uint8_t inst = ((struct flash_w91_config *)dev->config)->instance_id;
 
-	blocking_event_add();
-
 	IPC_DISPATCHER_HOST_SEND_DATA(ipc_data, inst,
 			flash_w91_erase, &erase_req, &err,
 			CONFIG_TELINK_W91_IPC_DISPATCHER_TIMEOUT_MS);
-
-	blocking_event_rm();
 
 	if (err < 0) {
 		LOG_ERR("Flash erase operation failed");
@@ -168,13 +163,9 @@ static int flash_w91_write(const struct device *dev, off_t offset, const void *d
 			write_req.len = len;
 		}
 
-		blocking_event_add();
-
 		IPC_DISPATCHER_HOST_SEND_DATA(ipc_data, inst,
 				flash_w91_write, &write_req, &err,
 				CONFIG_TELINK_W91_IPC_DISPATCHER_TIMEOUT_MS);
-
-		blocking_event_rm();
 
 		if (err || (len <= FLASH_WRITE_MAX_SIZE_IN_PACK)) {
 			break;
@@ -254,13 +245,9 @@ static int flash_w91_read(const struct device *dev, off_t offset, void *data, si
 			read_req.len = len;
 		}
 
-		blocking_event_add();
-
 		IPC_DISPATCHER_HOST_SEND_DATA(ipc_data, inst,
 				flash_w91_read, &read_req, &read_resp,
 				CONFIG_TELINK_W91_IPC_DISPATCHER_TIMEOUT_MS);
-
-		blocking_event_rm();
 
 		if (read_resp.err || (len <= FLASH_READ_MAX_SIZE_IN_PACK)) {
 			break;

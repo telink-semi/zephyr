@@ -10,12 +10,6 @@ config TELINK_W91_BLOCKING_CORE
 
 if TELINK_W91_BLOCKING_CORE
 
-config TELINK_W91_BLOCKING_CORE_THREAD_STACK_SIZE
-	int "Blocking thread stack size"
-	default 1024
-	help
-	  Blocking thread stack size.
-
 config BLOCKING_CORE_TELINK_W91_CORE_STOP_TIMEOUT_MS
 	int "Core stop timeout"
 	default 100
