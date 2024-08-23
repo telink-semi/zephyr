@@ -6,7 +6,7 @@
 
 #define DT_DRV_COMPAT telink_tlx_trng
 
-#include <trng.h>
+#include <trng_portable.h>
 #include <zephyr/drivers/entropy.h>
 #include <string.h>
 
