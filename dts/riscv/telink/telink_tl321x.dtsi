@@ -201,18 +201,6 @@
 			status = "disabled";
 		};
 
-		lspi: spi@87FFFF00 {
-			compatible = "telink,tl321x-spi";
-			reg = <0x87FFFF00 0x100>;
-			peripheral-id = "LSPI_MODULE";
-			cs0-pin = "0";
-			cs1-pin = "0";
-			cs2-pin = "0";
-			#address-cells = <1>;
-			#size-cells = <0>;
-			status = "disabled";
-		};
-
 		i2c: i2c@80140280 {
 			compatible = "telink,tlx-i2c";
 			reg = <0x80140280 0x40>;
