@@ -164,7 +164,7 @@ To flash the TLSR9118BDK40D board ensure that SW25 switch is in the next state:
 | Position | 0   | "+" | "-" | 0 |
 +----------+-----+-----+-----+---+
 
-Then use the west flash command. Download Senscomm tool `Burning and Debugging Tools`_
+Then use the west flash command. Download Senscomm tool `Senscomm Flash Tool`_
 and extract archive into some directory you wish TELINK_SCTOOL_BASE_DIR. This archive includes both versions for Linux
 and Windows.
 
@@ -198,5 +198,5 @@ References
 
 .. _Telink TLSR9 series chipset: [UNDER_DEVELOPMENT]
 .. _Telink W91 Generic Starter Kit Hardware Guide: [UNDER_DEVELOPMENT]
-.. _Burning and Debugging Tools : http://101.34.157.135/tools_and_sdk/Tools/SCM_Flash_Tool_v2.0.2.zip
+.. _Senscomm Flash Tool: https://wiki.telink-semi.cn/tools_and_sdk/Tools/SCM_Flash_Tool_v2.0.2.zip
 .. _Zephyr Getting Started Guide: https://docs.zephyrproject.org/latest/getting_started/index.html

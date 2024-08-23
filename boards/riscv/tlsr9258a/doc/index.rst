@@ -191,8 +191,8 @@ To flash the TLSR9258A board see the sources below:
 
 - `Burning and Debugging Tools for all Series`_
 
-It is also possible to use the west flash command. Download BDT tool for Linux `Burning and Debugging Tools for Linux`_ or
-`Burning and Debugging Tools for Windows`_ and extract archive into some directory you wish TELINK_BDT_BASE_DIR
+It is also possible to use the west flash command. Download BDT tool for Linux `Burning and Debugging Tool for Linux`_ or
+`Burning and Debugging Tool for Windows`_ and extract archive into some directory you wish TELINK_BDT_BASE_DIR
 
 - Now you should be able to run the west flash command with the BDT path specified (TELINK_BDT_BASE_DIR).
 
@@ -215,6 +215,6 @@ References
 .. _Telink TLSR9 series chipset: [UNDER_DEVELOPMENT]
 .. _Telink B95 Generic Starter Kit Hardware Guide: [UNDER_DEVELOPMENT]
 .. _Burning and Debugging Tools for all Series: https://wiki.telink-semi.cn/wiki/IDE-and-Tools/Burning-and-Debugging-Tools-for-all-Series/
-.. _Burning and Debugging Tools for Linux: https://wiki.telink-semi.cn/tools_and_sdk/Tools/BDT/Telink_libusb_BDT-Linux-X64-V1.6.0.zip
-.. _Burning and Debugging Tools for Windows: https://wiki.telink-semi.cn/tools_and_sdk/Tools/BDT/BDT.zip
+.. _Burning and Debugging Tool for Linux: https://wiki.telink-semi.cn/tools_and_sdk/Tools/BDT/Telink_libusb_BDT-Linux-X64-V1.6.0.zip
+.. _Burning and Debugging Tool for Windows: https://wiki.telink-semi.cn/tools_and_sdk/Tools/BDT/BDT.zip
 .. _Zephyr Getting Started Guide: https://docs.zephyrproject.org/latest/getting_started/index.html
