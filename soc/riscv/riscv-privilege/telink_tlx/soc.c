@@ -11,6 +11,7 @@
 
 #include "flash.h"
 #include <watchdog.h>
+#include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/storage/flash_map.h>
 
@@ -143,8 +144,8 @@ static int soc_b9x_init(void)
 void sys_arch_reboot(int type)
 {
 	ARG_UNUSED(type);
-	/* fixme */
-	/* sys_reboot_lib(); */
+
+	protected_sys_reboot();
 }
 
 /**
