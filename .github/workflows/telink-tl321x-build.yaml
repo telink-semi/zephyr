@@ -39,25 +39,33 @@ jobs:
         west zephyr-export
         pip install -r zephyr/scripts/requirements.txt
 
-    - name: Build TL321x basic/blinky
+    - name: Build TL321x samples/basic/blinky
       run: |
         cd ..
-        west build -b tl3218x                  -d build_blinky_tl321x                 zephyr/samples/basic/blinky
+        west build -b tl3218x -d build_blinky_tl321x zephyr/samples/basic/blinky
 
-    - name: Build TL321x hello_world
+    - name: Build TL321x samples/hello_world
       run: |
         cd ..
-        west build -b tl3218x                  -d build_hello_tl321x                  zephyr/samples/hello_world
+        west build -b tl3218x -d build_hello_tl321x zephyr/samples/hello_world
 
-    - name: Build TL321x samples/drivers/watchdog/
+    - name: Build TL321x samples/drivers/watchdog
       run: |
         cd ..
-        west build -b tl3218x                  -d build_watchdog_tl321x               zephyr/samples/drivers/watchdog/
+        west build -b tl3218x -d build_watchdog_tl321x zephyr/samples/drivers/watchdog
+
+    - name: Build TL321x tests/drivers/flash/common
+      run: |
+        cd ..
+        west build -b tl3218x -d build_tests_flash_tl321x zephyr/tests/drivers/flash/common
 
     - name: Collect artifacts
       run: |
         mkdir telink_build_artifacts
         cp ../build_blinky_tl321x/zephyr/zephyr.bin telink_build_artifacts/tl321x_blinky.bin
+        cp ../build_hello_tl321x/zephyr/zephyr.bin telink_build_artifacts/tl321x_hello_world.bin
+        cp ../build_watchdog_tl321x/zephyr/zephyr.bin telink_build_artifacts/tl321x_watchdog.bin
+        cp ../build_tests_flash_tl321x/zephyr/zephyr.bin telink_build_artifacts/tl321x_tests_flash.bin
 
     - name: Publish artifacts
       uses: actions/upload-artifact@v3
