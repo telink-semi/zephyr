@@ -59,6 +59,11 @@ jobs:
         cd ..
         west build -b tl3218x -d build_tests_flash_tl321x zephyr/tests/drivers/flash/common
 
+    - name: Build TL321x samples/basic/fade_led/
+      run: |
+        cd ..
+        west build -b tl3218x -d build_fade_tl321x zephyr/samples/basic/fade_led/
+
     - name: Collect artifacts
       run: |
         mkdir telink_build_artifacts
