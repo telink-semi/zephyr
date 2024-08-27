@@ -14,7 +14,7 @@
 
 #include <string.h>
 
-#if CONFIG_SOC_RISCV_TELINK_TL721X 
+#if CONFIG_SOC_RISCV_TELINK_TL721X
 #define GPIO_IRQ_REG reg_gpio_irq_ctrl
 #include "gpio.h"
 #elif CONFIG_SOC_RISCV_TELINK_TL321X
@@ -108,14 +108,14 @@
 #define IRQ_GPIO2_RISC0          ((uint8_t)26u)
 #define IRQ_GPIO2_RISC1          ((uint8_t)27u)
 #elif CONFIG_SOC_RISCV_TELINK_TL321X
-#define IRQ_GPIO0                ((uint8_t)25u)
-#define IRQ_GPIO1                ((uint8_t)26u)
-#define IRQ_GPIO2                ((uint8_t)27u)
-#define IRQ_GPIO3                ((uint8_t)28u)
-#define IRQ_GPIO4                ((uint8_t)29u)
-#define IRQ_GPIO5                ((uint8_t)30u)
-#define IRQ_GPIO6                ((uint8_t)31u)
-#define IRQ_GPIO7                ((uint8_t)32u)
+#define IRQ_GPIO0                ((uint8_t)34u)
+#define IRQ_GPIO1                ((uint8_t)35u)
+#define IRQ_GPIO2                ((uint8_t)36u)
+#define IRQ_GPIO3                ((uint8_t)37u)
+#define IRQ_GPIO4                ((uint8_t)38u)
+#define IRQ_GPIO5                ((uint8_t)39u)
+#define IRQ_GPIO6                ((uint8_t)40u)
+#define IRQ_GPIO7                ((uint8_t)41u)
 #endif
 
 /* b9x GPIO registers structure */
@@ -258,6 +258,16 @@ static inline void gpio_b9x_irq_en_set(const struct device *dev, gpio_pin_t pin)
 		BM_SET(gpio->irq1, BIT(pin));
 	} else if (irq == IRQ_GPIO2) {
 		BM_SET(gpio->irq2, BIT(pin));
+	} else if (irq == IRQ_GPIO3) {
+		BM_SET(gpio->irq3, BIT(pin));
+	} else if (irq == IRQ_GPIO4) {
+		BM_SET(gpio->irq4, BIT(pin));
+	} else if (irq == IRQ_GPIO5) {
+		BM_SET(gpio->irq5, BIT(pin));
+	} else if (irq == IRQ_GPIO6) {
+		BM_SET(gpio->irq6, BIT(pin));
+	} else if (irq == IRQ_GPIO7) {
+		BM_SET(gpio->irq7, BIT(pin));
 	} else {
 		__ASSERT(false, "Not supported GPIO IRQ number.");
 	}
@@ -287,6 +297,16 @@ static inline void gpio_b9x_irq_en_clr(const struct device *dev, gpio_pin_t pin)
 		BM_CLR(gpio->irq1, BIT(pin));
 	} else if (irq == IRQ_GPIO2) {
 		BM_CLR(gpio->irq2, BIT(pin));
+	} else if (irq == IRQ_GPIO3) {
+		BM_CLR(gpio->irq3, BIT(pin));
+	} else if (irq == IRQ_GPIO4) {
+		BM_CLR(gpio->irq4, BIT(pin));
+	} else if (irq == IRQ_GPIO5) {
+		BM_CLR(gpio->irq5, BIT(pin));
+	} else if (irq == IRQ_GPIO6) {
+		BM_CLR(gpio->irq6, BIT(pin));
+	} else if (irq == IRQ_GPIO7) {
+		BM_CLR(gpio->irq7, BIT(pin));
 	}
 #endif
 
