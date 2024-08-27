@@ -64,6 +64,16 @@ jobs:
         cd ..
         west build -b tl3218x -d build_fade_tl321x zephyr/samples/basic/fade_led/
 
+    - name: Build TL321x net/openthread/cli
+      run: |
+        cd ..
+        west build -b tl3218x -d build_ot_cli_tl321x zephyr/samples/net/openthread/cli
+
+    - name: Build TL321x net/openthread/coprocessor in RCP configuration with UART interface
+      run: |
+        cd ..
+        west build -b tl3218x -d build_ot_coprocessor_rcp_uart_tl321x zephyr/samples/net/openthread/coprocessor -- -DOVERLAY_CONFIG=overlay-rcp.conf
+
     - name: Collect artifacts
       run: |
         mkdir telink_build_artifacts
@@ -71,6 +81,9 @@ jobs:
         cp ../build_hello_tl321x/zephyr/zephyr.bin telink_build_artifacts/tl321x_hello_world.bin
         cp ../build_watchdog_tl321x/zephyr/zephyr.bin telink_build_artifacts/tl321x_watchdog.bin
         cp ../build_tests_flash_tl321x/zephyr/zephyr.bin telink_build_artifacts/tl321x_tests_flash.bin
+        cp ../build_fade_tl321x/zephyr/zephyr.bin telink_build_artifacts/tl321x_tests_pwm.bin
+        cp ../build_ot_cli_tl321x/zephyr/zephyr.bin telink_build_artifacts/tl321x_ot_cli.bin
+        cp ../build_ot_coprocessor_rcp_uart_tl321x/zephyr/zephyr.bin telink_build_artifacts/tl321x_ot_coprocessor_rcp_uart.bin
 
     - name: Publish artifacts
       uses: actions/upload-artifact@v3
