@@ -82,7 +82,7 @@
 			compatible = "telink,tlx-gpio";
 			gpio-controller;
 			interrupt-parent = <&plic0>;
-			interrupts = <37 1>, <38 1>, <39 1>;
+			interrupts = <46 1>, <47 1>, <48 1>,<49 1>, <50 1>, <51 1>,<52 1>, <53 1>;
 			reg = <0x80140c00 0x10>;
 			status = "disabled";
 			#gpio-cells = <2>;
@@ -92,7 +92,7 @@
 			compatible = "telink,tlx-gpio";
 			gpio-controller;
 			interrupt-parent = <&plic0>;
-			interrupts = <37 1>, <38 1>, <39 1>;
+			interrupts = <46 1>, <47 1>, <48 1>,<49 1>, <50 1>, <51 1>,<52 1>, <53 1>;
 			reg = <0x80140c10 0x10>;
 			status = "disabled";
 			#gpio-cells = <2>;
@@ -102,7 +102,7 @@
 			compatible = "telink,tlx-gpio";
 			gpio-controller;
 			interrupt-parent = <&plic0>;
-			interrupts = <37 1>, <38 1>, <39 1>;
+			interrupts = <46 1>, <47 1>, <48 1>,<49 1>, <50 1>, <51 1>,<52 1>, <53 1>;
 			reg = <0x80140c20 0x10>;
 			status = "disabled";
 			#gpio-cells = <2>;
@@ -112,7 +112,7 @@
 			compatible = "telink,tlx-gpio";
 			gpio-controller;
 			interrupt-parent = <&plic0>;
-			interrupts = <37 1>, <38 1>, <39 1>;
+			interrupts = <46 1>, <47 1>, <48 1>,<49 1>, <50 1>, <51 1>,<52 1>, <53 1>;
 			reg = <0x80140c30 0x10>;
 			status = "disabled";
 			#gpio-cells = <2>;
@@ -122,7 +122,7 @@
 			compatible = "telink,tlx-gpio";
 			gpio-controller;
 			interrupt-parent = <&plic0>;
-			interrupts = <37 1>, <38 1>, <39 1>;
+			interrupts = <46 1>, <47 1>, <48 1>,<49 1>, <50 1>, <51 1>,<52 1>, <53 1>;
 			reg = <0x80140c40 0x10>;
 			status = "disabled";
 			#gpio-cells = <2>;
@@ -132,7 +132,7 @@
 			compatible = "telink,tlx-gpio";
 			gpio-controller;
 			interrupt-parent = <&plic0>;
-			interrupts = <37 1>, <38 1>, <39 1>;
+			interrupts = <46 1>, <47 1>, <48 1>,<49 1>, <50 1>, <51 1>,<52 1>, <53 1>;
 			reg = <0x80140c50 0x10>;
 			status = "disabled";
 			#gpio-cells = <2>;
@@ -220,7 +220,7 @@
 		usbd: usbd@80118000 {
 			compatible = "telink,tlx-usbd";
 			reg = <0x80118000 0x70>;
-			interrupts = <19 1>, <20 1>, <21 1>, <22 1>, <23 1>, <36 1>, <42 1>;
+			interrupts = <19 1>, <20 1>, <21 1>, <22 1>, <23 1>, <42 1>, <43 1>;
 			interrupt-parent = <&plic0>;
 			num-bidir-endpoints = <1>;
 			num-in-endpoints = <6>;
