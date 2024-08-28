@@ -21,7 +21,7 @@ LOG_MODULE_REGISTER(adc_tlx, CONFIG_ADC_LOG_LEVEL);
 #include <adc.h>
 #include <zephyr/drivers/pinctrl.h>
 
-#if CONFIG_SOC_RISCV_TELINK_B95
+#if CONFIG_SOC_RISCV_TELINK_TL721X  || CONFIG_SOC_RISCV_TELINK_TL321X
 #define adc_input_pin_def_e     adc_input_pin_e
 
 /* Set ADC resolution value */
@@ -48,7 +48,7 @@ struct b9x_adc_data {
 	struct k_sem acq_sem;
 	struct k_thread thread;
 
-	K_THREAD_STACK_MEMBER(stack, CONFIG_ADC_B9X_ACQUISITION_THREAD_STACK_SIZE);
+	K_THREAD_STACK_MEMBER(stack, CONFIG_ADC_TLX_ACQUISITION_THREAD_STACK_SIZE);
 };
 
 struct b9x_adc_cfg {
@@ -103,7 +103,7 @@ static adc_input_pin_def_e adc_b9x_get_pin(uint8_t dt_pin)
 	adc_input_pin_def_e adc_pin;
 
 	switch (dt_pin) {
-#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B95
+#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_TL721X || CONFIG_SOC_RISCV_TELINK_TL321X
 	case DT_ADC_GPIO_PB0:
 		adc_pin = ADC_GPIO_PB0;
 		break;
@@ -201,7 +201,7 @@ static int adc_b9x_adc_start_read(const struct device *dev, const struct adc_seq
 
 	/* Set resolution */
 	switch (sequence->resolution) {
-#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92 || CONFIG_SOC_RISCV_TELINK_TL321X
+#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
 	case 14:
 		adc_set_resolution(ADC_RES14);
 		data->resolution_divider = 1;
@@ -249,7 +249,7 @@ static void adc_b9x_acquisition_thread(const struct device *dev)
 		}
 
 		/* Perform read */
-#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92 || CONFIG_SOC_RISCV_TELINK_TL321X
+#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
 		adc_code = (adc_b9x_get_code() / data->resolution_divider);
 		if (!data->differential) {
 			/* Sign bit is not used in case of single-ended configuration */
@@ -260,7 +260,7 @@ static void adc_b9x_acquisition_thread(const struct device *dev)
 				adc_code = 0;
 			}
 		}
-#elif CONFIG_SOC_RISCV_TELINK_B95
+#elif CONFIG_SOC_RISCV_TELINK_TL721X || CONFIG_SOC_RISCV_TELINK_TL321X
 		adc_code = adc_b9x_get_code();
 		if (!data->differential) {
 			/* Sign bit is not used in case of single-ended configuration */
@@ -301,10 +301,10 @@ static int adc_b9x_init(const struct device *dev)
 	k_sem_init(&data->acq_sem, 0, 1);
 
 	k_thread_create(&data->thread, data->stack,
-			CONFIG_ADC_B9X_ACQUISITION_THREAD_STACK_SIZE,
+			CONFIG_ADC_TLX_ACQUISITION_THREAD_STACK_SIZE,
 			(k_thread_entry_t)adc_b9x_acquisition_thread,
 			(void *)dev, NULL, NULL,
-			CONFIG_ADC_B9X_ACQUISITION_THREAD_PRIO,
+			CONFIG_ADC_TLX_ACQUISITION_THREAD_PRIO,
 			0, K_NO_WAIT);
 
 	adc_context_unlock_unconditionally(&data->ctx);
@@ -365,7 +365,7 @@ static int adc_b9x_channel_setup(const struct device *dev,
 	case ADC_GAIN_1:
 		pre_scale = ADC_PRESCALE_1;
 		break;
-#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92 || CONFIG_SOC_RISCV_TELINK_TL321X
+#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
 	case ADC_GAIN_1_4:
 		pre_scale = ADC_PRESCALE_1F4;
 		break;
@@ -421,7 +421,7 @@ static int adc_b9x_channel_setup(const struct device *dev,
 		return -EINVAL;
 	}
 
-#if CONFIG_SOC_RISCV_TELINK_B95
+#if CONFIG_SOC_RISCV_TELINK_TL721X || CONFIG_SOC_RISCV_TELINK_TL321X
 	/* Init NDMA ADC */
 	adc_init(NDMA_M_CHN);
 #endif
@@ -431,26 +431,26 @@ static int adc_b9x_channel_setup(const struct device *dev,
 	if (channel_cfg->differential) {
 		/* Differential pins configuration */
 
-#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92 || CONFIG_SOC_RISCV_TELINK_TL321X
+#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
 		adc_set_diff_pin(input_positive, input_negative);
-#elif CONFIG_SOC_RISCV_TELINK_B95
+#elif CONFIG_SOC_RISCV_TELINK_TL721X  || CONFIG_SOC_RISCV_TELINK_TL321X
 		adc_set_diff_pin(ADC_M_CHANNEL, input_positive, input_negative);
 #endif
 	} else if (input_positive == (uint8_t)ADC_VBAT) {
 		/* VBAT pin configuration */
 
-#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92 || CONFIG_SOC_RISCV_TELINK_TL321X
+#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
 		adc_battery_voltage_sample_init();
-#elif CONFIG_SOC_RISCV_TELINK_B95
+#elif CONFIG_SOC_RISCV_TELINK_TL721X  || CONFIG_SOC_RISCV_TELINK_TL321X
 		adc_vbat_sample_init(ADC_M_CHANNEL);
 #endif
 	} else {
 		/* Single-ended GPIO pin configuration */
 
-#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92 || CONFIG_SOC_RISCV_TELINK_TL321X
+#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
 		adc_gpio_sample_init(input_positive,
 				vref_internal_mv, pre_scale, sample_freq);
-#elif CONFIG_SOC_RISCV_TELINK_B95
+#elif CONFIG_SOC_RISCV_TELINK_TL721X || CONFIG_SOC_RISCV_TELINK_TL321X
 		adc_gpio_cfg_t adc_gpio_cfg_m = {
 				.v_ref			=	vref_internal_mv,
 				.pre_scale		=	pre_scale,
