@@ -72,34 +72,34 @@
 
 	/* Define ADC pins: PE0..PE7, PD0, PD5 */
 
-	adc_pe0_default: adc_pe0_default {
-		pinmux = <TLX_PINMUX_SET(TLX_PORT_E, TLX_PIN_0, TL321X_FUNC_DEFAULT)>;
+	adc_pb0_default: adc_pb0_default {
+		pinmux = <TLX_PINMUX_SET(TLX_PORT_B, TLX_PIN_0, TL321X_FUNC_DEFAULT)>;
 	};
-	adc_pe1_default: adc_pe1_default {
-		pinmux = <TLX_PINMUX_SET(TLX_PORT_E, TLX_PIN_1, TL321X_FUNC_DEFAULT)>;
+	adc_pb1_default: adc_pb1_default {
+		pinmux = <TLX_PINMUX_SET(TLX_PORT_B, TLX_PIN_1, TL321X_FUNC_DEFAULT)>;
 	};
-	adc_pe2_default: adc_pe2_default {
-		pinmux = <TLX_PINMUX_SET(TLX_PORT_E, TLX_PIN_2, TL321X_FUNC_DEFAULT)>;
+	adc_pb2_default: adc_pb2_default {
+		pinmux = <TLX_PINMUX_SET(TLX_PORT_B, TLX_PIN_2, TL321X_FUNC_DEFAULT)>;
 	};
-	adc_pe3_default: adc_pe3_default {
-		pinmux = <TLX_PINMUX_SET(TLX_PORT_E, TLX_PIN_3, TL321X_FUNC_DEFAULT)>;
+	adc_pb3_default: adc_pb3_default {
+		pinmux = <TLX_PINMUX_SET(TLX_PORT_B, TLX_PIN_3, TL321X_FUNC_DEFAULT)>;
 	};
-	adc_pe4_default: adc_pe4_default {
-		pinmux = <TLX_PINMUX_SET(TLX_PORT_E, TLX_PIN_4, TL321X_FUNC_DEFAULT)>;
+	adc_pb4_default: adc_pb4_default {
+		pinmux = <TLX_PINMUX_SET(TLX_PORT_B, TLX_PIN_4, TL321X_FUNC_DEFAULT)>;
 	};
-	adc_pe5_default: adc_pe5_default {
-		pinmux = <TLX_PINMUX_SET(TLX_PORT_E, TLX_PIN_5, TL321X_FUNC_DEFAULT)>;
+	adc_pb5_default: adc_pb5_default {
+		pinmux = <TLX_PINMUX_SET(TLX_PORT_B, TLX_PIN_5, TL321X_FUNC_DEFAULT)>;
 	};
-	adc_pe6_default: adc_pe6_default {
-		pinmux = <TLX_PINMUX_SET(TLX_PORT_E, TLX_PIN_6, TL321X_FUNC_DEFAULT)>;
+	adc_pb6_default: adc_pb6_default {
+		pinmux = <TLX_PINMUX_SET(TLX_PORT_B, TLX_PIN_6, TL321X_FUNC_DEFAULT)>;
 	};
-	adc_pe7_default: adc_pe7_default {
-		pinmux = <TLX_PINMUX_SET(TLX_PORT_E, TLX_PIN_7, TL321X_FUNC_DEFAULT)>;
+	adc_pb7_default: adc_pb7_default {
+		pinmux = <TLX_PINMUX_SET(TLX_PORT_B, TLX_PIN_7, TL321X_FUNC_DEFAULT)>;
 	};
 	adc_pd0_default: adc_pd0_default {
 		pinmux = <TLX_PINMUX_SET(TLX_PORT_D, TLX_PIN_0, TL321X_FUNC_DEFAULT)>;
 	};
-	adc_pd5_default: adc_pd5_default {
-		pinmux = <TLX_PINMUX_SET(TLX_PORT_D, TLX_PIN_5, TL321X_FUNC_DEFAULT)>;
+	adc_pd1_default: adc_pd1_default {
+		pinmux = <TLX_PINMUX_SET(TLX_PORT_D, TLX_PIN_1, TL321X_FUNC_DEFAULT)>;
 	};
 };
