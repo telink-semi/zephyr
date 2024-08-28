@@ -70,7 +70,7 @@
 		pinmux = <TLX_PINMUX_SET(TLX_PORT_C, TLX_PIN_2, TL321X_FUNC_I2C_SDA_IO)>;
 	};
 
-	/* Define ADC pins: PE0..PE7, PD0, PD5 */
+	/* Define ADC pins: PB0..PB7, PD0, PD1 */
 
 	adc_pb0_default: adc_pb0_default {
 		pinmux = <TLX_PINMUX_SET(TLX_PORT_B, TLX_PIN_0, TL321X_FUNC_DEFAULT)>;

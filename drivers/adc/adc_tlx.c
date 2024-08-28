@@ -33,13 +33,13 @@ static inline void adc_set_resolution(adc_res_e res)
 #endif
 
 
-/* ADC b9x defines */
+/* ADC tlx defines */
 #define SIGN_BIT_POSITION          (13)
 #define AREG_ADC_DATA_STATUS       (0xf6)
 #define ADC_DATA_READY             BIT(0)
 
-/* b9x ADC driver data */
-struct b9x_adc_data {
+/* tlx ADC driver data */
+struct tlx_adc_data {
 	struct adc_context ctx;
 	int16_t *buffer;
 	int16_t *repeat_buffer;
@@ -51,14 +51,14 @@ struct b9x_adc_data {
 	K_THREAD_STACK_MEMBER(stack, CONFIG_ADC_TLX_ACQUISITION_THREAD_STACK_SIZE);
 };
 
-struct b9x_adc_cfg {
+struct tlx_adc_cfg {
 	uint32_t sample_freq;
 	uint16_t vref_internal_mv;
 	const struct pinctrl_dev_config *pcfg;
 };
 
 /* Validate ADC data buffer size */
-static int adc_b9x_validate_buffer_size(const struct adc_sequence *sequence)
+static int adc_tlx_validate_buffer_size(const struct adc_sequence *sequence)
 {
 	size_t needed = sizeof(int16_t);
 
@@ -74,7 +74,7 @@ static int adc_b9x_validate_buffer_size(const struct adc_sequence *sequence)
 }
 
 /* Validate ADC read API input parameters */
-static int adc_b9x_validate_sequence(const struct adc_sequence *sequence)
+static int adc_tlx_validate_sequence(const struct adc_sequence *sequence)
 {
 	int status;
 
@@ -88,7 +88,7 @@ static int adc_b9x_validate_sequence(const struct adc_sequence *sequence)
 		return -ENOTSUP;
 	}
 
-	status = adc_b9x_validate_buffer_size(sequence);
+	status = adc_tlx_validate_buffer_size(sequence);
 	if (status) {
 		LOG_ERR("Buffer size too small.");
 		return status;
@@ -97,13 +97,13 @@ static int adc_b9x_validate_sequence(const struct adc_sequence *sequence)
 	return 0;
 }
 
-/* Convert dts pin to b9x SDK pin */
-static adc_input_pin_def_e adc_b9x_get_pin(uint8_t dt_pin)
+/* Convert dts pin to tlx SDK pin */
+static adc_input_pin_def_e adc_tlx_get_pin(uint8_t dt_pin)
 {
 	adc_input_pin_def_e adc_pin;
 
 	switch (dt_pin) {
-#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_TL721X || CONFIG_SOC_RISCV_TELINK_TL321X
+#if CONFIG_SOC_RISCV_TELINK_TL721X || CONFIG_SOC_RISCV_TELINK_TL321X
 	case DT_ADC_GPIO_PB0:
 		adc_pin = ADC_GPIO_PB0;
 		break;
@@ -148,7 +148,7 @@ static adc_input_pin_def_e adc_b9x_get_pin(uint8_t dt_pin)
 }
 
 /* Get ADC value */
-static signed short adc_b9x_get_code(void)
+static signed short adc_tlx_get_code(void)
 {
 	signed short adc_code;
 
@@ -166,8 +166,8 @@ static signed short adc_b9x_get_code(void)
 /* ADC Context API implementation: start sampling */
 static void adc_context_start_sampling(struct adc_context *ctx)
 {
-	struct b9x_adc_data *data =
-		CONTAINER_OF(ctx, struct b9x_adc_data, ctx);
+	struct tlx_adc_data *data =
+		CONTAINER_OF(ctx, struct tlx_adc_data, ctx);
 
 	data->repeat_buffer = data->buffer;
 
@@ -179,8 +179,8 @@ static void adc_context_start_sampling(struct adc_context *ctx)
 /* ADC Context API implementation: buffer pointer */
 static void adc_context_update_buffer_pointer(struct adc_context *ctx, bool repeat_sampling)
 {
-	struct b9x_adc_data *data =
-		CONTAINER_OF(ctx, struct b9x_adc_data, ctx);
+	struct tlx_adc_data *data =
+		CONTAINER_OF(ctx, struct tlx_adc_data, ctx);
 
 	if (repeat_sampling) {
 		data->buffer = data->repeat_buffer;
@@ -188,25 +188,19 @@ static void adc_context_update_buffer_pointer(struct adc_context *ctx, bool repe
 }
 
 /* Start ADC measurements */
-static int adc_b9x_adc_start_read(const struct device *dev, const struct adc_sequence *sequence)
+static int adc_tlx_adc_start_read(const struct device *dev, const struct adc_sequence *sequence)
 {
 	int status;
-	struct b9x_adc_data *data = dev->data;
+	struct tlx_adc_data *data = dev->data;
 
 	/* Validate input parameters */
-	status = adc_b9x_validate_sequence(sequence);
+	status = adc_tlx_validate_sequence(sequence);
 	if (status != 0) {
 		return status;
 	}
 
 	/* Set resolution */
 	switch (sequence->resolution) {
-#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
-	case 14:
-		adc_set_resolution(ADC_RES14);
-		data->resolution_divider = 1;
-		break;
-#endif
 	case 12:
 		adc_set_resolution(ADC_RES12);
 		data->resolution_divider = 4;
@@ -234,10 +228,10 @@ static int adc_b9x_adc_start_read(const struct device *dev, const struct adc_seq
 }
 
 /* Main ADC Acquisition thread */
-static void adc_b9x_acquisition_thread(const struct device *dev)
+static void adc_tlx_acquisition_thread(const struct device *dev)
 {
 	int16_t adc_code;
-	struct b9x_adc_data *data = dev->data;
+	struct tlx_adc_data *data = dev->data;
 
 	while (true) {
 		/* Wait for Acquisition semaphore */
@@ -249,19 +243,8 @@ static void adc_b9x_acquisition_thread(const struct device *dev)
 		}
 
 		/* Perform read */
-#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
-		adc_code = (adc_b9x_get_code() / data->resolution_divider);
-		if (!data->differential) {
-			/* Sign bit is not used in case of single-ended configuration */
-			adc_code = adc_code * 2;
-
-			/* Do not return negative value for single-ended configuration */
-			if (adc_code < 0) {
-				adc_code = 0;
-			}
-		}
-#elif CONFIG_SOC_RISCV_TELINK_TL721X || CONFIG_SOC_RISCV_TELINK_TL321X
-		adc_code = adc_b9x_get_code();
+#if CONFIG_SOC_RISCV_TELINK_TL721X || CONFIG_SOC_RISCV_TELINK_TL321X
+		adc_code = adc_tlx_get_code();
 		if (!data->differential) {
 			/* Sign bit is not used in case of single-ended configuration */
 			adc_code = adc_code * 8;
@@ -284,11 +267,11 @@ static void adc_b9x_acquisition_thread(const struct device *dev)
 }
 
 /* ADC Driver initialization */
-static int adc_b9x_init(const struct device *dev)
+static int adc_tlx_init(const struct device *dev)
 {
-	struct b9x_adc_data *data = dev->data;
+	struct tlx_adc_data *data = dev->data;
 
-	const struct b9x_adc_cfg *config = dev->config;
+	const struct tlx_adc_cfg *config = dev->config;
 	int err;
 
 	/* Configure dt provided device signals when available */
@@ -302,7 +285,7 @@ static int adc_b9x_init(const struct device *dev)
 
 	k_thread_create(&data->thread, data->stack,
 			CONFIG_ADC_TLX_ACQUISITION_THREAD_STACK_SIZE,
-			(k_thread_entry_t)adc_b9x_acquisition_thread,
+			(k_thread_entry_t)adc_tlx_acquisition_thread,
 			(void *)dev, NULL, NULL,
 			CONFIG_ADC_TLX_ACQUISITION_THREAD_PRIO,
 			0, K_NO_WAIT);
@@ -313,7 +296,7 @@ static int adc_b9x_init(const struct device *dev)
 }
 
 /* API implementation: channel_setup */
-static int adc_b9x_channel_setup(const struct device *dev,
+static int adc_tlx_channel_setup(const struct device *dev,
 				 const struct adc_channel_cfg *channel_cfg)
 {
 	adc_ref_vol_e vref_internal_mv;
@@ -322,8 +305,8 @@ static int adc_b9x_channel_setup(const struct device *dev,
 	adc_sample_cycle_e sample_cycl;
 	adc_input_pin_def_e input_positive;
 	adc_input_pin_def_e input_negative;
-	struct b9x_adc_data *data = dev->data;
-	const struct b9x_adc_cfg *config = dev->config;
+	struct tlx_adc_data *data = dev->data;
+	const struct tlx_adc_cfg *config = dev->config;
 
 	/* Check reference */
 	if (channel_cfg->reference != ADC_REF_INTERNAL) {
@@ -365,11 +348,6 @@ static int adc_b9x_channel_setup(const struct device *dev,
 	case ADC_GAIN_1:
 		pre_scale = ADC_PRESCALE_1;
 		break;
-#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
-	case ADC_GAIN_1_4:
-		pre_scale = ADC_PRESCALE_1F4;
-		break;
-#endif
 
 	default:
 		LOG_ERR("Selected ADC gain is not supported.");
@@ -410,8 +388,8 @@ static int adc_b9x_channel_setup(const struct device *dev,
 	}
 
 	/* Check for valid pins configuration */
-	input_positive = adc_b9x_get_pin(channel_cfg->input_positive);
-	input_negative = adc_b9x_get_pin(channel_cfg->input_negative);
+	input_positive = adc_tlx_get_pin(channel_cfg->input_positive);
+	input_negative = adc_tlx_get_pin(channel_cfg->input_negative);
 	if ((input_positive == (uint8_t)ADC_VBAT || input_negative == (uint8_t)ADC_VBAT) &&
 		channel_cfg->differential) {
 		LOG_ERR("VBAT pin is not available for differential mode.");
@@ -431,26 +409,19 @@ static int adc_b9x_channel_setup(const struct device *dev,
 	if (channel_cfg->differential) {
 		/* Differential pins configuration */
 
-#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
-		adc_set_diff_pin(input_positive, input_negative);
-#elif CONFIG_SOC_RISCV_TELINK_TL721X  || CONFIG_SOC_RISCV_TELINK_TL321X
+#if CONFIG_SOC_RISCV_TELINK_TL721X  || CONFIG_SOC_RISCV_TELINK_TL321X
 		adc_set_diff_pin(ADC_M_CHANNEL, input_positive, input_negative);
 #endif
 	} else if (input_positive == (uint8_t)ADC_VBAT) {
 		/* VBAT pin configuration */
 
-#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
-		adc_battery_voltage_sample_init();
-#elif CONFIG_SOC_RISCV_TELINK_TL721X  || CONFIG_SOC_RISCV_TELINK_TL321X
+#if CONFIG_SOC_RISCV_TELINK_TL721X  || CONFIG_SOC_RISCV_TELINK_TL321X
 		adc_vbat_sample_init(ADC_M_CHANNEL);
 #endif
 	} else {
 		/* Single-ended GPIO pin configuration */
 
-#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
-		adc_gpio_sample_init(input_positive,
-				vref_internal_mv, pre_scale, sample_freq);
-#elif CONFIG_SOC_RISCV_TELINK_TL721X || CONFIG_SOC_RISCV_TELINK_TL321X
+#if CONFIG_SOC_RISCV_TELINK_TL721X || CONFIG_SOC_RISCV_TELINK_TL321X
 		adc_gpio_cfg_t adc_gpio_cfg_m = {
 				.v_ref			=	vref_internal_mv,
 				.pre_scale		=	pre_scale,
@@ -465,14 +436,14 @@ static int adc_b9x_channel_setup(const struct device *dev,
 }
 
 /* API implementation: read */
-static int adc_b9x_read(const struct device *dev,
+static int adc_tlx_read(const struct device *dev,
 			const struct adc_sequence *sequence)
 {
 	int status;
-	struct b9x_adc_data *data = dev->data;
+	struct tlx_adc_data *data = dev->data;
 
 	adc_context_lock(&data->ctx, false, NULL);
-	status = adc_b9x_adc_start_read(dev, sequence);
+	status = adc_tlx_adc_start_read(dev, sequence);
 	adc_context_release(&data->ctx, status);
 
 	return status;
@@ -480,22 +451,22 @@ static int adc_b9x_read(const struct device *dev,
 
 #ifdef CONFIG_ADC_ASYNC
 /* API implementation: read_async */
-static int adc_b9x_read_async(const struct device *dev,
+static int adc_tlx_read_async(const struct device *dev,
 			      const struct adc_sequence *sequence,
 			      struct k_poll_signal *async)
 {
 	int status;
-	struct b9x_adc_data *data = dev->data;
+	struct tlx_adc_data *data = dev->data;
 
 	adc_context_lock(&data->ctx, true, async);
-	status = adc_b9x_adc_start_read(dev, sequence);
+	status = adc_tlx_adc_start_read(dev, sequence);
 	adc_context_release(&data->ctx, status);
 
 	return status;
 }
 #endif /* CONFIG_ADC_ASYNC */
 
-static struct b9x_adc_data data_0 = {
+static struct tlx_adc_data data_0 = {
 	ADC_CONTEXT_INIT_TIMER(data_0, ctx),
 	ADC_CONTEXT_INIT_LOCK(data_0, ctx),
 	ADC_CONTEXT_INIT_SYNC(data_0, ctx),
@@ -503,23 +474,23 @@ static struct b9x_adc_data data_0 = {
 
 PINCTRL_DT_INST_DEFINE(0);
 
-static const struct b9x_adc_cfg cfg_0 = {
+static const struct tlx_adc_cfg cfg_0 = {
 	.sample_freq = DT_INST_PROP(0, sample_freq),
 	.vref_internal_mv = DT_INST_PROP(0, vref_internal_mv),
 	.pcfg = PINCTRL_DT_INST_DEV_CONFIG_GET(0),
 };
 
-static const struct adc_driver_api adc_b9x_driver_api = {
-	.channel_setup = adc_b9x_channel_setup,
-	.read = adc_b9x_read,
+static const struct adc_driver_api adc_tlx_driver_api = {
+	.channel_setup = adc_tlx_channel_setup,
+	.read = adc_tlx_read,
 #ifdef CONFIG_ADC_ASYNC
-	.read_async = adc_b9x_read_async,
+	.read_async = adc_tlx_read_async,
 #endif
 	.ref_internal = cfg_0.vref_internal_mv,
 };
 
-DEVICE_DT_INST_DEFINE(0, adc_b9x_init, NULL,
+DEVICE_DT_INST_DEFINE(0, adc_tlx_init, NULL,
 		      &data_0,  &cfg_0,
 		      POST_KERNEL,
 		      CONFIG_ADC_INIT_PRIORITY,
-		      &adc_b9x_driver_api);
+		      &adc_tlx_driver_api);
