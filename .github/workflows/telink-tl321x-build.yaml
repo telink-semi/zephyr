@@ -89,6 +89,11 @@ jobs:
         cd ..
         west build -b tl3218x -d build_ot_coprocessor_rcp_uart_tl321x zephyr/samples/net/openthread/coprocessor -- -DOVERLAY_CONFIG=overlay-rcp.conf
 
+    - name: Build TL321x subsys/usb/console for USB driver
+      run: |
+        cd ..
+        west build -b tl3218x -d build_usb_console_tl321x zephyr/samples/subsys/usb/console
+
     - name: Collect artifacts
       run: |
         mkdir telink_build_artifacts
@@ -102,6 +107,7 @@ jobs:
         cp ../build_fade_tl321x/zephyr/zephyr.bin telink_build_artifacts/tl321x_tests_pwm.bin
         cp ../build_ot_cli_tl321x/zephyr/zephyr.bin telink_build_artifacts/tl321x_ot_cli.bin
         cp ../build_ot_coprocessor_rcp_uart_tl321x/zephyr/zephyr.bin telink_build_artifacts/tl321x_ot_coprocessor_rcp_uart.bin
+        cp ../build_usb_console_tl321x/zephyr/zephyr.bin telink_build_artifacts/tl321x_usb_console.bin
 
     - name: Publish artifacts
       uses: actions/upload-artifact@v3
