@@ -4,11 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#if CONFIG_SOC_RISCV_TELINK_B91
-#include "driver_b91.h"
-#elif CONFIG_SOC_RISCV_TELINK_B92
-#include "driver_b92.h"
-#elif CONFIG_SOC_RISCV_TELINK_B95
+#if CONFIG_SOC_RISCV_TELINK_TL721X
 #include "driver_b95.h"
 #elif CONFIG_SOC_RISCV_TELINK_TL321X
 #include "driver_tl321x.h"
@@ -27,21 +23,14 @@
 
 #include <soc.h>
 
-#if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
-#if (defined CONFIG_USB_TELINK_B9X && DT_PROP(DT_PATH(cpus, cpu_0), clock_frequency) != 48000000u) \
-&& (defined CONFIG_USB_TELINK_B9X && DT_PROP(DT_PATH(cpus, cpu_0), clock_frequency) != 96000000u)
-#error USB on B91 and B92 paltform requires CPU clocks frequency equal 48MHz or 96 MHz.
-#endif
-#endif
-
 #define LOG_LEVEL CONFIG_USB_DRIVER_LOG_LEVEL
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(usb_tlx);
 
 #define DT_DRV_COMPAT telink_tlx_usbd
 
-#define USBD_B9X_IRQN_BY_IDX(idx)	  DT_INST_IRQ_BY_IDX(0, idx, irq)
-#define USBD_B9X_IRQ_PRIORITY_BY_IDX(idx) DT_INST_IRQ_BY_IDX(0, idx, priority)
+#define USBD_TLX_IRQN_BY_IDX(idx)	  DT_INST_IRQ_BY_IDX(0, idx, irq)
+#define USBD_TLX_IRQ_PRIORITY_BY_IDX(idx) DT_INST_IRQ_BY_IDX(0, idx, priority)
 
 #define IS_REQUESTTYPE_DEV_TO_HOST(bmRT) (bmRT & 0x80)
 #define IS_REQUESTTYPE_HOST_TO_DEV(bmRT) (!(bmRT & 0x80))
@@ -59,7 +48,7 @@ static const uint8_t ep_en_bit[] = {0,
 				    FLD_USB_EDP7_EN,
 				    FLD_USB_EDP8_EN};
 
-#define USB_IN_EDP_IRQ_BITS                                                                        \
+#define USB_IN_EDP_IRQ_BITS                                                                    \
 	(FLD_USB_EDP1_IRQ | FLD_USB_EDP2_IRQ | FLD_USB_EDP3_IRQ | FLD_USB_EDP4_IRQ |               \
 	 FLD_USB_EDP7_IRQ | FLD_USB_EDP8_IRQ)
 #define USB_OUT_EDP_IRQ_BITS (FLD_USB_EDP5_IRQ | FLD_USB_EDP6_IRQ)
@@ -152,7 +141,7 @@ static struct ep_buf_t eps_buf_inf = {.init_list = {0, 0, 0, 0, 0, 0, 0, 0, 0},
  * @param type		Endpoint transfer type.
  * @param stall		Endpoint stall flag.
  */
-struct b9x_usbd_ep_cfg {
+struct tlx_usbd_ep_cfg {
 	usb_dc_ep_callback cb;
 	uint32_t max_sz;
 	bool en;
@@ -170,7 +159,7 @@ struct b9x_usbd_ep_cfg {
  * @param data			Pointer to data buffer for the endpoint.
  * @param current_pos	Pointer to the current offset in the endpoint buffer.
  */
-struct b9x_usbd_ep_buf {
+struct tlx_usbd_ep_buf {
 	uint32_t total_len;
 	uint32_t left_len;
 	uint32_t current_len;
@@ -186,9 +175,9 @@ uint8_t ep_data_buf[USBD_EPOUT_CNT + 1][EP_DATA_BUF_LEN]; /* Only for EP0ã€EP5ã
  * @param cfg	Endpoint configuration
  * @param buf	Endpoint buffer
  */
-struct b9x_usbd_ep_ctx {
-	struct b9x_usbd_ep_cfg cfg;
-	struct b9x_usbd_ep_buf buf;
+struct tlx_usbd_ep_ctx {
+	struct tlx_usbd_ep_cfg cfg;
+	struct tlx_usbd_ep_buf buf;
 	bool reading;
 	uint8_t writing_len;
 	struct k_timer retry_timer;
@@ -206,10 +195,10 @@ struct b9x_usbd_ep_ctx {
  * @param suspend			Suspend flag
  * @param suspend_ignore	Ignore suspend interrupt
  * @param usb_work			USBD work item
- * @param drv_lock			Mutex for thread-safe b9x driver use
+ * @param drv_lock			Mutex for thread-safe tlx driver use
  * @param ep_ctx			Endpoint contexts
  */
-struct b9x_usbd_ctx {
+struct tlx_usbd_ctx {
 	usb_dc_status_callback status_cb;
 	struct usb_setup_packet setup;
 	bool setup_Rsp;
@@ -220,10 +209,10 @@ struct b9x_usbd_ctx {
 	bool suspend_ignore;
 	struct k_work usb_work;
 	struct k_mutex drv_lock;
-	struct b9x_usbd_ep_ctx ep_ctx[USBD_EP_TOTAL_CNT];
+	struct tlx_usbd_ep_ctx ep_ctx[USBD_EP_TOTAL_CNT];
 };
 
-static struct b9x_usbd_ctx usbd_ctx = {
+static struct tlx_usbd_ctx usbd_ctx = {
 	.setup_Rsp = false,
 	.ctrl_zlp = false,
 	.attached = false,
@@ -232,7 +221,7 @@ static struct b9x_usbd_ctx usbd_ctx = {
 	.suspend_ignore = false,
 };
 
-static inline struct b9x_usbd_ctx *get_usbd_ctx(void)
+static inline struct tlx_usbd_ctx *get_usbd_ctx(void)
 {
 	return &usbd_ctx;
 }
@@ -273,9 +262,9 @@ static inline bool ep_is_valid(const uint8_t ep)
 }
 
 /** @brief Gets the structure pointer to the corresponding endpoint */
-static struct b9x_usbd_ep_ctx *endpoint_ctx(const uint8_t ep)
+static struct tlx_usbd_ep_ctx *endpoint_ctx(const uint8_t ep)
 {
-	struct b9x_usbd_ctx *ctx;
+	struct tlx_usbd_ctx *ctx;
 
 	if (!ep_is_valid(ep)) {
 		return NULL;
@@ -286,12 +275,12 @@ static struct b9x_usbd_ep_ctx *endpoint_ctx(const uint8_t ep)
 	return &ctx->ep_ctx[USB_EP_GET_IDX(ep)];
 }
 
-static struct b9x_usbd_ep_ctx *in_endpoint_ctx(const uint8_t ep)
+static struct tlx_usbd_ep_ctx *in_endpoint_ctx(const uint8_t ep)
 {
 	return endpoint_ctx(USBD_EPIN(ep));
 }
 
-static struct b9x_usbd_ep_ctx *out_endpoint_ctx(const uint8_t ep)
+static struct tlx_usbd_ep_ctx *out_endpoint_ctx(const uint8_t ep)
 {
 	return endpoint_ctx(USBD_EPOUT(ep));
 }
@@ -308,8 +297,8 @@ K_FIFO_DEFINE(usbd_evt_fifo);
  * a system work queue item waiting for a USB transfer to be finished.
  */
 static struct k_work_q usbd_work_queue;
-#if CONFIG_USB_TELINK_B9X || CONFIG_USB_TELINK_TLX
-static K_KERNEL_STACK_DEFINE(usbd_work_queue_stack, CONFIG_USB_B9X_WORK_QUEUE_STACK_SIZE);
+#if CONFIG_USB_TELINK_TLX
+static K_KERNEL_STACK_DEFINE(usbd_work_queue_stack, CONFIG_USB_TLX_WORK_QUEUE_STACK_SIZE);
 #endif
 
 static inline void usbd_work_schedule(void)
@@ -353,8 +342,8 @@ struct usbd_event {
 #define FIFO_ELEM_SZ	sizeof(struct usbd_event)
 #define FIFO_ELEM_ALIGN sizeof(uint32_t)
 
-#if CONFIG_USB_TELINK_B9X || CONFIG_USB_TELINK_TLX
-K_MEM_SLAB_DEFINE(fifo_elem_slab, FIFO_ELEM_SZ, CONFIG_USB_B9X_EVT_QUEUE_SIZE, FIFO_ELEM_ALIGN);
+#if CONFIG_USB_TELINK_TLX
+K_MEM_SLAB_DEFINE(fifo_elem_slab, FIFO_ELEM_SZ, CONFIG_USB_TLX_EVT_QUEUE_SIZE, FIFO_ELEM_ALIGN);
 #endif
 
 /**
@@ -412,7 +401,7 @@ static inline struct usbd_event *usbd_evt_alloc(void)
 
 		/*
 		 * Allocation may fail if workqueue thread is starved or event
-		 * queue size is too small (CONFIG_USB_B9x_EVT_QUEUE_SIZE).
+		 * queue size is too small (CONFIG_USB_TLX_EVT_QUEUE_SIZE).
 		 * Wipe all events, free the space and schedule
 		 * reinitialization.
 		 */
@@ -474,7 +463,7 @@ static void submit_usbd_event(enum usbd_event_type evt_type, uint8_t value)
  */
 static void ep_ctx_reset(enum usbd_endpoint_index_e ep_idx)
 {
-	struct b9x_usbd_ep_ctx *ep_ctx;
+	struct tlx_usbd_ep_ctx *ep_ctx;
 
 	if (ep_idx == USBD_EP0_IDX) {
 		usbhw_reset_ctrl_ep_ptr();
@@ -495,7 +484,7 @@ static void ep_ctx_reset(enum usbd_endpoint_index_e ep_idx)
 
 static void ep_buf_clear(uint8_t ep)
 {
-	struct b9x_usbd_ep_ctx *ep_ctx = endpoint_ctx(ep);
+	struct tlx_usbd_ep_ctx *ep_ctx = endpoint_ctx(ep);
 
 	ep_ctx->buf.current_pos = ep_ctx->buf.data;
 	ep_ctx->buf.total_len = 0;
@@ -504,7 +493,7 @@ static void ep_buf_clear(uint8_t ep)
 
 static void ep_buf_init(uint8_t ep)
 {
-	struct b9x_usbd_ep_ctx *ep_ctx = endpoint_ctx(ep);
+	struct tlx_usbd_ep_ctx *ep_ctx = endpoint_ctx(ep);
 
 	if (USB_EP_GET_IDX(ep) == USBD_EP0_IDX) {
 		ep_ctx->buf.data = ep_data_buf[0];
@@ -522,8 +511,8 @@ static uint32_t ep_write(uint8_t ep, const uint8_t *data, uint32_t data_len)
 {
 	uint16_t i;
 	uint8_t ep_idx = USB_EP_GET_IDX(ep);
-	struct b9x_usbd_ctx *ctx = get_usbd_ctx();
-	struct b9x_usbd_ep_ctx *ep_ctx = endpoint_ctx(ep);
+	struct tlx_usbd_ctx *ctx = get_usbd_ctx();
+	struct tlx_usbd_ep_ctx *ep_ctx = endpoint_ctx(ep);
 	uint32_t valid_len = 0;
 
 	k_mutex_lock(&ctx->drv_lock, K_FOREVER);
@@ -560,8 +549,8 @@ static uint32_t ep_write(uint8_t ep, const uint8_t *data, uint32_t data_len)
 
 static void usb_irq_setup_handler(void)
 {
-	struct b9x_usbd_ep_ctx *ep_ctx;
-	struct b9x_usbd_ctx *ctx = get_usbd_ctx();
+	struct tlx_usbd_ep_ctx *ep_ctx;
+	struct tlx_usbd_ctx *ctx = get_usbd_ctx();
 
 	memset(&ctx->setup, 0, sizeof(struct usb_setup_packet));
 	reg_usb_sups_cyc_cali = CTRL_EP_NORMAL_PACKET_REG_VALUE;
@@ -580,7 +569,7 @@ static void usb_irq_setup_handler(void)
 	if (get_usbd_ctx()->suspend) {
 		get_usbd_ctx()->suspend = false;
 		get_usbd_ctx()->suspend_ignore = true;
-		riscv_plic_irq_enable(USBD_B9X_IRQN_BY_IDX(5) - CONFIG_2ND_LVL_ISR_TBL_OFFSET);
+		riscv_plic_irq_enable(USBD_TLX_IRQN_BY_IDX(5) - CONFIG_2ND_LVL_ISR_TBL_OFFSET);
 		if (get_usbd_ctx()->status_cb) {
 			LOG_DBG("USB resume");
 			get_usbd_ctx()->status_cb(USB_DC_RESUME, NULL);
@@ -612,7 +601,7 @@ static void usb_irq_setup_handler(void)
 
 static void usb_ctrl_data_read_handler(void)
 {
-	struct b9x_usbd_ep_ctx *ep_ctx =
+	struct tlx_usbd_ep_ctx *ep_ctx =
 		endpoint_ctx(USB_EP_GET_ADDR(USBD_EP0_IDX, USB_EP_DIR_OUT));
 	uint32_t i = 0;
 	uint32_t len = 0;
@@ -646,8 +635,8 @@ static void usb_ctrl_data_read_handler(void)
 
 static void usb_ctrl_data_write_handler(void)
 {
-	struct b9x_usbd_ctx *ctx = get_usbd_ctx();
-	struct b9x_usbd_ep_ctx *ep_ctx =
+	struct tlx_usbd_ctx *ctx = get_usbd_ctx();
+	struct tlx_usbd_ep_ctx *ep_ctx =
 		endpoint_ctx(USB_EP_GET_ADDR(USBD_EP0_IDX, USB_EP_DIR_IN));
 
 	ep_ctx->cfg.cb(USB_EP_GET_ADDR(USBD_EP0_IDX, USB_EP_DIR_IN), USB_DC_EP_DATA_IN);
@@ -666,7 +655,7 @@ static void usb_ctrl_data_write_handler(void)
 
 static void usb_irq_data_handler(void)
 {
-	struct b9x_usbd_ctx *ctx = get_usbd_ctx();
+	struct tlx_usbd_ctx *ctx = get_usbd_ctx();
 
 	if (IS_REQUESTTYPE_HOST_TO_DEV(ctx->setup.bmRequestType)) {
 		usb_ctrl_data_read_handler();
@@ -706,7 +695,7 @@ static void usb_irq_reset_handler(void)
 	if (get_usbd_ctx()->suspend) {
 		get_usbd_ctx()->suspend = false;
 		get_usbd_ctx()->suspend_ignore = true;
-		riscv_plic_irq_enable(USBD_B9X_IRQN_BY_IDX(5) - CONFIG_2ND_LVL_ISR_TBL_OFFSET);
+		riscv_plic_irq_enable(USBD_TLX_IRQN_BY_IDX(5) - CONFIG_2ND_LVL_ISR_TBL_OFFSET);
 		if (get_usbd_ctx()->status_cb) {
 			LOG_DBG("USB resume");
 			get_usbd_ctx()->status_cb(USB_DC_RESUME, NULL);
@@ -748,7 +737,7 @@ static void usb_irq_status(void)
 
 static inline void usb_ep_send_zlp_if_needed(const uint8_t ep_idx)
 {
-	struct b9x_usbd_ep_ctx *ep_ctx;
+	struct tlx_usbd_ep_ctx *ep_ctx;
 
 	ep_ctx = in_endpoint_ctx(ep_idx);
 	if ((ep_ctx != NULL) && (ep_ctx->cfg.max_sz == ep_ctx->writing_len)) {
@@ -823,7 +812,7 @@ static void usb_irq_suspend(void)
 		get_usbd_ctx()->suspend_ignore = false;
 		return;
 	}
-	riscv_plic_irq_disable(USBD_B9X_IRQN_BY_IDX(5) - CONFIG_2ND_LVL_ISR_TBL_OFFSET);
+	riscv_plic_irq_disable(USBD_TLX_IRQN_BY_IDX(5) - CONFIG_2ND_LVL_ISR_TBL_OFFSET);
 	if (!get_usbd_ctx()->suspend) {
 		get_usbd_ctx()->suspend = true;
 		submit_usbd_event(USBD_EVT_SUSPEND, 0);
@@ -832,64 +821,61 @@ static void usb_irq_suspend(void)
 
 static int usb_irq_init(void)
 {
-	IRQ_CONNECT(USBD_B9X_IRQN_BY_IDX(0), USBD_B9X_IRQ_PRIORITY_BY_IDX(0), usb_irq_setup, 0, 0);
-	if (USBD_B9X_IRQN_BY_IDX(0) < CONFIG_2ND_LVL_ISR_TBL_OFFSET) {
+	IRQ_CONNECT(USBD_TLX_IRQN_BY_IDX(0), USBD_TLX_IRQ_PRIORITY_BY_IDX(0), usb_irq_setup, 0, 0);
+	if (USBD_TLX_IRQN_BY_IDX(0) < CONFIG_2ND_LVL_ISR_TBL_OFFSET) {
 		return -EINVAL;
 	}
-	riscv_plic_irq_enable(USBD_B9X_IRQN_BY_IDX(0) - CONFIG_2ND_LVL_ISR_TBL_OFFSET);
-	riscv_plic_set_priority(USBD_B9X_IRQN_BY_IDX(0) - CONFIG_2ND_LVL_ISR_TBL_OFFSET,
-				USBD_B9X_IRQ_PRIORITY_BY_IDX(0));
+	riscv_plic_irq_enable(USBD_TLX_IRQN_BY_IDX(0) - CONFIG_2ND_LVL_ISR_TBL_OFFSET);
+	riscv_plic_set_priority(USBD_TLX_IRQN_BY_IDX(0) - CONFIG_2ND_LVL_ISR_TBL_OFFSET,
+				USBD_TLX_IRQ_PRIORITY_BY_IDX(0));
 
-	IRQ_CONNECT(USBD_B9X_IRQN_BY_IDX(1), USBD_B9X_IRQ_PRIORITY_BY_IDX(1), usb_irq_data, 0, 0);
-	if (USBD_B9X_IRQN_BY_IDX(1) < CONFIG_2ND_LVL_ISR_TBL_OFFSET) {
+	IRQ_CONNECT(USBD_TLX_IRQN_BY_IDX(1), USBD_TLX_IRQ_PRIORITY_BY_IDX(1), usb_irq_data, 0, 0);
+	if (USBD_TLX_IRQN_BY_IDX(1) < CONFIG_2ND_LVL_ISR_TBL_OFFSET) {
 		return -EINVAL;
 	}
-	riscv_plic_irq_enable(USBD_B9X_IRQN_BY_IDX(1) - CONFIG_2ND_LVL_ISR_TBL_OFFSET);
-	riscv_plic_set_priority(USBD_B9X_IRQN_BY_IDX(1) - CONFIG_2ND_LVL_ISR_TBL_OFFSET,
-				USBD_B9X_IRQ_PRIORITY_BY_IDX(1));
+	riscv_plic_irq_enable(USBD_TLX_IRQN_BY_IDX(1) - CONFIG_2ND_LVL_ISR_TBL_OFFSET);
+	riscv_plic_set_priority(USBD_TLX_IRQN_BY_IDX(1) - CONFIG_2ND_LVL_ISR_TBL_OFFSET,
+				USBD_TLX_IRQ_PRIORITY_BY_IDX(1));
 
-	IRQ_CONNECT(USBD_B9X_IRQN_BY_IDX(2), USBD_B9X_IRQ_PRIORITY_BY_IDX(2), usb_irq_status, 0, 0);
-	if (USBD_B9X_IRQN_BY_IDX(2) < CONFIG_2ND_LVL_ISR_TBL_OFFSET) {
+	IRQ_CONNECT(USBD_TLX_IRQN_BY_IDX(2), USBD_TLX_IRQ_PRIORITY_BY_IDX(2), usb_irq_status, 0, 0);
+	if (USBD_TLX_IRQN_BY_IDX(2) < CONFIG_2ND_LVL_ISR_TBL_OFFSET) {
 		return -EINVAL;
 	}
-	riscv_plic_irq_enable(USBD_B9X_IRQN_BY_IDX(2) - CONFIG_2ND_LVL_ISR_TBL_OFFSET);
-	riscv_plic_set_priority(USBD_B9X_IRQN_BY_IDX(2) - CONFIG_2ND_LVL_ISR_TBL_OFFSET,
-				USBD_B9X_IRQ_PRIORITY_BY_IDX(2));
+	riscv_plic_irq_enable(USBD_TLX_IRQN_BY_IDX(2) - CONFIG_2ND_LVL_ISR_TBL_OFFSET);
+	riscv_plic_set_priority(USBD_TLX_IRQN_BY_IDX(2) - CONFIG_2ND_LVL_ISR_TBL_OFFSET,
+				USBD_TLX_IRQ_PRIORITY_BY_IDX(2));
 
-	IRQ_CONNECT(USBD_B9X_IRQN_BY_IDX(4), USBD_B9X_IRQ_PRIORITY_BY_IDX(4), usb_irq_eps, 0, 0);
-	if (USBD_B9X_IRQN_BY_IDX(4) < CONFIG_2ND_LVL_ISR_TBL_OFFSET) {
+	IRQ_CONNECT(USBD_TLX_IRQN_BY_IDX(4), USBD_TLX_IRQ_PRIORITY_BY_IDX(4), usb_irq_eps, 0, 0);
+	if (USBD_TLX_IRQN_BY_IDX(4) < CONFIG_2ND_LVL_ISR_TBL_OFFSET) {
 		return -EINVAL;
 	}
-	riscv_plic_irq_enable(USBD_B9X_IRQN_BY_IDX(4) - CONFIG_2ND_LVL_ISR_TBL_OFFSET);
-	riscv_plic_set_priority(USBD_B9X_IRQN_BY_IDX(4) - CONFIG_2ND_LVL_ISR_TBL_OFFSET,
-				USBD_B9X_IRQ_PRIORITY_BY_IDX(4));
+	riscv_plic_irq_enable(USBD_TLX_IRQN_BY_IDX(4) - CONFIG_2ND_LVL_ISR_TBL_OFFSET);
+	riscv_plic_set_priority(USBD_TLX_IRQN_BY_IDX(4) - CONFIG_2ND_LVL_ISR_TBL_OFFSET,
+				USBD_TLX_IRQ_PRIORITY_BY_IDX(4));
 
-	IRQ_CONNECT(USBD_B9X_IRQN_BY_IDX(5), USBD_B9X_IRQ_PRIORITY_BY_IDX(5), usb_irq_suspend, 0,
+	IRQ_CONNECT(USBD_TLX_IRQN_BY_IDX(5), USBD_TLX_IRQ_PRIORITY_BY_IDX(5), usb_irq_suspend, 0,
 		    0);
-	if (USBD_B9X_IRQN_BY_IDX(5) < CONFIG_2ND_LVL_ISR_TBL_OFFSET) {
+	if (USBD_TLX_IRQN_BY_IDX(5) < CONFIG_2ND_LVL_ISR_TBL_OFFSET) {
 		return -EINVAL;
 	}
-	riscv_plic_irq_enable(USBD_B9X_IRQN_BY_IDX(5) - CONFIG_2ND_LVL_ISR_TBL_OFFSET);
-	riscv_plic_set_priority(USBD_B9X_IRQN_BY_IDX(5) - CONFIG_2ND_LVL_ISR_TBL_OFFSET,
-				USBD_B9X_IRQ_PRIORITY_BY_IDX(5));
+	riscv_plic_irq_enable(USBD_TLX_IRQN_BY_IDX(5) - CONFIG_2ND_LVL_ISR_TBL_OFFSET);
+	riscv_plic_set_priority(USBD_TLX_IRQN_BY_IDX(5) - CONFIG_2ND_LVL_ISR_TBL_OFFSET,
+				USBD_TLX_IRQ_PRIORITY_BY_IDX(5));
 	get_usbd_ctx()->suspend_ignore = true;
 
-	IRQ_CONNECT(USBD_B9X_IRQN_BY_IDX(6), USBD_B9X_IRQ_PRIORITY_BY_IDX(6), usb_irq_reset, 0, 0);
-	if (USBD_B9X_IRQN_BY_IDX(6) < CONFIG_2ND_LVL_ISR_TBL_OFFSET) {
+	IRQ_CONNECT(USBD_TLX_IRQN_BY_IDX(6), USBD_TLX_IRQ_PRIORITY_BY_IDX(6), usb_irq_reset, 0, 0);
+	if (USBD_TLX_IRQN_BY_IDX(6) < CONFIG_2ND_LVL_ISR_TBL_OFFSET) {
 		return -EINVAL;
 	}
-	riscv_plic_irq_enable(USBD_B9X_IRQN_BY_IDX(6) - CONFIG_2ND_LVL_ISR_TBL_OFFSET);
-	riscv_plic_set_priority(USBD_B9X_IRQN_BY_IDX(6) - CONFIG_2ND_LVL_ISR_TBL_OFFSET,
-				USBD_B9X_IRQ_PRIORITY_BY_IDX(6));
+	riscv_plic_irq_enable(USBD_TLX_IRQN_BY_IDX(6) - CONFIG_2ND_LVL_ISR_TBL_OFFSET);
+	riscv_plic_set_priority(USBD_TLX_IRQN_BY_IDX(6) - CONFIG_2ND_LVL_ISR_TBL_OFFSET,
+				USBD_TLX_IRQ_PRIORITY_BY_IDX(6));
 
 	usbhw_enable_manual_interrupt(FLD_CTRL_EP_AUTO_CFG | FLD_CTRL_EP_AUTO_DESC |
 				FLD_CTRL_EP_AUTO_FEAT | FLD_CTRL_EP_AUTO_STD);
 	usbhw_set_eps_irq_mask(FLD_USB_EDP5_IRQ | FLD_USB_EDP6_IRQ);
 
-#if CONFIG_SOC_RISCV_TELINK_B91
-	usbhw_set_irq_mask(USB_IRQ_RESET_MASK | USB_IRQ_SUSPEND_MASK);
-#endif
-#if CONFIG_SOC_RISCV_TELINK_B95 || CONFIG_SOC_RISCV_TELINK_TL321X
+#if CONFIG_SOC_RISCV_TELINK_TL721X || CONFIG_SOC_RISCV_TELINK_TL321X
 	usbhw_set_irq_mask(USB_IRQ_RESET_MASK | USB_IRQ_SUSPEND_MASK |
 				USB_IRQ_SETUP_MASK | USB_IRQ_DATA_MASK | USB_IRQ_STATUS_MASK);
 #endif
@@ -909,7 +895,7 @@ static int usb_irq_init(void)
  */
 int usb_dc_attach(void)
 {
-	struct b9x_usbd_ctx *ctx = get_usbd_ctx();
+	struct tlx_usbd_ctx *ctx = get_usbd_ctx();
 	uint32_t i;
 
 	if (ctx->attached) {
@@ -939,8 +925,8 @@ int usb_dc_attach(void)
  */
 int usb_dc_detach(void)
 {
-	struct b9x_usbd_ctx *ctx = get_usbd_ctx();
-	struct b9x_usbd_ep_ctx *ep_ctx;
+	struct tlx_usbd_ctx *ctx = get_usbd_ctx();
+	struct tlx_usbd_ep_ctx *ep_ctx;
 	uint8_t i;
 
 	k_mutex_lock(&ctx->drv_lock, K_FOREVER);
@@ -1088,7 +1074,7 @@ int usb_dc_ep_check_cap(const struct usb_dc_ep_cfg_data *const ep_cfg)
  */
 int usb_dc_ep_configure(const struct usb_dc_ep_cfg_data *const ep_cfg)
 {
-	struct b9x_usbd_ep_ctx *ep_ctx;
+	struct tlx_usbd_ep_ctx *ep_ctx;
 	uint8_t i;
 	uint8_t ep_idx = USB_EP_GET_IDX(ep_cfg->ep_addr);
 
@@ -1160,7 +1146,7 @@ int usb_dc_ep_configure(const struct usb_dc_ep_cfg_data *const ep_cfg)
  */
 int usb_dc_ep_set_stall(const uint8_t ep)
 {
-	struct b9x_usbd_ep_ctx *ep_ctx;
+	struct tlx_usbd_ep_ctx *ep_ctx;
 
 	if (!dev_attached() || !dev_ready()) {
 		return -ENODEV;
@@ -1187,7 +1173,7 @@ int usb_dc_ep_set_stall(const uint8_t ep)
  */
 int usb_dc_ep_clear_stall(const uint8_t ep)
 {
-	struct b9x_usbd_ep_ctx *ep_ctx;
+	struct tlx_usbd_ep_ctx *ep_ctx;
 
 	if (!dev_attached() || !dev_ready()) {
 		return -ENODEV;
@@ -1213,7 +1199,7 @@ int usb_dc_ep_clear_stall(const uint8_t ep)
  */
 int usb_dc_ep_is_stalled(const uint8_t ep, uint8_t *const stalled)
 {
-	struct b9x_usbd_ep_ctx *ep_ctx;
+	struct tlx_usbd_ep_ctx *ep_ctx;
 
 	if (!dev_attached() || !dev_ready()) {
 		return -ENODEV;
@@ -1260,7 +1246,7 @@ int usb_dc_ep_halt(const uint8_t ep)
  */
 int usb_dc_ep_enable(const uint8_t ep)
 {
-	struct b9x_usbd_ep_ctx *ep_ctx;
+	struct tlx_usbd_ep_ctx *ep_ctx;
 
 	if (!dev_attached()) {
 		return -ENODEV;
@@ -1298,7 +1284,7 @@ int usb_dc_ep_enable(const uint8_t ep)
  */
 int usb_dc_ep_disable(const uint8_t ep)
 {
-	struct b9x_usbd_ep_ctx *ep_ctx;
+	struct tlx_usbd_ep_ctx *ep_ctx;
 
 	if (!dev_attached() || !dev_ready()) {
 		return -ENODEV;
@@ -1333,7 +1319,7 @@ int usb_dc_ep_disable(const uint8_t ep)
  */
 int usb_dc_ep_flush(const uint8_t ep)
 {
-	struct b9x_usbd_ep_ctx *ep_ctx;
+	struct tlx_usbd_ep_ctx *ep_ctx;
 
 	if (!dev_attached() || !dev_ready()) {
 		return -ENODEV;
@@ -1369,7 +1355,7 @@ int usb_dc_ep_flush(const uint8_t ep)
 int usb_dc_ep_write(const uint8_t ep, const uint8_t *const data, const uint32_t data_len,
 		    uint32_t *const ret_bytes)
 {
-	struct b9x_usbd_ep_ctx *ep_ctx;
+	struct tlx_usbd_ep_ctx *ep_ctx;
 
 	LOG_DBG("ep 0x%02x, len %d", ep, data_len);
 
@@ -1457,7 +1443,7 @@ int usb_dc_ep_read(const uint8_t ep, uint8_t *const data, const uint32_t max_dat
  */
 int usb_dc_ep_set_callback(const uint8_t ep, const usb_dc_ep_callback cb)
 {
-	struct b9x_usbd_ep_ctx *ep_ctx;
+	struct tlx_usbd_ep_ctx *ep_ctx;
 
 	if (!dev_attached()) {
 		return -ENODEV;
@@ -1493,8 +1479,8 @@ int usb_dc_ep_set_callback(const uint8_t ep, const usb_dc_ep_callback cb)
  */
 int usb_dc_ep_read_wait(uint8_t ep, uint8_t *data, uint32_t max_data_len, uint32_t *read_bytes)
 {
-	struct b9x_usbd_ep_ctx *ep_ctx;
-	struct b9x_usbd_ctx *ctx = get_usbd_ctx();
+	struct tlx_usbd_ep_ctx *ep_ctx;
+	struct tlx_usbd_ctx *ctx = get_usbd_ctx();
 	uint32_t bytes_to_copy;
 
 	if (!dev_attached() || !dev_ready()) {
@@ -1554,7 +1540,7 @@ int usb_dc_ep_read_wait(uint8_t ep, uint8_t *data, uint32_t max_data_len, uint32
  */
 int usb_dc_ep_read_continue(uint8_t ep)
 {
-	struct b9x_usbd_ep_ctx *ep_ctx;
+	struct tlx_usbd_ep_ctx *ep_ctx;
 
 	if (!dev_attached() || !dev_ready()) {
 		return -ENODEV;
@@ -1593,7 +1579,7 @@ int usb_dc_ep_read_continue(uint8_t ep)
  */
 int usb_dc_ep_mps(uint8_t ep)
 {
-	struct b9x_usbd_ep_ctx *ep_ctx;
+	struct tlx_usbd_ep_ctx *ep_ctx;
 
 	if (!dev_attached()) {
 		return -ENODEV;
@@ -1628,8 +1614,8 @@ static void ep_read(enum usbd_endpoint_index_e ep_idx)
 {
 	uint8_t i;
 	uint8_t len;
-	struct b9x_usbd_ep_ctx *ep_ctx;
-	struct b9x_usbd_ctx *ctx = get_usbd_ctx();
+	struct tlx_usbd_ep_ctx *ep_ctx;
+	struct tlx_usbd_ctx *ctx = get_usbd_ctx();
 
 	if ((ep_idx != USBD_OUT_EP5_IDX) && (ep_idx != USBD_OUT_EP6_IDX)) {
 		LOG_ERR("EP%d is only for IN.", ep_idx);
@@ -1655,11 +1641,11 @@ static void ep_read(enum usbd_endpoint_index_e ep_idx)
 
 static void usbd_work_handler(struct k_work *item)
 {
-	struct b9x_usbd_ctx *ctx;
-	struct b9x_usbd_ep_ctx *ep_ctx;
+	struct tlx_usbd_ctx *ctx;
+	struct tlx_usbd_ep_ctx *ep_ctx;
 	struct usbd_event *ev;
 
-	ctx = CONTAINER_OF(item, struct b9x_usbd_ctx, usb_work);
+	ctx = CONTAINER_OF(item, struct tlx_usbd_ctx, usb_work);
 	while ((ev = usbd_evt_get()) != NULL) {
 		if (!dev_ready()) {
 			usbd_evt_free(ev);
@@ -1764,7 +1750,7 @@ static void usbd_work_handler(struct k_work *item)
 
 static void usbd_retry_timer_expire(struct k_timer *timer)
 {
-	struct b9x_usbd_ep_ctx *ep_ctx = k_timer_user_data_get(timer);
+	struct tlx_usbd_ep_ctx *ep_ctx = k_timer_user_data_get(timer);
 
 	submit_usbd_event(USBD_EVT_EP_RETRY, ep_ctx - usbd_ctx.ep_ctx);
 }
@@ -1774,7 +1760,7 @@ static int usb_init(void)
 	int ret;
 
 	reg_wakeup_en = 0;
-#if CONFIG_SOC_RISCV_TELINK_B95 || CONFIG_SOC_RISCV_TELINK_TL321X
+#if CONFIG_SOC_RISCV_TELINK_TL721X || CONFIG_SOC_RISCV_TELINK_TL321X
 	usbhw_init();
 	usbhw_set_ctrl_ep_size(SIZE_64_BYTE);
 #endif

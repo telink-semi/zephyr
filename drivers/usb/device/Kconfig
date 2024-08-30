@@ -187,6 +187,24 @@ config USB_TELINK_B9X
 	help
 	  B9x USB Device Controller Driver
 
+config USB_B9X_EVT_QUEUE_SIZE
+	int "USBD event queue size"
+	range 4 64
+	default 32
+	depends on USB_TELINK_B9X
+	help
+	  Size of the driver internal event queue.
+	  Required size will depend on number of endpoints (class instances) in use.
+
+config USB_B9X_WORK_QUEUE_STACK_SIZE
+	int "USBD work queue stack size"
+	default 1024
+	depends on USB_TELINK_B9X
+	help
+	  Size of the stack for the work queue thread that is used in the driver
+	  for handling the events from the USBD ISR, i.e. executing endpoint
+	  callbacks and providing proper notifications to the USB device stack.
+
 config USB_TELINK_TLX
 	bool "Telink Semiconductor USB Device Controller Driver for TLx"
 	default y
@@ -195,19 +213,19 @@ config USB_TELINK_TLX
 	help
 	  TLx USB Device Controller Driver
 
-config USB_B9X_EVT_QUEUE_SIZE
+config USB_TLX_EVT_QUEUE_SIZE
 	int "USBD event queue size"
 	range 4 64
 	default 32
-	depends on USB_TELINK_B9X || USB_TELINK_TLX
+	depends on USB_TELINK_TLX
 	help
-	  Size of the driver's internal event queue.
+	  Size of the driver internal event queue.
 	  Required size will depend on number of endpoints (class instances) in use.
 
-config USB_B9X_WORK_QUEUE_STACK_SIZE
+config USB_TLX_WORK_QUEUE_STACK_SIZE
 	int "USBD work queue stack size"
 	default 1024
-	depends on USB_TELINK_B9X || USB_TELINK_TLX
+	depends on USB_TELINK_TLX
 	help
 	  Size of the stack for the work queue thread that is used in the driver
 	  for handling the events from the USBD ISR, i.e. executing endpoint
