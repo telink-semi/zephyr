@@ -2052,6 +2052,7 @@ int zsock_setsockopt_ctx(struct net_context *ctx, int level, int optname,
 			break;
 
 		case SO_REUSEADDR:
+		case SO_REUSEPORT:
 			/* Ignore for now. Provided to let port
 			 * existing apps.
 			 */
