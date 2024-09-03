@@ -427,7 +427,7 @@ static int wifi_w91_scan(const struct device *dev, scan_result_cb_t cb)
 	const struct wifi_w91_config *cfg = dev->config;
 	struct wifi_w91_data *data = dev->data;
 
-	if (data->base.scan_cb != NULL) {
+	if (data->base.if_state.state == WIFI_STATE_SCANNING) {
 		LOG_INF("Scan callback in progress");
 		return -EINPROGRESS;
 	}
@@ -647,29 +647,37 @@ static bool unpack_wifi_w91_event_scan_done_cb(void *unpack_data,
 	IPC_DISPATCHER_UNPACK_FIELD(pack_data, p_evt->id);
 	IPC_DISPATCHER_UNPACK_FIELD(pack_data, p_evt->param.scan_done.number);
 
-	p_evt->param.scan_done.ap_info = malloc(sizeof(*ap_info) * p_evt->param.scan_done.number);
-	if (p_evt->param.scan_done.ap_info == NULL) {
-		LOG_ERR("No memory for wifi event (scan done)");
-		return false;
-	}
+	if (p_evt->param.scan_done.number) {
+		p_evt->param.scan_done.ap_info =
+			malloc(sizeof(*ap_info) * p_evt->param.scan_done.number);
+		if (p_evt->param.scan_done.ap_info == NULL) {
+			LOG_ERR("No memory for wifi event (scan done)");
+			return false;
+		}
 
-	for (uint8_t i = 0; i < p_evt->param.scan_done.number; i++) {
-		ap_info = &p_evt->param.scan_done.ap_info[i];
+		for (uint8_t i = 0; i < p_evt->param.scan_done.number; i++) {
+			ap_info = &p_evt->param.scan_done.ap_info[i];
 
-		IPC_DISPATCHER_UNPACK_FIELD(pack_data, ap_info->ssid_len);
-		IPC_DISPATCHER_UNPACK_ARRAY(pack_data, ap_info->ssid, ap_info->ssid_len);
-		IPC_DISPATCHER_UNPACK_FIELD(pack_data, ap_info->channel);
-		IPC_DISPATCHER_UNPACK_FIELD(pack_data, ap_info->authmode);
-		IPC_DISPATCHER_UNPACK_FIELD(pack_data, ap_info->rssi);
-		IPC_DISPATCHER_UNPACK_ARRAY(pack_data, ap_info->bssid, sizeof(ap_info->bssid));
+			IPC_DISPATCHER_UNPACK_FIELD(pack_data, ap_info->ssid_len);
+			IPC_DISPATCHER_UNPACK_ARRAY(pack_data, ap_info->ssid, ap_info->ssid_len);
+			IPC_DISPATCHER_UNPACK_FIELD(pack_data, ap_info->channel);
+			IPC_DISPATCHER_UNPACK_FIELD(pack_data, ap_info->authmode);
+			IPC_DISPATCHER_UNPACK_FIELD(pack_data, ap_info->rssi);
+			IPC_DISPATCHER_UNPACK_ARRAY(pack_data,
+				ap_info->bssid, sizeof(ap_info->bssid));
 
-		expect_len += sizeof(ap_info->ssid_len) + ap_info->ssid_len +
-			sizeof(ap_info->channel) + sizeof(ap_info->authmode) +
-			sizeof(ap_info->rssi) + sizeof(ap_info->bssid);
+			expect_len += sizeof(ap_info->ssid_len) + ap_info->ssid_len +
+				sizeof(ap_info->channel) + sizeof(ap_info->authmode) +
+				sizeof(ap_info->rssi) + sizeof(ap_info->bssid);
+		}
+	} else {
+		p_evt->param.scan_done.ap_info = NULL;
 	}
 
 	if (expect_len != pack_data_len) {
-		free(p_evt->param.scan_done.ap_info);
+		if (p_evt->param.scan_done.ap_info) {
+			free(p_evt->param.scan_done.ap_info);
+		}
 		return false;
 	}
 
@@ -839,7 +847,6 @@ static void wifi_w91_even_scan_done_handler(struct wifi_w91_data *data,
 
 			if (data->base.scan_cb) {
 				data->base.scan_cb(data->base.iface, 0, &scan_result);
-
 				/* ensure notifications get delivered */
 				k_yield();
 			} else {
@@ -850,12 +857,6 @@ static void wifi_w91_even_scan_done_handler(struct wifi_w91_data *data,
 
 	if (event->ap_info) {
 		free(event->ap_info);
-	}
-
-	if (data->base.scan_cb) {
-		/* report end of scan event */
-		data->base.scan_cb(data->base.iface, 0, NULL);
-		data->base.scan_cb = NULL;
 	}
 }
 
@@ -923,6 +924,10 @@ static void wifi_w91_event_thread(void *p1, void *p2, void *p3)
 			wifi_w91_reset_state(&data->base.if_state);
 			data->base.if_state.state = WIFI_STATE_DISCONNECTED;
 			data->base.if_state.iface_mode = WIFI_MODE_INFRA;
+			if (data->base.scan_cb) {
+				/* report end of scan event */
+				data->base.scan_cb(data->base.iface, 0, NULL);
+			}
 			break;
 		case WIFI_W91_EVENT_AP_START:
 			data->base.state = WIFI_W91_AP_STARTED;
