@@ -16,7 +16,7 @@
 #include <zephyr/storage/flash_map.h>
 
 #if (defined(CONFIG_BT_TLX) || defined(CONFIG_IEEE802154))
-#include "b9x_bt_flash.h"
+#include "tlx_bt_flash.h"
 #endif
 
 /* List of supported CCLK frequencies */
