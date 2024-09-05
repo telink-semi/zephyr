@@ -9,7 +9,11 @@
 #include <zephyr/sys/byteorder.h>
 #include <zephyr/drivers/bluetooth/hci_driver.h>
 
+#if CONFIG_SOC_RISCV_TELINK_TL321X
+#include <tlx_bt.h>
+#else
 #include <b9x_bt.h>
+#endif
 
 #define LOG_LEVEL CONFIG_BT_HCI_DRIVER_LOG_LEVEL
 #include <zephyr/logging/log.h>
