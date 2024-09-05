@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Telink Semiconductor
+ * Copyright (c) 2024 Telink Semiconductor
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -182,9 +182,30 @@ void soc_b9x_restore(void)
 	}
 }
 
+#if CONFIG_SOC_RISCV_TELINK_TL721X
 #include "flash/flash_common.h"
 #include "flash_base.h"
+/**
+ * @brief       This function is used to set the use of four lines when reading and writing flash.
+ * @param[in]   device_num	- the number of slave device.
+ * @param[in]   flash_mid	- the mid of flash.
+ * @return      1: success, 0: error, 2: mid is not supported.
+ */
+unsigned char flash_set_4line_read_write(mspi_slave_device_num_e device_num, unsigned int flash_mid)
+{
+	unsigned char status = flash_4line_en_with_device_num(device_num, flash_mid);
 
+	if (status == 1) {
+		flash_read_page = flash_4read;
+		flash_set_rd_xip_config_sram(device_num, FLASH_X4READ_CMD);
+		flash_write_page = flash_quad_page_program;
+	}
+
+	return status;
+}
+#elif CONFIG_SOC_RISCV_TELINK_TL321X
+#include "flash/flash_common.h"
+#include "flash_base.h"
 /**
  * @brief       This function is used to set the use of four lines when reading and writing flash.
  * @param[in]   flash_mid   - the mid of flash.
@@ -192,17 +213,17 @@ void soc_b9x_restore(void)
  */
 unsigned char flash_set_4line_read_write(unsigned int flash_mid)
 {
-
 	unsigned char status = flash_4line_en(flash_mid);
 
 	if (status == 1) {
 		flash_read_page = flash_4read;
-		flash_set_xip_config(FLASH_X4READ_CMD);
+		flash_set_rd_xip_config_sram(FLASH_X4READ_CMD);
 		flash_write_page = flash_quad_page_program;
 	}
 
 	return status;
 }
+#endif
 
 /**
  * @brief Check mounted flash size (should be greater than in .dts).
@@ -217,8 +238,11 @@ static int soc_b9x_check_flash(void)
 	mid = flash_read_mid();
 	hw_flash_cap = (flash_capacity_e)((mid & FLASH_MID_SIZE_MASK) >> FLASH_MID_SIZE_OFFSET);
 
-	/* Enable 4x SPI read and write */
+	/* Enable Quad SPI (4x) read and write mode */
 	if (flash_set_4line_read_write(mid) != 1) {
+		printk("Error: Failed to switch flash model 0x%X to quad mode\n", mid);
+	} else {
+		printk("Flash model 0x%X successfully set to quad mode\n", mid);
 	}
 
 	switch (hw_flash_cap) {
@@ -263,4 +287,4 @@ __attribute__((noinline)) void telink_bt_blc_mac_init(uint8_t *bt_mac)
 
 SYS_INIT(soc_b9x_init, PRE_KERNEL_1, 0);
 
-/* SYS_INIT(soc_b9x_check_flash, POST_KERNEL, 0); */
+SYS_INIT(soc_b9x_check_flash, POST_KERNEL, 0);

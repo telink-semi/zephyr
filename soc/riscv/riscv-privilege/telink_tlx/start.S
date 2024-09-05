@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Telink Semiconductor
+ * Copyright (c) 2024 Telink Semiconductor
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -28,20 +28,12 @@ entry:
 #if defined(CONFIG_TELINK_TLX_2_WIRE_SPI_ENABLE) && CONFIG_TELINK_TLX_2_WIRE_SPI_ENABLE
 	.word (0x3b4097a9)              #/ 2 - wire SPI interface
 #else
-	.word (0x3b4097a9)              #/ 4 - wire SPI interface set in soc_b9x_check_flash
+	.word (0x3b4097a9)              #/ 4 - wire SPI interface set in soc_tlx_check_flash
 #endif
 
 	.align 2
 
 start:
-
-#if defined(CONFIG_TELINK_B91_USB_SWI_DISABLE) && CONFIG_TELINK_B91_USB_SWI_DISABLE
-	/* USB SWI disable: 0x80100c01 <- 0x40 */
-	lui    t0, 0x80100
-	addi   t0, t0, 0x700
-	li     t1, 0x40
-	sb     t1, 0x501(t0)
-#endif
 
 	/* Disable vector mode */
 	csrci  0x7d0, 2
@@ -164,14 +156,6 @@ retention_entry:
 
 retention_start:
 
-#if defined(CONFIG_TELINK_B91_USB_SWI_DISABLE) && CONFIG_TELINK_B91_USB_SWI_DISABLE
-	/* USB SWI disable: 0x80100c01 <- 0x40 */
-	lui    t0, 0x80100
-	addi   t0, t0, 0x700
-	li     t1, 0x40
-	sb     t1, 0x501(t0)
-#endif
-
 	/* Enable I/D-Cache */
 	csrr   t0, NDS_MCACHE_CTL
 	ori    t0, t0, 1                #/ I-Cache
@@ -184,35 +168,7 @@ retention_start:
 	csrs   NDS_MMISC_CTL, t0
 
 	/* flash wakeup */
-#if CONFIG_SOC_RISCV_TELINK_B91
-_WAKEUP_FLASH:
-	lui    t0, 0x80140
-	li     t1, 0xff
-	li     t2, 0x0
-	li     t3, 0xab
-	sb     t1, 0x329(t0)            #/ mspi ie enable   : 0x140329 : 0x1f
-	sb     t2, 0x101(t0)            #/ cs_low           : 0x140101 : 0x00
-	sb     t3, 0x100(t0)            #/ wakeup_cmd       : 0x140100 : 0xab
-_MSPI_WAIT:
-	lui    t0, 0x80140
-	lb     t2, 0x102 (t0)           #/ read reg_mspi_status FLD_MSPI_BUSY(bit0)
-	li     t3, 0x1
-	li     t4, 0x10
-	beq    t3, t2, _MSPI_WAIT
-	sb     t4, 0x101(t0)            #/ cs_high           : 0x140101 : 0x10
-	/* efuse load need delay about 18us */
-	li     t0, 0
-	li     t1, 226
-_WAIT_EFUSE_LOAD_FINISH:
-	addi   t0, t0, 1
-	bgeu   t1, t0, _WAIT_EFUSE_LOAD_FINISH
-
-_MULTI_ADDRESS_BEGIN:
-	lui    t0, 0x80140
-	la     t1, g_pm_multi_addr
-	lw     t2, 0(t1)
-	sw     t2, 0x104(t0)            #/ g_pm_multi_addr->0x80140104
-#elif CONFIG_SOC_RISCV_TELINK_B92 || CONFIG_SOC_RISCV_TELINK_B95 || CONFIG_SOC_RISCV_TELINK_TL321X
+#if CONFIG_SOC_RISCV_TELINK_TL721X || CONFIG_SOC_RISCV_TELINK_TL321X
 	/* we are not in ISR so use ISR stack to restore registers */
 	la     sp, z_interrupt_stacks
 	li     t0, CONFIG_ISR_STACK_SIZE
