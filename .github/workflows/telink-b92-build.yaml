@@ -49,6 +49,11 @@ jobs:
         cd ..
         west build -b tlsr9528a                  -d build_blinky_pm_b92                 zephyr/samples/basic/blinky                              -- -DCONFIG_PM=y
 
+    - name: Build B92 samples/drivers/spi_flash
+      run: |
+        cd ..
+        west build -b tlsr9528a                  -d build_spi_flash_b92                 zephyr/samples/drivers/spi_flash
+
     - name: Build B92 bluetooth/peripheral_ht
       run: |
         cd ..
@@ -129,6 +134,7 @@ jobs:
         mkdir telink_build_artifacts
         cp ../build_blinky_b92/zephyr/zephyr.bin                    telink_build_artifacts/b92_blinky.bin
         cp ../build_blinky_pm_b92/zephyr/zephyr.bin                 telink_build_artifacts/b92_blinky_pm.bin
+        cp ../build_spi_flash_b92/zephyr/zephyr.bin                 telink_build_artifacts/b92_spi_flash.bin
         cp ../build_bt_peripheral_ht_b92/zephyr/zephyr.bin          telink_build_artifacts/b92_bt_peripheral_ht.bin
         cp ../build_bt_peripheral_ht_pm_b92/zephyr/zephyr.bin       telink_build_artifacts/b92_bt_peripheral_ht_pm.bin
         cp ../build_ot_coprocessor_rcp_uart_b92/zephyr/zephyr.bin   telink_build_artifacts/b92_ot_coprocessor_rcp_uart.bin
