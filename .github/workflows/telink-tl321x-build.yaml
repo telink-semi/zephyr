@@ -74,6 +74,11 @@ jobs:
         cd ..
         west build -b tl3218x     -d build_tests_flash_tl321x                 zephyr/tests/drivers/flash/common
 
+    - name: Build TL321x samples/drivers/spi_flash
+      run: |
+        cd ..
+        west build -b tl3218x     -d build_spi_flash_tl321x                    zephyr/samples/drivers/spi_flash
+
     - name: Build TL321x samples/basic/fade_led/
       run: |
         cd ..
@@ -109,6 +114,7 @@ jobs:
         cp ../build_adc_tl321x/zephyr/zephyr.bin                        telink_build_artifacts/tl321x_adc.bin
         cp ../build_watchdog_tl321x/zephyr/zephyr.bin                   telink_build_artifacts/tl321x_watchdog.bin
         cp ../build_tests_flash_tl321x/zephyr/zephyr.bin                telink_build_artifacts/tl321x_tests_flash.bin
+        cp ../build_spi_flash_tl321x/zephyr/zephyr.bin                  telink_build_artifacts/tl321x_spi_flash.bin
         cp ../build_fade_tl321x/zephyr/zephyr.bin                       telink_build_artifacts/tl321x_tests_pwm.bin
         cp ../build_ot_cli_tl321x/zephyr/zephyr.bin                     telink_build_artifacts/tl321x_ot_cli.bin
         cp ../build_ot_coprocessor_rcp_uart_tl321x/zephyr/zephyr.bin    telink_build_artifacts/tl321x_ot_coprocessor_rcp_uart.bin
