@@ -10,21 +10,6 @@
 
 #include <zephyr/devicetree.h>
 #include <zephyr/linker/linker-tool.h>
-
-MEMORY
-{
-#if !CONFIG_SOC_SERIES_RISCV_TELINK_TLX_RETENTION
-
-	RAMILM       (rwx) : ORIGIN = DT_REG_ADDR(DT_NODELABEL(ram_ilm)),              LENGTH = DT_REG_SIZE(DT_NODELABEL(ram_ilm))
-
-#else
-
-    RAM_ILM_N    (rwx) : ORIGIN = DT_REG_ADDR(DT_NODELABEL(ram_ilm_nonretention)), LENGTH = DT_REG_SIZE(DT_NODELABEL(ram_ilm_nonretention))
-    RAM_DLM      (rwx) : ORIGIN = DT_REG_ADDR(DT_NODELABEL(ram_dlm)),              LENGTH = DT_REG_SIZE(DT_NODELABEL(ram_dlm))
-
-#endif /* CONFIG_SOC_SERIES_RISCV_TELINK_TLX_RETENTION */
-}
-
 #include <zephyr/arch/riscv/common/linker.ld>
 
 #ifdef CONFIG_MCUBOOT
