@@ -87,11 +87,11 @@ class SCTOOLBinaryRunner(ZephyrBinaryRunner):
                 print(f'N22 FW not exist {n22_fw_bin}')
                 exit()
             # erase N22 area
-            erase = subprocess.Popen(['./sctool', '-p', self.usb_port, '-da', 'da/da.ram.bin', '-b', '115200', '--manual', 'flash_erase', '0x80300000', '0x100000'], cwd=self.sctool_path)
+            erase = subprocess.Popen(['./sctool', '-p', self.usb_port, '-da', 'da/da.ram.bin', '-b', '115200', '--manual', 'flash_erase', '0x80140000', '0xc7000'], cwd=self.sctool_path)
             if erase.wait():
                 exit()
             # flash N22 FW
-            flash = subprocess.Popen(['./sctool', '-p', self.usb_port, '-da', 'da/da.ram.bin', '--after', 'hw_reset', '-b', '115200', '--manual', 'flash_write', '0x80300000', n22_fw_bin], cwd=self.sctool_path)
+            flash = subprocess.Popen(['./sctool', '-p', self.usb_port, '-da', 'da/da.ram.bin', '--after', 'hw_reset', '-b', '115200', '--manual', 'flash_write', '0x80140000', n22_fw_bin], cwd=self.sctool_path)
             if flash.wait():
                 exit()
             print('N22 FW done!')

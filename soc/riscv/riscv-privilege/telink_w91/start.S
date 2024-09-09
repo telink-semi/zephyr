@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Telink Semiconductor
+ * Copyright (c) 2024 Telink Semiconductor
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -9,7 +9,7 @@
 
 #include "soc.h"
 
-#define N22_CORE_START (DT_REG_ADDR(DT_CHOSEN(zephyr_flash)) + DT_REG_SIZE(DT_CHOSEN(zephyr_flash)))
+#define N22_CORE_START (DT_REG_ADDR(DT_CHOSEN(zephyr_flash)) + DT_REG_ADDR(DT_NODELABEL(n22_partition)))
 #define IPC_REMOTE_TX_START (DT_REG_ADDR(DT_N_NODELABEL_sram_rx))
 #define IPC_REMOTE_TX_END (IPC_REMOTE_TX_START + DT_REG_SIZE(DT_N_NODELABEL_sram_rx))
 

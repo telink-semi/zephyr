@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Telink Semiconductor
+ * Copyright (c) 2024 Telink Semiconductor
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -72,6 +72,8 @@
 };
 
 &flash {
+	reg = <0x80000000 0x400000>;
+
 	partitions {
 		compatible = "fixed-partitions";
 		#address-cells = <1>;
@@ -83,23 +85,31 @@
 		};
 		slot0_partition: partition@20000 {
 			label = "image-0";
-			reg = <0x20000 0x68000>;
+			reg = <0x20000 0x120000>;
 		};
-		slot1_partition: partition@88000 {
+		n22_partition: partition@140000 { // Don't change n22_partition
+			label = "image-n22";
+			reg = <0x140000 0xc7000>;
+		};
+		slot1_partition: partition@207000 {
 			label = "image-1";
-			reg = <0x88000 0x68000>;
+			reg = <0x207000 0x120000>;
 		};
-		scratch_partition: partition@f0000 {
+		scratch_partition: partition@327000 {
 			label = "image-scratch";
-			reg = <0xf0000 0x4000>;
+			reg = <0x327000 0x4000>;
 		};
-		storage_partition: partition@f4000 {
+		storage_partition: partition@32b000 {
 			label = "storage";
-			reg = <0xf4000 0xa000>;
+			reg = <0x32b000 0xa000>;
 		};
-		vendor_partition: partition@fe000 {
+		free_space_partition: partition@335000 {
+			label = "free-space";
+			reg = <0x335000 0xc9000>;
+		};
+		vendor_partition: partition@3fe000 {
 			label = "vendor-data";
-			reg = <0xfe000 0x2000>;
+			reg = <0x3fe000 0x2000>;
 		};
 	};
 };
