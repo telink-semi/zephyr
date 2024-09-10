@@ -72,8 +72,6 @@
 };
 
 &flash {
-	reg = <0x80000000 0x400000>;
-
 	partitions {
 		compatible = "fixed-partitions";
 		#address-cells = <1>;
