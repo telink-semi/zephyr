@@ -36,15 +36,15 @@ static inline size_t nvs_lookup_cache_pos(uint16_t id)
 #else
 	pos = crc16_ccitt(0xffff, (const uint8_t *)&id, sizeof(id));
 #endif
-	
+
 	return pos % CONFIG_NVS_LOOKUP_CACHE_SIZE;
 }
 
-static inline struct nvs_lookup * nvs_lookup_cache_location(struct nvs_fs *fs,size_t pos)
+static inline struct nvs_lookup *nvs_lookup_cache_location(struct nvs_fs *fs, size_t pos)
 {
-	uint16_t idx=0;
+	uint16_t idx = 0;
 	struct nvs_lookup *cache_entry = fs->lookup_cache;
-	struct nvs_lookup *const cache_end = &fs->lookup_cache[fs->lookup_idx];//
+	struct nvs_lookup *const cache_end = &fs->lookup_cache[fs->lookup_idx];
 
 
 	for (; cache_entry < cache_end; ++cache_entry) {
@@ -61,7 +61,7 @@ static int nvs_lookup_cache_rebuild(struct nvs_fs *fs)
 {
 	int rc;
 	uint32_t addr, ate_addr;
-	struct nvs_lookup * cache_entry;
+	struct nvs_lookup *cache_entry;
 	struct nvs_ate ate;
 
 	memset(fs->lookup_cache, 0xff, sizeof(fs->lookup_cache));
@@ -77,10 +77,9 @@ static int nvs_lookup_cache_rebuild(struct nvs_fs *fs)
 		}
 
 
-		 cache_entry = nvs_lookup_cache_location(fs,nvs_lookup_cache_pos(ate.id));
+		cache_entry = nvs_lookup_cache_location(fs, nvs_lookup_cache_pos(ate.id));
 		if (ate.id != 0xFFFF && cache_entry == NVS_LOOKUP_CACHE_NO_ADDR &&
-		    nvs_ate_valid(fs, &ate))
-		{
+		    nvs_ate_valid(fs, &ate)) {
 			cache_entry  = &fs->lookup_cache[fs->lookup_idx++];
 			cache_entry->flags.bf.addr = ate_addr;
 			cache_entry->flags.bf.id = nvs_lookup_cache_pos(ate.id);
@@ -189,17 +188,19 @@ static int nvs_flash_ate_wrt(struct nvs_fs *fs, const struct nvs_ate *entry)
 			       sizeof(struct nvs_ate));
 #ifdef CONFIG_NVS_LOOKUP_CACHE
 	/* 0xFFFF is a special-purpose identifier. Exclude it from the cache */
-	if (entry->id != 0xFFFF) 
-	{
-		struct nvs_lookup * cache_entry = nvs_lookup_cache_location(fs,nvs_lookup_cache_pos(entry->id));
-		if((cache_entry)==NVS_LOOKUP_CACHE_NO_ADDR)
-		{
+	if (entry->id != 0xFFFF) {
+		struct nvs_lookup *cache_entry = nvs_lookup_cache_location(fs,
+						nvs_lookup_cache_pos(entry->id));
+
+		if ((cache_entry) == NVS_LOOKUP_CACHE_NO_ADDR) {
+
 			cache_entry  = &fs->lookup_cache[fs->lookup_idx++];
-			
 		}
-			cache_entry->flags.bf.addr = fs->ate_wra;
-			cache_entry->flags.bf.id = nvs_lookup_cache_pos(entry->id);
-			LOG_DBG("kp_idx2 %d %x %x %x\n", fs->lookup_idx,fs->ate_wra,nvs_lookup_cache_pos(entry->id),* (int *)cache_entry);
+
+		cache_entry->flags.bf.addr = fs->ate_wra;
+		cache_entry->flags.bf.id = nvs_lookup_cache_pos(entry->id);
+		LOG_DBG("kp_idx2 %d %x %x %x\n", fs->lookup_idx, fs->ate_wra,
+			nvs_lookup_cache_pos(entry->id), *(int *)cache_entry);
 	}
 #endif
 	fs->ate_wra -= nvs_al_size(fs, sizeof(struct nvs_ate));
@@ -618,7 +619,7 @@ static int nvs_gc(struct nvs_fs *fs)
 	size_t ate_size;
 
 	ate_size = nvs_al_size(fs, sizeof(struct nvs_ate));
-	
+
 	sec_addr = (fs->ate_wra & ADDR_SECT_MASK);
 	nvs_sector_advance(fs, &sec_addr);
 	gc_addr = sec_addr + fs->sector_size - ate_size;
@@ -659,17 +660,16 @@ static int nvs_gc(struct nvs_fs *fs)
 		}
 
 #ifdef CONFIG_NVS_LOOKUP_CACHE
-		struct nvs_lookup * cache_entry = nvs_lookup_cache_location(fs,nvs_lookup_cache_pos(gc_ate.id));
-		if (cache_entry == NVS_LOOKUP_CACHE_NO_ADDR) 
-		{
+		struct nvs_lookup *cache_entry = nvs_lookup_cache_location(fs,
+						nvs_lookup_cache_pos(gc_ate.id));
+		if (cache_entry == NVS_LOOKUP_CACHE_NO_ADDR) {
 			cache_entry  = &fs->lookup_cache[fs->lookup_idx++];
-			LOG_DBG("kp_idx1 %d %x %x\n", fs->lookup_idx,fs->ate_wra,nvs_lookup_cache_pos(gc_ate.id));
+			LOG_DBG("kp_idx1 %d %x %x\n", fs->lookup_idx, fs->ate_wra,
+						nvs_lookup_cache_pos(gc_ate.id));
 			wlk_addr = fs->ate_wra;
 			cache_entry->flags.bf.addr = fs->ate_wra;
 			cache_entry->flags.bf.id = nvs_lookup_cache_pos(gc_ate.id);
-		}
-		else
-		{
+		} else {
 			wlk_addr = cache_entry->flags.bf.addr;
 		}
 #else
@@ -754,7 +754,7 @@ static int nvs_startup(struct nvs_fs *fs)
 	uint8_t erase_value = fs->flash_parameters->erase_value;
 
 	k_mutex_lock(&fs->nvs_lock, K_FOREVER);
-	
+
 	ate_size = nvs_al_size(fs, sizeof(struct nvs_ate));
 	/* step through the sectors to find a open sector following
 	 * a closed sector, this is where NVS can write.
@@ -970,7 +970,7 @@ int nvs_clear(struct nvs_fs *fs)
 		LOG_ERR("NVS not initialized");
 		return -EACCES;
 	}
-	
+
 	for (uint16_t i = 0; i < fs->sector_count; i++) {
 		addr = i << ADDR_SECT_SHIFT;
 		rc = nvs_flash_erase_sector(fs, addr);
@@ -993,7 +993,7 @@ int nvs_mount(struct nvs_fs *fs)
 	size_t write_block_size;
 
 	k_mutex_init(&fs->nvs_lock);
-	
+
 	fs->flash_parameters = flash_get_parameters(fs->flash_device);
 	if (fs->flash_parameters == NULL) {
 		LOG_ERR("Could not obtain flash parameters");
@@ -1057,7 +1057,7 @@ ssize_t nvs_write(struct nvs_fs *fs, uint16_t id, const void *data, size_t len)
 		LOG_ERR("NVS not initialized");
 		return -EACCES;
 	}
-	
+
 	ate_size = nvs_al_size(fs, sizeof(struct nvs_ate));
 	data_size = nvs_al_size(fs, len);
 
@@ -1072,14 +1072,13 @@ ssize_t nvs_write(struct nvs_fs *fs, uint16_t id, const void *data, size_t len)
 
 	/* find latest entry with same id */
 #ifdef CONFIG_NVS_LOOKUP_CACHE
-	struct nvs_lookup * cache_entry = nvs_lookup_cache_location(fs,nvs_lookup_cache_pos(id));
-	if (cache_entry == NVS_LOOKUP_CACHE_NO_ADDR) 
-	{
+	struct nvs_lookup *cache_entry = nvs_lookup_cache_location(fs, nvs_lookup_cache_pos(id));
+
+	if (cache_entry == NVS_LOOKUP_CACHE_NO_ADDR) {
+
 		wlk_addr = NVS_LOOKUP_CACHE_NO_ADDR;
 		goto no_cached_entry;
-	}
-	else
-	{
+	} else {
 		wlk_addr = cache_entry->flags.bf.addr;
 	}
 #else
@@ -1207,15 +1206,14 @@ ssize_t nvs_read_hist(struct nvs_fs *fs, uint16_t id, void *data, size_t len,
 	cnt_his = 0U;
 
 #ifdef CONFIG_NVS_LOOKUP_CACHE
-	struct nvs_lookup * cache_entry = nvs_lookup_cache_location(fs,nvs_lookup_cache_pos(id));
-	if (cache_entry == NVS_LOOKUP_CACHE_NO_ADDR) 
-	{
+	struct nvs_lookup *cache_entry = nvs_lookup_cache_location(fs, nvs_lookup_cache_pos(id));
+
+	if (cache_entry == NVS_LOOKUP_CACHE_NO_ADDR) {
+
 		wlk_addr = NVS_LOOKUP_CACHE_NO_ADDR;
 		rc = -ENOENT;
 		goto err;
-	}
-	else
-	{
+	} else {
 		wlk_addr = cache_entry->flags.bf.addr;
 	}
 #else
@@ -1258,7 +1256,7 @@ err:
 ssize_t nvs_read(struct nvs_fs *fs, uint16_t id, void *data, size_t len)
 {
 	int rc;
-	
+
 	rc = nvs_read_hist(fs, id, data, len, 0);
 	return rc;
 }
