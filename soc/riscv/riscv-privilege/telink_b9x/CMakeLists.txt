@@ -43,3 +43,16 @@ zephyr_link_libraries(
 	-Wl,--wrap,sys_heap_aligned_alloc
 	-Wl,--wrap,sys_heap_aligned_realloc
 )
+
+# Make MCUBoot early boot code injection
+if (CONFIG_MCUBOOT)
+
+zephyr_sources(
+	mcu_boot_startup.c
+)
+
+zephyr_link_libraries(
+	-Wl,--wrap,main
+)
+
+endif()

@@ -68,6 +68,11 @@ class BDTBinaryRunner(ZephyrBinaryRunner):
         activate = subprocess.Popen(['./bdt', soc_type, 'ac'], cwd=self.bdt_path)
         if activate.wait():
             exit()
+        # unlock flash only B92
+        if soc_type == 'B92':
+            unlock = subprocess.Popen(['./bdt', soc_type, 'ulf'], cwd=self.bdt_path)
+            if unlock.wait():
+                exit()
         # erase flash
         if self.erase:
             erase = subprocess.Popen(['./bdt', soc_type, 'wf', '0', '-e', '-s', flash_size], cwd=self.bdt_path)
