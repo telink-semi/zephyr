@@ -1,70 +1,79 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2023 Telink Semiconductor
+# Copyright (c) 2024 Telink Semiconductor
 # SPDX-License-Identifier: Apache-2.0
 
 """
-Download Telink N22 core firmware
+Download Telink N22 core firmware and optionally Matter MCUboot files
 ###############################################
 
-telink_w91_post_build <1> <2>
+telink_w91_post_build <1> <2> <3>
 
 1 - zephyr output binary folder
-2 - N22 core git revision
+2 - git revision
+3 - Matter OTA layout (1 if enabled, 0 if not)
 """
 
 import sys
 import os
 import requests
 
-N22_URL_FORMAT = f'https://wiki.telink-semi.cn/wiki/protocols/Zephyr/binaries/public/w91_n22/w91_n22_%s.bin'
+BASE_URL = f'https://wiki.telink-semi.cn/wiki/protocols/Zephyr/binaries/public/w91_n22/'
+N22_URL_FORMAT = BASE_URL + f'w91_n22_%s.bin'
+MATTER_MCUBOOT_URL_FORMAT = BASE_URL + f'w91_mcuboot_%s.bin'
+MATTER_MCUBOOT_KEY_URL_FORMAT = BASE_URL + f'w91_mcuboot_key_%s.pem'
+
+def download_file(url, destination):
+	print(f'fetching {url}...')
+	try:
+		response = requests.get(url)
+		if response.status_code != 200:
+			print(f'error: Can\'t fetch {url}.')
+			return False
+	except Exception as e:
+		print(f'error: Can\'t fetch {url}: {str(e)}')
+		return False
+
+	try:
+		with open(destination, 'wb') as f:
+			f.write(response.content)
+		print(f'saved {destination}')
+		return True
+	except Exception as e:
+		print(f'error: Can\'t save {destination}: {str(e)}')
+		return False
 
 def main():
-	bin_path = None
-	try:
-		bin_path = sys.argv[1]
-	except:
-		pass
-
-	n22_revision = None
-	try:
-		n22_revision = sys.argv[2]
-	except:
-		pass
-
-	if bin_path is None or n22_revision is None:
+	if len(sys.argv) < 3:
 		print('error: Invalid arguments.')
 		return
+
+	bin_path = sys.argv[1]
+	n22_revision = sys.argv[2]
+	matter_ota_layout_enabled = sys.argv[3] if len(sys.argv) > 3 else '0'
 
 	if not os.path.exists(bin_path) or not os.path.isdir(bin_path):
 		print(f'error: Invalid binary path \'{bin_path}\'.')
 		return
 
+	# Download N22 core firmware
 	n22_bin_url = N22_URL_FORMAT % n22_revision
-	print('fetching %s ...' % n22_bin_url)
-
-	try:
-		response = requests.get(n22_bin_url)
-	except:
-		print(f'error: Can\'t fetch.')
-		return
-
-	if response.status_code != 200:
-		print(f'error: Can\'t fetch.')
-		return
-
 	n22_bin_name = os.path.join(bin_path, 'n22.bin')
-
-	try:
-		n22_bin = open(n22_bin_name, 'w+b');
-	except:
-		print(f'error: Can\'t create file \'{n22_bin_name}\'.')
+	if not download_file(n22_bin_url, n22_bin_name):
 		return
 
-	n22_bin.write(response.content)
-	n22_bin.close()
-	print(f'saved N22 firmware into \'{n22_bin_name}\'')
+	# Download Matter MCUboot files if Matter OTA layout is enabled
+	if matter_ota_layout_enabled == '1':
+		matter_mcuboot_url = MATTER_MCUBOOT_URL_FORMAT % n22_revision
+		matter_mcuboot_name = os.path.join(bin_path, 'mcuboot.bin')
+		if not download_file(matter_mcuboot_url, matter_mcuboot_name):
+			return
+
+		matter_mcuboot_key_url = MATTER_MCUBOOT_KEY_URL_FORMAT % n22_revision
+		matter_mcuboot_key_name = os.path.join(bin_path, 'mcuboot_key.pem')
+		if not download_file(matter_mcuboot_key_url, matter_mcuboot_key_name):
+			return
 
 if __name__ == "__main__":
 	main()

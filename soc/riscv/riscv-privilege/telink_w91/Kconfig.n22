@@ -14,3 +14,10 @@ config TELINK_W91_FETCH_N22_BIN_REVISION
 	depends on TELINK_W91_FETCH_N22_BIN
 	help
 		This option sets N22 binary revision.
+
+config TELINK_W91_MATTER_OTA_LAYOUT
+	bool "Support Matter OTA layout"
+	depends on TELINK_W91_FETCH_N22_BIN
+	default n
+	help
+		This option enables support Matter OTA layout
