@@ -27,6 +27,15 @@ config NVS_LOOKUP_CACHE_SIZE
 	  Number of entries in Non-volatile Storage lookup cache.
 	  It is recommended that it be a power of 2.
 
+config NVS_LOOKUP_CACHE_ARRAY_SIZE
+	int "Non-volatile Storage lookup cache size"
+	default 128
+	range 1 65536
+	depends on NVS_LOOKUP_CACHE
+	help
+	  Number of entries in Non-volatile Storage lookup cache.
+	  It is recommended that it be a power of 2.
+
 module = NVS
 module-str = nvs
 source "subsys/logging/Kconfig.template.log_config"
