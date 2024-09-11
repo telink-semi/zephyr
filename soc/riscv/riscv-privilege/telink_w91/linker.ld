@@ -21,8 +21,10 @@ MEMORY
 
 #include <zephyr/arch/riscv/common/linker.ld>
 
-#ifdef CONFIG_MCUBOOT
+#ifdef CONFIG_MCUBOOT            /* MCUboot build check */
 	ASSERT(__rom_region_size <= DT_REG_SIZE(DT_NODELABEL(boot_partition)), "boot_partition overflows")
-#else
+#elif CONFIG_BOOTLOADER_MCUBOOT  /* Zephyr build check with enabled MCUboot */
+	ASSERT(__rom_region_size <= (DT_REG_ADDR(DT_NODELABEL(n22_partition)) - DT_REG_ADDR(DT_NODELABEL(slot0_partition))), "n22_partition overlaps")
+#else			                 /* Zephyr build check without MCUboot */
 	ASSERT(__rom_region_size <= DT_REG_ADDR(DT_NODELABEL(n22_partition)), "n22_partition overlaps")
 #endif
