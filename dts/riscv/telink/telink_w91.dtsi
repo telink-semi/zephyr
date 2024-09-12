@@ -126,6 +126,22 @@
 			status = "okay";
 		};
 
+		spi1: spi1 {
+			compatible = "telink,w91-spi";
+			instance-id = <1>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
+		spi2: spi2 {
+			compatible = "telink,w91-spi";
+			instance-id = <2>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
 		i2c0: i2c0 {
 			compatible = "telink,w91-i2c";
 			#address-cells = <1>;

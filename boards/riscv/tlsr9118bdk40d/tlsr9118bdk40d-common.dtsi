@@ -123,6 +123,12 @@
 	pinctrl-names = "default";
 };
 
+&spi1 {
+	status = "okay";
+	pinctrl-0 = <&spi1_cs_default &spi1_clk_default &spi1_miso_default &spi1_mosi_default>;
+	pinctrl-names = "default";
+};
+
 &pwm0 {
 	status = "okay";
 	pinctrl-ch4 = <&pwm_ch4_p20_default>;
