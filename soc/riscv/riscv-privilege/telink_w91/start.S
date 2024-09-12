@@ -22,8 +22,8 @@ SECTION_FUNC(init, init)
 	.global reset_vector
 
 reset_vector:
-	.global _start
-	.type _start,@function
+	.global _check_start_core
+	.type _check_start_core,@function
 
 #if !defined(CONFIG_BOOTLOADER_MCUBOOT)
 	.word (0x31707848)                 #/ magic
@@ -33,6 +33,20 @@ reset_vector:
 
 	.org 0xa0
 #endif
+
+_check_start_core:
+
+	csrr a0, mhartid
+	li t0, CONFIG_RV_BOOT_HART
+	beq a0, t0, _start                 #/ started on D25 core
+
+	lui    t0, 0xf0100                 #/ started on N22 core, change into D25 core
+	lui    t1, %hi(_start)
+	addi   t1, t1, %lo(_start)
+	sw     t1, 0x200(t0)               #/ D25 core address: 0xf0100200 <- _start
+	lui    t0, 0xf1700
+	li     t1, 0x01
+	sw     t1, 0x218(t0)               #/ D25 core reset: 0xf1700218 <- 0x01
 
 _start:                                #/ after reset starts on D25 core
 
