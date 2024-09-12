@@ -58,6 +58,11 @@ jobs:
         cd ..
         west build -b tlsr9118bdk40d             -d build_mpu6050_w91                   zephyr/samples/sensor/mpu6050                 -- -DCONFIG_COMPILER_WARNINGS_AS_ERRORS=y
 
+    - name: Build W91 spi_flash_at45
+      run: |
+        cd ..
+        west build -b tlsr9118bdk40d             -d build_spi_flash_at45_w91            zephyr/samples/drivers/spi_flash_at45         -- -DCONFIG_COMPILER_WARNINGS_AS_ERRORS=y
+
     - name: Build W91 subsys/nvs
       run: |
         cd ..
@@ -120,6 +125,7 @@ jobs:
         cp ../build_button_w91/zephyr/zephyr.bin                    telink_build_artifacts/w91_button.bin
         cp ../build_uart_echo_bot_w91/zephyr/zephyr.bin             telink_build_artifacts/w91_uart_echo_bot.bin
         cp ../build_mpu6050_w91/zephyr/zephyr.bin                   telink_build_artifacts/w91_mpu6050.bin
+        cp ../build_spi_flash_at45_w91/zephyr/zephyr.bin            telink_build_artifacts/w91_spi_flash_at45.bin
         cp ../build_nvs_w91/zephyr/zephyr.bin                       telink_build_artifacts/w91_nvs.bin
         cp ../build_mcuboot_w91/zephyr/zephyr.bin                   telink_build_artifacts/w91_mcuboot.bin
         cp ../build_blinky_dfu_w91/zephyr/zephyr.signed.bin         telink_build_artifacts/w91_blinky_dfu.signed.bin
