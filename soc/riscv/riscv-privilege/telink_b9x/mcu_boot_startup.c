@@ -64,7 +64,6 @@ static bool telink_b9x_mcu_boot_startup(void)
 
 		if (efuse_get_chip_id(chip_id)) {
 			printk_buf("chip id", chip_id, sizeof(chip_id));
-			result = false;
 		} else {
 			BOOT_LOG_ERR("chip id read error");
 		}
