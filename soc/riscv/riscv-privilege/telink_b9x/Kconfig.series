@@ -28,3 +28,10 @@ config SOC_SERIES_RISCV_TELINK_B9X_NON_RETENTION_RAM_CODE
 	help
 	  Place Telink B9x SoCs ram code in non-retention area
 	  and restore this are after each retention.
+
+config TELINK_B9X_MCUBOOT_STARTUP
+	bool "Telink B9x MCUBoot startup handler"
+	depends on SOC_SERIES_RISCV_TELINK_B9X && MCUBOOT
+	help
+	  Run Telink specific vendor code before MCUBoot
+	  main process
