@@ -8,8 +8,7 @@
 
 #include <zephyr/sys/byteorder.h>
 #include <zephyr/drivers/bluetooth/hci_driver.h>
-
-#include <b9x_bt.h>
+#include <tlx_bt.h>
 
 #define LOG_LEVEL CONFIG_BT_HCI_DRIVER_LOG_LEVEL
 #include <zephyr/logging/log.h>
@@ -216,10 +215,10 @@ done:
 
 static int hci_b9x_open(void)
 {
-#if CONFIG_IEEE802154_TELINK_B9X
-	extern volatile bool b9x_rf_zigbee_250K_mode;
+#if CONFIG_IEEE802154_TELINK_TLX
+	extern volatile bool tlx_rf_zigbee_250K_mode;
 
-	b9x_rf_zigbee_250K_mode = false;
+	tlx_rf_zigbee_250K_mode = false;
 #endif
 	int status;
 
@@ -250,10 +249,10 @@ static int hci_b9x_close(void)
 	bt_le_adv_stop();
 #endif /* CONFIG_BT_HCI_HOST && CONFIG_BT_BROADCASTER */
 	b9x_bt_controller_deinit();
-#if CONFIG_IEEE802154_TELINK_B9X
-	extern volatile bool b9x_rf_zigbee_250K_mode;
+#if CONFIG_IEEE802154_TELINK_TLX
+	extern volatile bool tlx_rf_zigbee_250K_mode;
 
-	b9x_rf_zigbee_250K_mode = false;
+	tlx_rf_zigbee_250K_mode = false;
 #endif
 	return 0;
 }

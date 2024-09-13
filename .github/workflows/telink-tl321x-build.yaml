@@ -84,6 +84,11 @@ jobs:
         cd ..
         west build -b tl3218x     -d build_fade_tl321x                        zephyr/samples/basic/fade_led/
 
+    - name: Build TL321x bluetooth/peripheral_ht
+      run: |
+        cd ..
+        west build -b tl3218x     -d build_peripheral_ht_tl321x               zephyr/samples/bluetooth/peripheral_ht
+
     - name: Build TL321x net/openthread/cli
       run: |
         cd ..
@@ -116,6 +121,7 @@ jobs:
         cp ../build_tests_flash_tl321x/zephyr/zephyr.bin                telink_build_artifacts/tl321x_tests_flash.bin
         cp ../build_spi_flash_tl321x/zephyr/zephyr.bin                  telink_build_artifacts/tl321x_spi_flash.bin
         cp ../build_fade_tl321x/zephyr/zephyr.bin                       telink_build_artifacts/tl321x_tests_pwm.bin
+        cp ../build_peripheral_ht_tl321x/zephyr/zephyr.bin              telink_build_artifacts/tl321x_peripheral_ht.bin
         cp ../build_ot_cli_tl321x/zephyr/zephyr.bin                     telink_build_artifacts/tl321x_ot_cli.bin
         cp ../build_ot_coprocessor_rcp_uart_tl321x/zephyr/zephyr.bin    telink_build_artifacts/tl321x_ot_coprocessor_rcp_uart.bin
         cp ../build_usb_console_tl321x/zephyr/zephyr.bin                telink_build_artifacts/tl321x_usb_console.bin
