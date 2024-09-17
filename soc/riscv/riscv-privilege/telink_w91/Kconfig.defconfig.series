@@ -57,6 +57,11 @@ config TEST_EXTRA_STACK_SIZE
 config HAS_FLASH_LOAD_OFFSET
 	default y if BOOTLOADER_MCUBOOT
 
+config TELINK_W91_SLOT0_PARTITION_ADDR
+	hex
+	default $(dt_node_reg_addr_hex,$(dt_nodelabel_path,slot0_partition),0)
+	depends on SOC_SERIES_RISCV_TELINK_W91
+
 config MBEDTLS_ZEPHYR_ENTROPY
 	default y if ENTROPY_HAS_DRIVER
 

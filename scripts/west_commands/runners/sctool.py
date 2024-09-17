@@ -10,10 +10,13 @@ from runners.core import ZephyrBinaryRunner, RunnerCaps, BuildConfiguration
 class SCTOOLBinaryRunner(ZephyrBinaryRunner):
     '''Runner front-end for Senscomm Flash Tool.'''
 
+    SERIAL_BAUDE_RATE = '2000000'
+
     def __init__(self, cfg, sctool_path, usb_port, address, erase=False, update_n22=False):
         super().__init__(cfg)
         self.sctool_path = sctool_path
         self.usb_port = usb_port
+        self.baude_rate = self.SERIAL_BAUDE_RATE
         self.address = address
         self.erase = bool(erase)
         self.update_n22 = bool(update_n22)
@@ -32,7 +35,7 @@ class SCTOOLBinaryRunner(ZephyrBinaryRunner):
             help='path to sctool installation root')
         parser.add_argument('--usb-port', default='/dev/ttyUSB0',
             help='USB CDC to which device is attached')
-        parser.add_argument('--address', default='0x80000000',
+        parser.add_argument('--address', default=None,
             help='start flash address to write')
         parser.add_argument("--update-n22", action="store_true",
             help="upadet N22 FW")
@@ -59,22 +62,41 @@ class SCTOOLBinaryRunner(ZephyrBinaryRunner):
         if not build_conf['CONFIG_SOC_RISCV_TELINK_W91']:
             print('only Telink W91 chip is supported!')
             exit()
-        # download RAM
-        pre_erase = subprocess.Popen(['./sctool', '-p', self.usb_port, '-da', 'da/da.ram.bin', '--before', 'hw_reset', '--after', 'no_reset', '-b', '115200', 'upload_da'], cwd=self.sctool_path)
-        if pre_erase.wait():
-            exit()
         # get flash size
         flash_size = hex(build_conf['CONFIG_FLASH_SIZE'] * 1024)
+        # get flash base address
+        if self.address is not None: # if user defined use it
+            print(f'User defined flash base address: {self.address}')
+            flash_base = self.address
+        else:
+            # calculate flash base address from configuration
+            if build_conf.getboolean('CONFIG_MCUBOOT'): # mcuboot
+                print('MCUboot app!')
+                flash_base = hex(build_conf['CONFIG_FLASH_BASE_ADDRESS'])
+            elif build_conf.getboolean('CONFIG_BOOTLOADER_MCUBOOT'): # MCU boot app
+                print('MCUboot bootloader app!')
+                flash_base = hex(build_conf['CONFIG_FLASH_BASE_ADDRESS'] +
+                                 build_conf['CONFIG_TELINK_W91_SLOT0_PARTITION_ADDR'])
+            else: # standalone app
+                print('Standalone app!')
+                flash_base = hex(build_conf['CONFIG_FLASH_BASE_ADDRESS'])
+        # get N22 partition address
+        n22_partition_addr = hex(build_conf['CONFIG_TELINK_W91_N22_PARTITION_ADDR'] + int(flash_base, 16))
+        # download RAM
+        pre_erase = subprocess.Popen(['./sctool', '-p', self.usb_port, '-da', 'da/da.ram.bin', '-b', self.baude_rate, '--before', 'hw_reset', '--after', 'no_reset', 'upload_da'], cwd=self.sctool_path)
+        if pre_erase.wait():
+            exit()
         print('Flashing D25 FW...')
-        # erase flash
+        # erase flash if needed
         if self.erase:
-            erase = subprocess.Popen(['./sctool', '-p', self.usb_port, '-da', 'da/da.ram.bin', '-b', '115200', '--manual', 'flash_erase', '0x80000000', flash_size], cwd=self.sctool_path)
+            print('Erasing flash...')
+            erase = subprocess.Popen(['./sctool', '-p', self.usb_port, '-da', 'da/da.ram.bin', '--manual', 'flash_erase', flash_base, flash_size], cwd=self.sctool_path)
             if erase.wait():
                 exit()
         # get binary file
         bin_file = os.path.abspath(self.cfg.bin_file)
         # flash
-        flash = subprocess.Popen(['./sctool', '-p', self.usb_port, '-da', 'da/da.ram.bin', '--after', 'hw_reset', '-b', '115200', '--manual', 'flash_write', self.address, bin_file], cwd=self.sctool_path)
+        flash = subprocess.Popen(['./sctool', '-p', self.usb_port, '-da', 'da/da.ram.bin', '--after', 'hw_reset', '--manual', 'flash_write', flash_base, bin_file], cwd=self.sctool_path)
         if flash.wait():
             exit()
         print('D25 FW done!')
@@ -86,12 +108,8 @@ class SCTOOLBinaryRunner(ZephyrBinaryRunner):
             if not os.path.isfile(n22_fw_bin):
                 print(f'N22 FW not exist {n22_fw_bin}')
                 exit()
-            # erase N22 area
-            erase = subprocess.Popen(['./sctool', '-p', self.usb_port, '-da', 'da/da.ram.bin', '-b', '115200', '--manual', 'flash_erase', '0x80140000', '0xc7000'], cwd=self.sctool_path)
-            if erase.wait():
-                exit()
             # flash N22 FW
-            flash = subprocess.Popen(['./sctool', '-p', self.usb_port, '-da', 'da/da.ram.bin', '--after', 'hw_reset', '-b', '115200', '--manual', 'flash_write', '0x80140000', n22_fw_bin], cwd=self.sctool_path)
+            flash = subprocess.Popen(['./sctool', '-p', self.usb_port, '-da', 'da/da.ram.bin', '--after', 'hw_reset', '--manual', 'flash_write', n22_partition_addr, n22_fw_bin], cwd=self.sctool_path)
             if flash.wait():
                 exit()
             print('N22 FW done!')
