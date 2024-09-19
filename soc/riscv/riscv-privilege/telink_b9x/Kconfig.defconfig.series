@@ -62,16 +62,10 @@ config MBEDTLS_ZEPHYR_ENTROPY
 	default y if ENTROPY_HAS_DRIVER
 
 config MBEDTLS_USER_CONFIG_ENABLE
-	default y if TELINK_B9X_MBEDTLS_HW_ACCELERATION
+	default y
 
 config MBEDTLS_USER_CONFIG_FILE
-	default "mbedtls-tlsr9-conf.h" if TELINK_B9X_MBEDTLS_HW_ACCELERATION
-
-config MBEDTLS_ENTROPY_ENABLED
-	default y if TELINK_B9X_MBEDTLS_HW_ACCELERATION
-
-config MBEDTLS_DEBUG
-	default y if TELINK_B9X_MBEDTLS_HW_ACCELERATION && MBEDTLS_TEST
+	default "telink_b9x_mbedtls_user_config.h"
 
 config COMMON_LIBC_MALLOC
 	default y

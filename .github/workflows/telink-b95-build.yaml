@@ -93,7 +93,12 @@ jobs:
     - name: Build B95 subsys/usb/console for USB driver
       run: |
         cd ..
-        west build -b tlsr9258a             -d build_usb_console_b95                    zephyr/samples/subsys/usb/console                        -- -DCONFIG_COMPILER_WARNINGS_AS_ERRORS=y
+        west build -b tlsr9258a                  -d build_usb_console_b95              zephyr/samples/subsys/usb/console                        -- -DCONFIG_COMPILER_WARNINGS_AS_ERRORS=y
+
+    - name: Build B95 crypto/mbedtls
+      run: |
+        cd ..
+        west build -b tlsr9258a                  -d build_crypto_mbedtls_b95           zephyr/tests/crypto/mbedtls                              -- -DCONFIG_COMPILER_WARNINGS_AS_ERRORS=y -DCONFIG_MBEDTLS_ECP_C=y -DCONFIG_MBEDTLS_ECP_ALL_ENABLED=y
 
     - name: Collect artifacts
       run: |
@@ -109,6 +114,7 @@ jobs:
         cp ../build_ot_echo_server_b95/zephyr/zephyr.bin            telink_build_artifacts/b95_ot_echo_server.bin
         cp ../build_ot_echo_client_b95/zephyr/zephyr.bin            telink_build_artifacts/b95_ot_echo_client.bin
         cp ../build_usb_console_b95/zephyr/zephyr.bin               telink_build_artifacts/b95_usb_console.bin
+        cp ../build_crypto_mbedtls_b95/zephyr/zephyr.bin            telink_build_artifacts/b95_mbedtls.bin
 
     - name: Publish artifacts
       uses: actions/upload-artifact@v3

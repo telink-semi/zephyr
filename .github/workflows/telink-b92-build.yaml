@@ -130,6 +130,11 @@ jobs:
         cd ..
         west build -b tlsr9528a                  -d build_ot_cli_b92                    zephyr/samples/net/openthread/cli                        -- -DCONFIG_COMPILER_WARNINGS_AS_ERRORS=y -DOVERLAY_CONFIG=overlay-telink-fixed-mac.conf
 
+    - name: Build B92 crypto/mbedtls
+      run: |
+        cd ..
+        west build -b tlsr9528a                  -d build_crypto_mbedtls_b92            zephyr/tests/crypto/mbedtls                              -- -DCONFIG_COMPILER_WARNINGS_AS_ERRORS=y -DCONFIG_MBEDTLS_ECP_C=y -DCONFIG_MBEDTLS_ECP_ALL_ENABLED=y
+
     - name: Collect artifacts
       run: |
         mkdir telink_build_artifacts
@@ -151,6 +156,7 @@ jobs:
         cp ../build_mcuboot_usb_dfu_b92/zephyr/zephyr.bin           telink_build_artifacts/b92_mcuboot_usb_dfu.bin
         cp ../build_blinky_usb_dfu_b92/zephyr/zephyr.signed.bin     telink_build_artifacts/b92_blinky_usb_dfu.signed.bin
         cp ../build_ot_cli_b92/zephyr/zephyr.bin                    telink_build_artifacts/b92_ot_cli.bin
+        cp ../build_crypto_mbedtls_b92/zephyr/zephyr.bin            telink_build_artifacts/b92_mbedtls.bin
 
     - name: Publish artifacts
       uses: actions/upload-artifact@v3
