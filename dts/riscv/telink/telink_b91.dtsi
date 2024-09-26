@@ -51,7 +51,7 @@
 			compatible = "telink,machine-timer";
 			reg = <0xe6000000 0x10000>;
 			interrupts = <7 0>;
-			interrupt-parent = <&plic0>;
+			interrupt-parent = <&hlic>;
 		};
 
 		flash_mspi: flash-controller@80140100 {
@@ -158,6 +158,11 @@
 			reg = <0x80140800 0x800>;
 			interrupt-parent = <&plic0>;
 			interrupts = <15 2>;
+			status = "disabled";
+		};
+
+		bt_hci: bt_hci {
+			compatible = "telink,b91-bt";
 			status = "disabled";
 		};
 

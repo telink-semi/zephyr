@@ -6,6 +6,13 @@ if BOARD_TLSR9518ADK80D
 config SOC_FLASH_TELINK_B91
 	default y if FLASH
 
+if BT
+
+config BT_HCI_ACL_FLOW_CONTROL
+	default n
+
+endif # BT
+
 # Workaround for not being able to have commas in macro arguments
 DT_CHOSEN_Z_CODE_PARTITION := zephyr,code-partition
 

@@ -3,6 +3,10 @@
 
 if SOC_SERIES_TLSR951X
 
+config SYS_CLOCK_EXISTS
+	bool
+	default y
+
 config SYS_CLOCK_HW_CYCLES_PER_SEC
 	int
 	default 32000
@@ -40,6 +44,9 @@ config TEST_EXTRA_STACK_SIZE
 
 config 2ND_LVL_INTR_00_OFFSET
 	default 11
+
+config 2ND_LVL_ISR_TBL_OFFSET
+	default 12
 
 config HAS_FLASH_LOAD_OFFSET
 	default y if BOOTLOADER_MCUBOOT
