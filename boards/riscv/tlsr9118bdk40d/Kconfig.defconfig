@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Telink Semiconductor
+# Copyright (c) 2024 Telink Semiconductor
 # SPDX-License-Identifier: Apache-2.0
 
 if BOARD_TLSR9118BDK40D
@@ -8,10 +8,17 @@ config BOARD
 
 endif
 
+if BOARD_TLSR9118BDK40D_V1
+
+config BOARD
+	default "tlsr9118bdk40d_v1"
+
+endif
+
 config HEAP_MEM_POOL_SIZE
 	default 4096
 
-if BOARD_TLSR9118BDK40D
+if BOARD_TLSR9118BDK40D || BOARD_TLSR9118BDK40D_V1
 
 if BT
 
