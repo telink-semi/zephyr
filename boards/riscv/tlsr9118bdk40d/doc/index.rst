@@ -34,12 +34,11 @@ IPC unit is implemented to share date between MCUs.
 The TLSR9118BDK40D default board configuration provides the following hardware components:
 
 - RF conducted antenna
-- Micro-SD card reader slot
 - Chip reset button
-- Two USB type-C to UART interfaces
+- USB type-C to UART interface
 - 4-wire JTAG
-- Key matrix up to 4 keys
-- 2 LEDs
+- 4 keys
+- 4 red LEDs
 
 Supported Features
 ==================
@@ -98,22 +97,30 @@ The following values also could be assigned to the system clock in the board DTS
 PINs Configuration
 ------------------
 
-- LED0 (green): GPIO19
-- SW0: GPIO16, SW1: GPIO15
-- Key Matrix SW0: GPIO18_GPIO16, SW1: GPIO18_GPIO15, SW2: GPIO17_GPIO16, SW3: GPIO17_GPIO15
+- LED1 (RED): GPIO15
+- LED2 (RED): GPIO16
+- LED3 (RED): GPIO17
+- LED4 (RED): GPIO18
+
+Keys
+- SW7 : GPIO4
+- SW9 : GPIO5
+- SW2 : GPIO6
+- SW1 : GPIO7
 
 Peripheral's pins on the SoC are mapped to the following GPIO pins in the
-``boards/riscv/tlsr9118bdk40d/tlsr9118bdk40d-common.dtsi`` file:
+``boards/riscv/tlsr9118bdk40d/tlsr9118bdk40d-common.dtsi`` and ``boards/riscv/tlsr9118bdk40d/tlsr9118bdk40d.dts`` files:
 
-- PWM Channel 4 (red LED): GPIO20
+- 3 PWM Channel: GPIO18, GPIO17, GPIO16
 - I2C SCL: GPIO15, SDA: GPIO16
 
 Serial Port
 -----------
 
 The TLSR9118BDK40D SoC has 3 UARTs.
-The Zephyr console output is assigned to UART0 (J47 connector). The default settings are 115200 8N1.
-The slave core N22 console is assigned to UART1 (J71 connector). The default settings are 115200 8N1.
+The Zephyr console output is assigned to UART0 (J47 USB-C connector). The default settings are 115200 8N1.
+The slave core N22 console is assigned to UART1 (UART_RX GPIO 0, UART_TX GPIO 1). You will need USB-to-UART converter.
+The default settings are 115200 8N1.
 
 Although UART0 and UART1 are set by default as console outputs for each core,
 UART2 can be configured to usage on GPIO15, GPIO16 (check ``boards/riscv/tlsr9118bdk40d/tlsr9118bdk40d-pinctrl.dtsi`` ).
@@ -137,32 +144,9 @@ Here is an example for the "blinky" application.
    # From the root of the zephyr repository
    west build -b tlsr9118bdk40d samples/basic/blinky
 
-Open a serial terminal with the following settings:
-
-- Speed: 115200
-- Data: 8 bits
-- Parity: None
-- Stop bits: 1
-
-Flash the board, reset and observe the following messages on the selected
-serial port:
-
-.. code-block:: console
-
-   *** Booting Zephyr OS build v3.1.0-rc1-14499-g717301fd9915 **
-
-
 
 Flashing
 ========
-
-To flash the TLSR9118BDK40D board ensure that SW25 switch is in the next state:
-
-+----------+-----+-----+-----+---+
-| Switch # | 1   | 2   | 3   | 4 |
-+==========+=====+=====+=====+===+
-| Position | 0   | "+" | "-" | 0 |
-+----------+-----+-----+-----+---+
 
 Then use the west flash command. Download Senscomm tool `Senscomm Flash Tool`_
 and extract archive into some directory you wish TELINK_SCTOOL_BASE_DIR. This archive includes both versions for Linux
@@ -180,15 +164,19 @@ and Windows.
 
    export TELINK_SCTOOL_BASE_DIR="/opt/telink_sctool/"
 
-After flashing move SW25 to this state:
+Open a serial terminal with the following settings:
 
-+----------+-----+-----+-----+---+
-| Switch # | 1   | 2   | 3   | 4 |
-+==========+=====+=====+=====+===+
-| Position | 0   | "+" | "+" | 0 |
-+----------+-----+-----+-----+---+
+- Speed: 115200
+- Data: 8 bits
+- Parity: None
+- Stop bits: 1
 
-Reset the board.
+Flash the board, reset and observe the following messages on the selected
+serial port:
+
+.. code-block:: console
+
+   *** Booting Zephyr OS build v3.1.0-rc1-14499-g717301fd9915 **
 
 
 References
