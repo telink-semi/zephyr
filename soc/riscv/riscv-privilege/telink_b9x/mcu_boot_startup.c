@@ -7,6 +7,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/uart.h>
 #include <bootutil/bootutil_log.h>
+#include <zephyr/sys/crc.h>
 BOOT_LOG_MODULE_REGISTER(telink_b9x_mcuboot);
 
 static bool telink_b9x_mcu_boot_startup(void);
@@ -60,9 +61,13 @@ static bool telink_b9x_mcu_boot_startup(void)
 
 	if (show_chip_id) {
 		extern unsigned char efuse_get_chip_id(unsigned char *chip_id_buff);
-		uint8_t chip_id[16];
+		uint8_t chip_id[18];
 
 		if (efuse_get_chip_id(chip_id)) {
+			uint16_t chip_id_crc = crc16_itu_t(0, chip_id, 16);
+
+			chip_id[16] = chip_id_crc & 0x00ff;
+			chip_id[17] = chip_id_crc >> 8;
 			printk_buf("chip id", chip_id, sizeof(chip_id));
 		} else {
 			BOOT_LOG_ERR("chip id read error");
