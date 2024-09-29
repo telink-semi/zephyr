@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Telink Semiconductor
+# Copyright (c) 2024 Telink Semiconductor
 # SPDX-License-Identifier: Apache-2.0
 
 if (CONFIG_TELINK_W91_2_WIRE_SPI_ENABLE)
@@ -91,5 +91,6 @@ endif()
 if(CONFIG_TELINK_W91_FETCH_N22_BIN)
 	set_property(GLOBAL APPEND PROPERTY extra_post_build_commands COMMAND
 		${ZEPHYR_BASE}/scripts/utils/telink_w91_post_build ${ZEPHYR_BINARY_DIR} ${CONFIG_TELINK_W91_FETCH_N22_BIN_REVISION}
+		$<IF:$<BOOL:${CONFIG_TELINK_W91_N22_MATTER_OTA_LAYOUT}>,1,0>
 	)
 endif()

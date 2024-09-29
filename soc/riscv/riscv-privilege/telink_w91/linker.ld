@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Telink Semiconductor
+ * Copyright (c) 2024 Telink Semiconductor
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -23,4 +23,6 @@ MEMORY
 
 #ifdef CONFIG_MCUBOOT
 	ASSERT(__rom_region_size <= DT_REG_SIZE(DT_NODELABEL(boot_partition)), "boot_partition overflows")
+#else
+	ASSERT(__rom_region_end < (CONFIG_FLASH_BASE_ADDRESS + CONFIG_TELINK_W91_N22_PARTITION_ADDR), "n22_partition overlaps")
 #endif
