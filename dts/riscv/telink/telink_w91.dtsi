@@ -6,6 +6,8 @@
 
 /dts-v1/;
 
+#include <zephyr/dt-bindings/adc/adc.h>
+#include <zephyr/dt-bindings/adc/w91-adc.h>
 #include <zephyr/dt-bindings/gpio/gpio.h>
 #include <zephyr/dt-bindings/i2c/i2c.h>
 #include <zephyr/dt-bindings/pwm/pwm.h>
@@ -182,6 +184,11 @@
 		wdt: watchdog {
 			compatible = "telink,w91-watchdog";
 			status = "disabled";
+		};
+		adc: adc {
+			compatible = "telink,w91-adc";
+			status = "disabled";
+			#io-channel-cells = <1>;
 		};
 	};
 };
