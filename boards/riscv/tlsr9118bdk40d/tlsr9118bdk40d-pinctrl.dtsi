@@ -87,4 +87,10 @@
 	pwm_ch4_p20_default: pwm_ch4_p20_default {
 		pinmux = <W91_PINMUX_SET(W91_PIN_20, W91_FUNC_PWM_5)>;
 	};
+
+	/* Define ADC pins */
+
+	adc_ch0_p7_default: adc_ch0_p7_default {
+		pinmux = <W91_PINMUX_SET(W91_PIN_7, W91_FUNC_DEFAULT)>;
+	};
 };
