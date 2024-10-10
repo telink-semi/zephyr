@@ -1,6 +1,8 @@
 family:
   - name: telink_tlsr
     series:
-      - name: tlsr951x
+      - name: telink_b9x
         socs:
-          - name: tlsr9518
+          - name: telink_b91
+          - name: telink_b92
+          - name: telink_b95
