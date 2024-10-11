@@ -79,6 +79,15 @@ config MBEDTLS_USER_CONFIG_FILE
 config MBEDTLS_ENTROPY_POLL_ZEPHYR
 	default y if ENTROPY_HAS_DRIVER
 
+config MBEDTLS_ENTROPY_C
+	default y if MBEDTLS_TEST && TELINK_B9X_MBEDTLS_HW_ACCELERATION
+
+config MBEDTLS_CTR_DRBG_ENABLED
+	default y if MBEDTLS_TEST && TELINK_B9X_MBEDTLS_HW_ACCELERATION
+
+config MBEDTLS_CIPHER_AES_ENABLED
+	default y if MBEDTLS_TEST && TELINK_B9X_MBEDTLS_HW_ACCELERATION
+
 # Workaround for not being able to have commas in macro arguments
 DT_LABEL_Z_STORAGE := $(dt_nodelabel_path,storage_partition)
 
