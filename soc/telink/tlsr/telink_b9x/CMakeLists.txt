@@ -23,6 +23,10 @@ zephyr_sources_ifdef(CONFIG_PM
 	power.c
 )
 
+zephyr_sources_ifdef(CONFIG_MCUBOOT_ACTION_HOOKS
+	mcuboot_status_change.c
+)
+
 # Force using BFD-LD
 zephyr_ld_options(-fuse-ld=bfd)
 
