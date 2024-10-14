@@ -4,17 +4,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#define DT_DRV_COMPAT telink_b91_bt
+#define DT_DRV_COMPAT telink_b9x_bt
 
 #include <zephyr/drivers/bluetooth.h>
 #include <zephyr/sys/byteorder.h>
-#include <b91_bt.h>
+#include <b9x_bt.h>
 
 #define LOG_LEVEL CONFIG_BT_HCI_DRIVER_LOG_LEVEL
 #include <zephyr/logging/log.h>
-LOG_MODULE_REGISTER(bt_hci_b91);
+LOG_MODULE_REGISTER(bt_hci_driver_b9x);
 
-#define HCI_BT_B91_TIMEOUT K_MSEC(2000)
+#define HCI_BT_B9X_TIMEOUT      K_MSEC(2000)
+#define HCI_CMD                 0x01
+#define HCI_ACL                 0x02
+#define HCI_EVT                 0x04
 
 static K_SEM_DEFINE(hci_send_sem, 1, 1);
 static const struct device *hci_dev;
@@ -25,7 +28,7 @@ static bool is_hci_event_discardable(const uint8_t *evt_data)
 	uint8_t evt_type = evt_data[0];
 
 	switch (evt_type) {
-#if defined(CONFIG_BT_CLASSIC)
+#if defined(CONFIG_BT_BREDR)
 	case BT_HCI_EVT_INQUIRY_RESULT_WITH_RSSI:
 	case BT_HCI_EVT_EXTENDED_INQUIRY_RESULT:
 		return true;
@@ -45,7 +48,7 @@ static bool is_hci_event_discardable(const uint8_t *evt_data)
 	}
 }
 
-static struct net_buf *bt_b91_evt_recv(uint8_t *data, size_t len)
+static struct net_buf *bt_b9x_evt_recv(uint8_t *data, size_t len)
 {
 	bool discardable;
 	struct bt_hci_evt_hdr hdr;
@@ -93,7 +96,7 @@ static struct net_buf *bt_b91_evt_recv(uint8_t *data, size_t len)
 	return buf;
 }
 
-static struct net_buf *bt_b91_acl_recv(uint8_t *data, size_t len)
+static struct net_buf *bt_b9x_acl_recv(uint8_t *data, size_t len)
 {
 	struct bt_hci_acl_hdr hdr;
 	struct net_buf *buf;
@@ -134,7 +137,7 @@ static struct net_buf *bt_b91_acl_recv(uint8_t *data, size_t len)
 	return buf;
 }
 
-static void hci_b91_host_rcv_pkt(uint8_t *data, uint16_t len)
+static void hci_b9x_host_rcv_pkt(uint8_t *data, uint16_t len)
 {
 	uint8_t pkt_indicator;
 	struct net_buf *buf;
@@ -145,12 +148,12 @@ static void hci_b91_host_rcv_pkt(uint8_t *data, uint16_t len)
 	len -= sizeof(pkt_indicator);
 
 	switch (pkt_indicator) {
-	case BT_HCI_H4_EVT:
-		buf = bt_b91_evt_recv(data, len);
+	case HCI_EVT:
+		buf = bt_b9x_evt_recv(data, len);
 		break;
 
-	case BT_HCI_H4_ACL:
-		buf = bt_b91_acl_recv(data, len);
+	case HCI_ACL:
+		buf = bt_b9x_acl_recv(data, len);
 		break;
 
 	default:
@@ -173,16 +176,21 @@ static void hci_b91_controller_rcv_pkt_ready(void)
 	k_sem_give(&hci_send_sem);
 }
 
-static b91_bt_host_callback_t vhci_host_cb = {
+static b9x_bt_host_callback_t vhci_host_cb = {
 	.host_send_available = hci_b91_controller_rcv_pkt_ready,
-	.host_read_packet = hci_b91_host_rcv_pkt
+	.host_read_packet = hci_b9x_host_rcv_pkt
 };
 
-static int hci_b91_open(const struct device *dev, bt_hci_recv_t recv)
+static int hci_b9x_open(const struct device *dev, bt_hci_recv_t recv)
 {
+#if CONFIG_IEEE802154_TELINK_B9X
+	extern volatile bool b9x_rf_zigbee_250K_mode;
+
+	b9x_rf_zigbee_250K_mode = false;
+#endif
 	int status;
 
-	status = b91_bt_controller_init();
+	status = b9x_bt_controller_init();
 	if (status) {
 		LOG_ERR("Bluetooth controller init failed %d", status);
 		return status;
@@ -190,14 +198,20 @@ static int hci_b91_open(const struct device *dev, bt_hci_recv_t recv)
 
 	hci_dev = dev;
 	hci_recv = recv;
-	b91_bt_host_callback_register(&vhci_host_cb);
+	b9x_bt_host_callback_register(&vhci_host_cb);
 
+#if CONFIG_SOC_RISCV_TELINK_B91
 	LOG_DBG("B91 BT started");
+#elif CONFIG_SOC_RISCV_TELINK_B92
+	LOG_DBG("B92 BT started");
+#elif CONFIG_SOC_RISCV_TELINK_B95
+	LOG_DBG("B95 BT started");
+#endif
 
 	return 0;
 }
 
-static int bt_b91_send(const struct device *dev, struct net_buf *buf)
+static int bt_b9x_send(const struct device *dev, struct net_buf *buf)
 {
 	(void) dev;
 	int err = 0;
@@ -207,11 +221,11 @@ static int bt_b91_send(const struct device *dev, struct net_buf *buf)
 
 	switch (bt_buf_get_type(buf)) {
 	case BT_BUF_ACL_OUT:
-		type = BT_HCI_H4_ACL;
+		type = HCI_ACL;
 		break;
 
 	case BT_BUF_CMD:
-		type = BT_HCI_H4_CMD;
+		type = HCI_CMD;
 		break;
 
 	default:
@@ -221,8 +235,8 @@ static int bt_b91_send(const struct device *dev, struct net_buf *buf)
 
 	LOG_HEXDUMP_DBG(buf->data, buf->len, "Final HCI buffer:");
 
-	if (k_sem_take(&hci_send_sem, HCI_BT_B91_TIMEOUT) == 0) {
-		b91_bt_host_send_packet(type, buf->data, buf->len);
+	if (k_sem_take(&hci_send_sem, HCI_BT_B9X_TIMEOUT) == 0) {
+		b9x_bt_host_send_packet(type, buf->data, buf->len);
 	} else {
 		LOG_ERR("Send packet timeout error");
 		err = -ETIMEDOUT;
@@ -235,14 +249,30 @@ done:
 	return err;
 }
 
+static int hci_b9x_close(const struct device *dev)
+{
+	(void) dev;
+#if defined(CONFIG_BT_HCI_HOST) && defined(CONFIG_BT_BROADCASTER)
+	bt_le_adv_stop();
+#endif /* CONFIG_BT_HCI_HOST && CONFIG_BT_BROADCASTER */
+	b9x_bt_controller_deinit();
+#if CONFIG_IEEE802154_TELINK_B9X
+	extern volatile bool b9x_rf_zigbee_250K_mode;
+
+	b9x_rf_zigbee_250K_mode = false;
+#endif
+	return 0;
+}
+
 static int b91_bt_hci_init(const struct device *dev)
 {
 	return 0;
 }
 
 static const struct bt_hci_driver_api b91_bt_hci_api = {
-	.open  = hci_b91_open,
-	.send  = bt_b91_send,
+	.open  = hci_b9x_open,
+	.send  = bt_b9x_send,
+	.close = hci_b9x_close
 };
 
 /* BT HCI driver registration */

@@ -94,6 +94,7 @@
 		zephyr,entropy = &trng0;
 		zephyr,code-partition = &slot0_partition;
 		zephyr,ieee802154 = &ieee802154;
+		zephyr,bt-hci = &bt_hci;
 	};
 };
 
@@ -207,6 +208,10 @@
 	sample-freq = <DT_FREQ_K(96)>;
 	pinctrl-0 = <&adc_pb0_default>;
 	pinctrl-names = "default";
+};
+
+&bt_hci {
+	status = "okay";
 };
 
 zephyr_udc0: &usbd {
