@@ -171,13 +171,13 @@ static void hci_b9x_host_rcv_pkt(uint8_t *data, uint16_t len)
 	}
 }
 
-static void hci_b91_controller_rcv_pkt_ready(void)
+static void hci_b9x_controller_rcv_pkt_ready(void)
 {
 	k_sem_give(&hci_send_sem);
 }
 
 static b9x_bt_host_callback_t vhci_host_cb = {
-	.host_send_available = hci_b91_controller_rcv_pkt_ready,
+	.host_send_available = hci_b9x_controller_rcv_pkt_ready,
 	.host_read_packet = hci_b9x_host_rcv_pkt
 };
 
@@ -264,28 +264,28 @@ static int hci_b9x_close(const struct device *dev)
 	return 0;
 }
 
-static int b91_bt_hci_init(const struct device *dev)
+static int b9x_bt_hci_init(const struct device *dev)
 {
 	return 0;
 }
 
-static const struct bt_hci_driver_api b91_bt_hci_api = {
+static const struct bt_hci_driver_api b9x_bt_hci_api = {
 	.open  = hci_b9x_open,
 	.send  = bt_b9x_send,
 	.close = hci_b9x_close
 };
 
 /* BT HCI driver registration */
-#define B91_BT_HCI_INIT(n)                                              \
-	DEVICE_DT_INST_DEFINE(n, b91_bt_hci_init,                           \
+#define B9X_BT_HCI_INIT(n)                                              \
+	DEVICE_DT_INST_DEFINE(n, b9x_bt_hci_init,                           \
 		NULL,                                                           \
 		NULL,                                                           \
 		NULL,                                                           \
 		POST_KERNEL,                                                    \
 		CONFIG_KERNEL_INIT_PRIORITY_DEVICE,                             \
-		&b91_bt_hci_api);
+		&b9x_bt_hci_api);
 
-DT_INST_FOREACH_STATUS_OKAY(B91_BT_HCI_INIT)
+DT_INST_FOREACH_STATUS_OKAY(B9X_BT_HCI_INIT)
 
 #if DT_NUM_INST_STATUS_OKAY(DT_DRV_COMPAT) > 1
 #error only one HCI controller is supported
