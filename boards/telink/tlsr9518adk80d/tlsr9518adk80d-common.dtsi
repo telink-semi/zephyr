@@ -81,7 +81,7 @@
 		};
 		key_dfu: button_dfu {
 			label = "USB DFU";
-			gpios = <&gpiob 0 GPIO_PULL_DOWN>;
+			gpios = <&gpiob 0 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
 		};
 	};
 
