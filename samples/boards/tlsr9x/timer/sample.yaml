@@ -1,0 +1,7 @@
+sample:
+  name: TIMER usage sample
+tests:
+  sample.drivers.uart:
+    tags: timer tim
+    depends_on: gpio
+    harness: tim_outs
