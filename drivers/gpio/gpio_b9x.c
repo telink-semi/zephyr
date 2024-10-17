@@ -729,7 +729,7 @@ static int gpio_b9x_pm_action(const struct device *dev, enum pm_device_action ac
 				}
 
 				riscv_plic_irq_enable(IRQ_TO_L2(irq_num));
-				riscv_plic_set_priority(IRQ_TO_L2(irq_num, irq_priority));
+				riscv_plic_set_priority(IRQ_TO_L2(irq_num), irq_priority);
 
 				if (irq_num == IRQ_GPIO) {
 					BM_CLR(GPIO_IRQ_REG, FLD_GPIO_IRQ_LVL_GPIO);

@@ -15,7 +15,7 @@
 		color-mapping = <LED_COLOR_ID_GREEN
 				 LED_COLOR_ID_RED
 				 LED_COLOR_ID_BLUE>;
-		gpios = <&gpiob 4 0>;
+		in-gpios = <&gpiob 4 0>;
 	};
 
 	aliases {

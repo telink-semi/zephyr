@@ -8,7 +8,7 @@
 	at45db0: at45db041d@0 {
 		compatible = "atmel,at45";
 		reg = <0>;
-		spi-max-frequency = <24000000>;
+		spi-max-frequency = <48000000>;
 		jedec-id = [1f 24 00];
 		size = <4194304>;
 		sector-size = <65536>;
