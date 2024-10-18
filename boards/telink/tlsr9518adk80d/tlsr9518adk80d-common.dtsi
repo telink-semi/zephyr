@@ -213,12 +213,3 @@
 &bt_hci {
 	status = "okay";
 };
-
-zephyr_udc0: &usbd {
-	compatible = "telink,b9x-usbd";
-	status = "okay";
-};
-
-&wdt {
-	status = "okay";
-};

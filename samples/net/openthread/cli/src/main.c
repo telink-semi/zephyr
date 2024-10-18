@@ -55,7 +55,7 @@ static void ot_satate_changed(otChangedFlags flags,
 	}
 }
 
-void main(void)
+int main(void)
 {
 #ifdef CONFIG_USB_DEVICE_STACK
 	usb_enable(NULL);
@@ -72,4 +72,6 @@ void main(void)
 	};
 
 	openthread_state_changed_cb_register(openthread_get_default_context(), &ot_state_cahnge);
+
+	return 0;
 }

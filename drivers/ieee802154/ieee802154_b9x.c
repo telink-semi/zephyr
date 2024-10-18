@@ -57,10 +57,10 @@ static struct b9x_src_match_table src_match_table;
 static struct b9x_enh_ack_table enh_ack_table;
 #endif /* CONFIG_OPENTHREAD_LINK_METRICS_SUBJECT */
 
-#ifdef CONFIG_IEEE802154_2015
+#ifdef CONFIG_IEEE802154_TELINK_B9X_ENCRYPTION
 /* mac keys data */
 static struct b9x_mac_keys mac_keys;
-#endif /* CONFIG_IEEE802154_2015 */
+#endif /* CONFIG_IEEE802154_TELINK_B9X_ENCRYPTION */
 
 /* B9X data structure */
 static struct  b9x_data data = {
@@ -70,10 +70,10 @@ static struct  b9x_data data = {
 #ifdef CONFIG_OPENTHREAD_LINK_METRICS_SUBJECT
 	.enh_ack_table = &enh_ack_table,
 #endif /* CONFIG_OPENTHREAD_LINK_METRICS_SUBJECT */
-#ifdef CONFIG_IEEE802154_2015
+#ifdef CONFIG_IEEE802154_TELINK_B9X_ENCRYPTION
 /* mac keys data */
 	.mac_keys = &mac_keys,
-#endif /* CONFIG_IEEE802154_2015 */
+#endif /* CONFIG_IEEE802154_TELINK_B9X_ENCRYPTION */
 };
 
 #ifdef CONFIG_OPENTHREAD_FTD
@@ -222,7 +222,7 @@ ALWAYS_INLINE b9x_enh_ack_table_search(
 /* Add to enhanced ack table */
 static void b9x_enh_ack_table_add(
 	struct b9x_enh_ack_table *table, const uint8_t *addr_short, const uint8_t *addr_ext,
-	uint16_t ie_header_len, const uint8_t *ie_header)
+	const struct ieee802154_header_ie *ie_header)
 {
 	int idx = b9x_enh_ack_table_search(table, addr_short, addr_ext);
 
@@ -240,9 +240,8 @@ static void b9x_enh_ack_table_add(
 		}
 	}
 	if (idx != -1) {
-		table->item[idx].ie_header_len = ie_header_len;
-		memcpy(table->item[idx].ie_header, ie_header,
-			ie_header_len);
+		memcpy(&table->item[idx].ie_header, ie_header,
+			sizeof(struct ieee802154_header_ie));
 	}
 }
 
@@ -261,9 +260,8 @@ static void b9x_enh_ack_table_remove(
 				IEEE802154_FRAME_LENGTH_ADDR_SHORT);
 			memset(table->item[i].addr_ext, 0,
 				IEEE802154_FRAME_LENGTH_ADDR_EXT);
-			table->item[i].ie_header_len = 0;
-			memset(table->item[i].ie_header, 0,
-				B9X_ACK_IE_MAX_SIZE);
+			memset(&table->item[i].ie_header, 0,
+				sizeof(struct ieee802154_header_ie));
 			break;
 		}
 	}
@@ -271,22 +269,22 @@ static void b9x_enh_ack_table_remove(
 
 #endif /* CONFIG_OPENTHREAD_LINK_METRICS_SUBJECT */
 
-#ifdef CONFIG_IEEE802154_2015
+#ifdef CONFIG_IEEE802154_TELINK_B9X_ENCRYPTION
 
 /* Clean mac keys data */
-static void b9x_mac_keys_data_clean(struct b9x_mac_keys *mac_keys)
+static void b9x_mac_keys_data_clean(struct b9x_mac_keys *mac_keys_data)
 {
-	memset(mac_keys, 0, sizeof(struct b9x_mac_keys));
+	memset(mac_keys_data, 0, sizeof(struct b9x_mac_keys));
 }
 
-static const uint8_t *b9x_mac_keys_get(const struct b9x_mac_keys *mac_keys, uint8_t key_id)
+static const uint8_t *b9x_mac_keys_get(const struct b9x_mac_keys *mac_keys_data, uint8_t key_id)
 {
 	const uint8_t *result = NULL;
 
 	if (key_id) {
 		for (size_t i = 0; i < B9X_MAC_KEYS_ITEMS; i++) {
-			if (mac_keys->item[i].key_id == key_id) {
-				result = mac_keys->item[i].key;
+			if (mac_keys_data->item[i].key_id == key_id) {
+				result = mac_keys_data->item[i].key;
 				break;
 			}
 		}
@@ -294,17 +292,17 @@ static const uint8_t *b9x_mac_keys_get(const struct b9x_mac_keys *mac_keys, uint
 	return result;
 }
 
-static uint32_t b9x_mac_keys_frame_cnt_get(const struct b9x_mac_keys *mac_keys, uint8_t key_id)
+static uint32_t b9x_mac_keys_frame_cnt_get(const struct b9x_mac_keys *mac_keys_data, uint8_t key_id)
 {
 	uint32_t result = 0;
 
 	if (key_id) {
 		for (size_t i = 0; i < B9X_MAC_KEYS_ITEMS; i++) {
-			if (mac_keys->item[i].key_id == key_id) {
-				if (mac_keys->item[i].frame_cnt_local) {
-					result = mac_keys->item[i].frame_cnt;
+			if (mac_keys_data->item[i].key_id == key_id) {
+				if (mac_keys_data->item[i].frame_cnt_local) {
+					result = mac_keys_data->item[i].frame_cnt;
 				} else {
-					result = mac_keys->frame_cnt;
+					result = mac_keys_data->frame_cnt;
 				}
 				break;
 			}
@@ -313,15 +311,15 @@ static uint32_t b9x_mac_keys_frame_cnt_get(const struct b9x_mac_keys *mac_keys, 
 	return result;
 }
 
-static void b9x_mac_keys_frame_cnt_inc(struct b9x_mac_keys *mac_keys, uint8_t key_id)
+static void b9x_mac_keys_frame_cnt_inc(struct b9x_mac_keys *mac_keys_data, uint8_t key_id)
 {
 	if (key_id) {
 		for (size_t i = 0; i < B9X_MAC_KEYS_ITEMS; i++) {
-			if (mac_keys->item[i].key_id == key_id) {
-				if (mac_keys->item[i].frame_cnt_local) {
-					mac_keys->item[i].frame_cnt++;
+			if (mac_keys_data->item[i].key_id == key_id) {
+				if (mac_keys_data->item[i].frame_cnt_local) {
+					mac_keys_data->item[i].frame_cnt++;
 				} else {
-					mac_keys->frame_cnt++;
+					mac_keys_data->frame_cnt++;
 				}
 				break;
 			}
@@ -329,7 +327,7 @@ static void b9x_mac_keys_frame_cnt_inc(struct b9x_mac_keys *mac_keys, uint8_t ke
 	}
 }
 
-#endif /* CONFIG_IEEE802154_2015 */
+#endif /* CONFIG_IEEE802154_TELINK_B9X_ENCRYPTION */
 
 /* Disable power management by device */
 static void b9x_disable_pm(const struct device *dev)
@@ -574,7 +572,7 @@ ALWAYS_INLINE b9x_send_ack(const struct device *dev, struct ieee802154_frame *fr
 	struct b9x_data *b9x = dev->data;
 	uint8_t ack_buf[64];
 	size_t ack_len;
-#ifdef CONFIG_IEEE802154_2015
+#ifdef CONFIG_IEEE802154_TELINK_B9X_ENCRYPTION
 	const uint8_t *key = NULL;
 	uint32_t frame_cnt = b9x_mac_keys_frame_cnt_get(b9x->mac_keys, 1);
 	const uint8_t sec_header[] = {
@@ -597,13 +595,13 @@ ALWAYS_INLINE b9x_send_ack(const struct device *dev, struct ieee802154_frame *fr
 			frame->payload_len = sizeof(payload);
 		}
 	}
-#endif /* CONFIG_IEEE802154_2015 */
+#endif /* CONFIG_IEEE802154_TELINK_B9X_ENCRYPTION */
 
 	if (b9x_ieee802154_frame_build(frame, ack_buf, sizeof(ack_buf), &ack_len)) {
 		b9x->ack_sending = true;
 		k_sem_reset(&b9x->tx_wait);
 		rf_set_txmode();
-#ifdef CONFIG_IEEE802154_2015
+#ifdef CONFIG_IEEE802154_TELINK_B9X_ENCRYPTION
 		if (frame->sec_header) {
 			if (ieee802154_b9x_crypto_encrypt(key, b9x->filter_ieee_addr,
 				frame_cnt,
@@ -621,7 +619,7 @@ ALWAYS_INLINE b9x_send_ack(const struct device *dev, struct ieee802154_frame *fr
 		}
 #else
 		delay_us(CONFIG_IEEE802154_B9X_SET_TXRX_DELAY_US);
-#endif /* CONFIG_IEEE802154_2015 */
+#endif /* CONFIG_IEEE802154_TELINK_B9X_ENCRYPTION */
 		b9x_set_tx_payload(dev, ack_buf, ack_len);
 		rf_tx_pkt(b9x->tx_buffer);
 	} else {
@@ -739,9 +737,8 @@ static void ALWAYS_INLINE b9x_rf_rx_isr(const struct device *dev)
 					frame.src_addr_ext ? frame.src_addr : NULL);
 				if (idx >= 0) {
 					ack_ie_header =
-						b9x->enh_ack_table->item[idx].ie_header;
-					ack_ie_header_len =
-						b9x->enh_ack_table->item[idx].ie_header_len;
+						(uint8_t *)&b9x->enh_ack_table->item[idx].ie_header;
+					ack_ie_header_len = sizeof(struct ieee802154_header_ie);
 				}
 			}
 #endif /* CONFIG_OPENTHREAD_LINK_METRICS_SUBJECT */
@@ -876,9 +873,9 @@ static int b9x_init(const struct device *dev)
 	b9x_enh_ack_table_clean(b9x->enh_ack_table);
 #endif /* CONFIG_OPENTHREAD_LINK_METRICS_SUBJECT */
 	b9x->event_handler = NULL;
-#ifdef CONFIG_IEEE802154_2015
+#ifdef CONFIG_IEEE802154_TELINK_B9X_ENCRYPTION
 	b9x_mac_keys_data_clean(b9x->mac_keys);
-#endif /* CONFIG_IEEE802154_2015 */
+#endif /* CONFIG_IEEE802154_TELINK_B9X_ENCRYPTION */
 	return 0;
 }
 
@@ -907,9 +904,9 @@ static enum ieee802154_hw_caps b9x_get_capabilities(const struct device *dev)
 #if defined(CONFIG_NET_PKT_TIMESTAMP) && defined(CONFIG_NET_PKT_TXTIME)
 	caps |= IEEE802154_HW_TXTIME;
 #endif /* CONFIG_NET_PKT_TIMESTAMP && CONFIG_NET_PKT_TXTIME */
-#ifdef CONFIG_IEEE802154_2015
+#ifdef CONFIG_IEEE802154_TELINK_B9X_ENCRYPTION
 	caps |= IEEE802154_HW_TX_SEC;
-#endif /* CONFIG_IEEE802154_2015 */
+#endif /* CONFIG_IEEE802154_TELINK_B9X_ENCRYPTION */
 	return caps;
 }
 
@@ -1010,7 +1007,7 @@ static int b9x_start(const struct device *dev)
 		riscv_plic_set_priority(DT_INST_IRQN(0), DT_INST_IRQ(0, priority));
 #endif /* CONFIG_DYNAMIC_INTERRUPTS */
 		if (!b9x_rf_zigbee_250K_mode) {
-#if CONFIG_SOC_RISCV_TELINK_B95 && CONFIG_IEEE802154_2015
+#if CONFIG_SOC_RISCV_TELINK_B95 && CONFIG_IEEE802154_TELINK_B9X_ENCRYPTION
 			ske_dig_en();
 #endif
 			rf_mode_init();
@@ -1094,7 +1091,7 @@ static int b9x_tx(const struct device *dev,
 		}
 	}
 
-#ifdef CONFIG_IEEE802154_2015
+#ifdef CONFIG_IEEE802154_TELINK_B9X_ENCRYPTION
 
 	struct ieee802154_frame frame;
 	uint8_t key_id = 0;
@@ -1253,7 +1250,7 @@ static int b9x_tx(const struct device *dev,
 
 	} while (0);
 
-#endif /* CONFIG_IEEE802154_2015 */
+#endif /* CONFIG_IEEE802154_TELINK_B9X_ENCRYPTION */
 
 	/* prepare tx buffer */
 	b9x_set_tx_payload(dev, frag->data, frag->len);
@@ -1294,11 +1291,11 @@ static int b9x_tx(const struct device *dev,
 		}
 		b9x->ack_handler_en = false;
 	}
-#ifdef CONFIG_IEEE802154_2015
+#ifdef CONFIG_IEEE802154_TELINK_B9X_ENCRYPTION
 	if (!status) {
 		b9x_mac_keys_frame_cnt_inc(b9x->mac_keys, key_id);
 	}
-#endif /* CONFIG_IEEE802154_2015 */
+#endif /* CONFIG_IEEE802154_TELINK_B9X_ENCRYPTION */
 
 	return status;
 }
@@ -1359,10 +1356,10 @@ static int b9x_configure(const struct device *dev,
 			sys_put_le16(config->ack_ie.short_addr, short_addr);
 			sys_memcpy_swap(ext_addr, config->ack_ie.ext_addr,
 				IEEE802154_FRAME_LENGTH_ADDR_EXT);
-			if (config->ack_ie.data_len > 0) {
+			if (!config->ack_ie.purge_ie) {
 				b9x_enh_ack_table_add(b9x->enh_ack_table,
 					short_addr, ext_addr,
-					config->ack_ie.data_len, config->ack_ie.data);
+					config->ack_ie.header_ie);
 			} else {
 				b9x_enh_ack_table_remove(b9x->enh_ack_table,
 					short_addr, ext_addr);
@@ -1373,7 +1370,7 @@ static int b9x_configure(const struct device *dev,
 	case IEEE802154_CONFIG_EVENT_HANDLER:
 		b9x->event_handler = config->event_handler;
 		break;
-#ifdef CONFIG_IEEE802154_2015
+#ifdef CONFIG_IEEE802154_TELINK_B9X_ENCRYPTION
 	case IEEE802154_CONFIG_MAC_KEYS:
 		{
 			uint32_t cnt = b9x->mac_keys->frame_cnt;
@@ -1388,10 +1385,10 @@ static int b9x_configure(const struct device *dev,
 					b9x->mac_keys->item[i].frame_cnt_local =
 					config->mac_keys[i].frame_counter_per_key;
 					b9x->mac_keys->item[i].key_id =
-						config->mac_keys[i].key_index;
+						*config->mac_keys[i].key_id;
 				} else {
 					LOG_WRN("can't save key id %u",
-						config->mac_keys[i].key_index);
+						*config->mac_keys[i].key_id);
 				}
 			}
 		}
@@ -1399,7 +1396,7 @@ static int b9x_configure(const struct device *dev,
 	case IEEE802154_CONFIG_FRAME_COUNTER:
 		b9x->mac_keys->frame_cnt = config->frame_counter;
 		break;
-#endif /* CONFIG_IEEE802154_2015 */
+#endif /* CONFIG_IEEE802154_TELINK_B9X_ENCRYPTION */
 	default:
 		LOG_WRN("Unhandled cfg %d", type);
 		result = -ENOTSUP;

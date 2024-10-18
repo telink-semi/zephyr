@@ -32,6 +32,7 @@ struct ws2812_led_data {
 	const struct device          *led;
 	const size_t                  led_len;
 	struct led_rgb               *pix;
+	void                         *aux;
 };
 
 /*
@@ -55,7 +56,10 @@ struct ws2812_led_data {
 		.led_len = COND_CODE_1(                                                    \
 			DT_NODE_HAS_COMPAT(DT_NODELABEL(name), worldsemi_ws2812_gpio),         \
 			(DT_PROP(DT_NODELABEL(name), chain_length)), (0)),                     \
-		.pix = (struct led_rgb [COND_CODE_1(                                       \
+		.pix = (struct led_rgb[COND_CODE_1(                                        \
+			DT_NODE_HAS_COMPAT(DT_NODELABEL(name), worldsemi_ws2812_gpio),         \
+			(DT_PROP(DT_NODELABEL(name), chain_length)), (0))]) {},                \
+		.aux = (struct led_rgb[COND_CODE_1(                                        \
 			DT_NODE_HAS_COMPAT(DT_NODELABEL(name), worldsemi_ws2812_gpio),         \
 			(DT_PROP(DT_NODELABEL(name), chain_length)), (0))]) {},                \
 	}

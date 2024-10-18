@@ -36,7 +36,6 @@
 #define B9X_RSSI_TO_LQI_MIN                 (-87)
 #define B9X_CCA_TIME_MAX_US                 (200)
 #define B9X_LOGIC_CHANNEL_TO_PHYSICAL(p)    (((p) - 10) * 5)
-#define B9X_ACK_IE_MAX_SIZE                 (16)
 #define B9X_MAC_KEYS_ITEMS                  (3)
 #ifndef IEEE802154_CRYPTO_LENGTH_AES_BLOCK
 #define IEEE802154_CRYPTO_LENGTH_AES_BLOCK  (16)
@@ -73,13 +72,12 @@ struct b9x_enh_ack_table {
 		bool valid;
 		uint8_t addr_short[IEEE802154_FRAME_LENGTH_ADDR_SHORT];
 		uint8_t addr_ext[IEEE802154_FRAME_LENGTH_ADDR_EXT];
-		uint16_t ie_header_len;
-		uint8_t ie_header[B9X_ACK_IE_MAX_SIZE];
+		struct ieee802154_header_ie ie_header;
 	} item[CONFIG_OPENTHREAD_MAX_CHILDREN];
 };
 #endif /* CONFIG_OPENTHREAD_LINK_METRICS_SUBJECT */
 
-#ifdef CONFIG_IEEE802154_2015
+#ifdef CONFIG_IEEE802154_TELINK_B9X_ENCRYPTION
 /* radio MAC keys type */
 struct b9x_mac_keys {
 	struct {
@@ -90,7 +88,7 @@ struct b9x_mac_keys {
 	} item[B9X_MAC_KEYS_ITEMS];
 	uint32_t frame_cnt;
 };
-#endif /* CONFIG_IEEE802154_2015 */
+#endif /* CONFIG_IEEE802154_TELINK_B9X_ENCRYPTION */
 
 /* data structure */
 struct b9x_data {
@@ -119,9 +117,9 @@ struct b9x_data {
 	atomic_t current_pm_lock;
 #endif /* CONFIG_PM_DEVICE */
 	ieee802154_event_cb_t event_handler;
-#ifdef CONFIG_IEEE802154_2015
+#ifdef CONFIG_IEEE802154_TELINK_B9X_ENCRYPTION
 	struct b9x_mac_keys *mac_keys;
-#endif /* CONFIG_IEEE802154_2015 */
+#endif /* CONFIG_IEEE802154_TELINK_B9X_ENCRYPTION */
 };
 
 #endif
