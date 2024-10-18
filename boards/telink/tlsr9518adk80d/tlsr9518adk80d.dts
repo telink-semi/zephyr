@@ -7,3 +7,11 @@
 /dts-v1/;
 
 #include "tlsr9518adk80d-common.dtsi"
+
+zephyr_udc0: &usbd {
+	status = "okay";
+};
+
+&wdt {
+	status = "okay";
+};

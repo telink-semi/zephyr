@@ -604,7 +604,7 @@ b9x_ieee802154_get_data(const uint8_t *payload,
  * Cryptography functionality
  */
 
-#ifdef CONFIG_IEEE802154_2015
+#ifdef CONFIG_IEEE802154_TELINK_B9X_ENCRYPTION
 #if CONFIG_SOC_RISCV_TELINK_B91 || CONFIG_SOC_RISCV_TELINK_B92
 #include <aes.h>
 #elif CONFIG_SOC_RISCV_TELINK_B95
@@ -827,4 +827,4 @@ ieee802154_b9x_crypto_decrypt(
 
 	return result;
 }
-#endif
+#endif /* CONFIG_IEEE802154_TELINK_B9X_ENCRYPTION */

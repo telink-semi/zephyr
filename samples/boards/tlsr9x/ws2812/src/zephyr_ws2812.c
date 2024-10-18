@@ -26,7 +26,10 @@ bool ws2812_led_init(struct ws2812_led_data *ws2812_led)
 		}
 		/* init all LEDs ready */
 		memset(ws2812_led->pix, 0x00, sizeof(struct led_rgb) * ws2812_led->led_len);
-		if (led_strip_update_rgb(ws2812_led->led, ws2812_led->pix, ws2812_led->led_len)) {
+		memcpy(ws2812_led->aux, ws2812_led->pix,
+			sizeof(struct led_rgb) * ws2812_led->led_len);
+		if (led_strip_update_rgb(ws2812_led->led,
+			(struct led_rgb *) ws2812_led->aux, ws2812_led->led_len)) {
 			result = false;
 			break;
 		}
@@ -54,8 +57,10 @@ bool ws2812_led_set(struct ws2812_led_data *ws2812_led,
 				ws2812_led->pix[id / 3].b = (state ? 0xff : 0);
 				break;
 			}
-			if (!led_strip_update_rgb(ws2812_led->led, ws2812_led->pix,
-				ws2812_led->led_len)) {
+			memcpy(ws2812_led->aux, ws2812_led->pix,
+				sizeof(struct led_rgb) * ws2812_led->led_len);
+			if (!led_strip_update_rgb(ws2812_led->led,
+				(struct led_rgb *) ws2812_led->aux, ws2812_led->led_len)) {
 				result = true;
 			}
 		} else if (state == WS2812_LED_FIXED) {
@@ -69,19 +74,21 @@ bool ws2812_led_set(struct ws2812_led_data *ws2812_led,
 				switch (id % 3) {
 				case 0:
 					ws2812_led->pix[id / 3].r =
-						(permille * 0xff) / PERMILLE_MAX;
+						(permille * 0xff + PERMILLE_MAX / 2) / PERMILLE_MAX;
 					break;
 				case 1:
 					ws2812_led->pix[id / 3].g =
-						(permille * 0xff) / PERMILLE_MAX;
+						(permille * 0xff + PERMILLE_MAX / 2) / PERMILLE_MAX;
 					break;
 				case 2:
 					ws2812_led->pix[id / 3].b =
-						(permille * 0xff) / PERMILLE_MAX;
+						(permille * 0xff + PERMILLE_MAX / 2) / PERMILLE_MAX;
 					break;
 				}
-				if (!led_strip_update_rgb(ws2812_led->led, ws2812_led->pix,
-					ws2812_led->led_len)) {
+				memcpy(ws2812_led->aux, ws2812_led->pix,
+					sizeof(struct led_rgb) * ws2812_led->led_len);
+				if (!led_strip_update_rgb(ws2812_led->led,
+					(struct led_rgb *) ws2812_led->aux, ws2812_led->led_len)) {
 					result = true;
 				}
 			}

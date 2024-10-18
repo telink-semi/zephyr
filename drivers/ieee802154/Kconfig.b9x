@@ -79,4 +79,8 @@ config IEEE802154_B9X_MAC7
 	  This is the byte 7 of the MAC address.
 
 endif # IEEE802154_B9X_MAC_STATIC
+
+config IEEE802154_TELINK_B9X_ENCRYPTION
+	bool "Telink 802.15.4 AES-CCM* authentication & encryption"
+
 endif # IEEE802154_TELINK_B9X
