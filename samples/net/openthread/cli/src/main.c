@@ -1,7 +1,7 @@
 /* main.c - OpenThread */
 
 /*
- * Copyright (c) 2023 Telink
+ * Copyright (c) 2023-2024 Telink
  *
  * SPDX-License-Identifier: Apache-2.0
  */
