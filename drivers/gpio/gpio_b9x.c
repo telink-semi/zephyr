@@ -31,18 +31,19 @@
 #define DT_DRV_COMPAT telink_b9x_gpio
 
 /* Get GPIO instance */
-#define GET_GPIO(dev)           ((volatile struct gpio_b9x_t *)	\
-				 ((const struct gpio_b9x_config *)dev->config)->gpio_base)
+#define GET_GPIO(dev)                                                                              \
+	((volatile struct gpio_b9x_t *)((const struct gpio_b9x_config *)dev->config)->gpio_base)
 
 /* Get GPIO IRQ number defined in dts */
-#define GET_IRQ_NUM(dev)        (irq_from_level_2(((const struct gpio_b9x_config *)dev->config)->irq_num))
+#define GET_IRQ_NUM(dev) (irq_from_level_2(((const struct gpio_b9x_config *)dev->config)->irq_num))
 
 /* Get GPIO IRQ priority defined in dts */
 #define GET_IRQ_PRIORITY(dev)   (((const struct gpio_b9x_config *)dev->config)->irq_priority)
 
 /* Get GPIO port number: port A - 0, port B - 1, ..., port F - 5  */
-#define GET_PORT_NUM(gpio)      ((uint8_t)(((uint32_t)gpio - DT_REG_ADDR(DT_NODELABEL(gpioa))) / \
-					   DT_REG_SIZE(DT_NODELABEL(gpioa))))
+#define GET_PORT_NUM(gpio)                                                                         \
+	((uint8_t)(((uint32_t)gpio - DT_REG_ADDR(DT_NODELABEL(gpioa))) /                           \
+		   DT_REG_SIZE(DT_NODELABEL(gpioa))))
 
 /* Check that gpio is port C */
 #define IS_PORT_C(gpio)         ((uint32_t)gpio == DT_REG_ADDR(DT_NODELABEL(gpioc)))
@@ -891,27 +892,20 @@ PM_DEVICE_DT_INST_DEFINE(n, gpio_b9x_pm_action);
 
 
 /* GPIO driver registration */
-#define GPIO_B9X_INIT(n)						    \
-	PM_DEVICE_INST_DEFINE(n, gpio_b9x_pm_action)	\
-	static struct gpio_b9x_pin_irq_config gpio_b9x_pin_irq_state_##n; \
-	static const struct gpio_b9x_config gpio_b9x_config_##n = {	    \
-		.common = {						    \
-			.port_pin_mask = GPIO_PORT_PIN_MASK_FROM_DT_INST(n) \
-		},							    \
-		.gpio_base = DT_INST_REG_ADDR(n),			    \
-		.irq_num = DT_INST_IRQN(n),				    \
-		.irq_priority = DT_INST_IRQ(n, priority),		    \
-		.pin_irq_state = &gpio_b9x_pin_irq_state_##n,	\
-		.pirq_connect = gpio_b9x_irq_connect_##n		    \
-	};								    \
-	static struct gpio_b9x_data gpio_b9x_data_##n;			    \
-									    \
-	DEVICE_DT_INST_DEFINE(n, gpio_b9x_init,				    \
-			      PM_DEVICE_INST_GET(n),					    \
-			      &gpio_b9x_data_##n,			    \
-			      &gpio_b9x_config_##n,			    \
-			      PRE_KERNEL_1,				    \
-			      CONFIG_GPIO_INIT_PRIORITY,		    \
+#define GPIO_B9X_INIT(n)                                                                           \
+	PM_DEVICE_INST_DEFINE(n, gpio_b9x_pm_action)                                               \
+	static struct gpio_b9x_pin_irq_config gpio_b9x_pin_irq_state_##n;                          \
+	static const struct gpio_b9x_config gpio_b9x_config_##n = {                                \
+		.common = {.port_pin_mask = GPIO_PORT_PIN_MASK_FROM_DT_INST(n)},                   \
+		.gpio_base = DT_INST_REG_ADDR(n),                                                  \
+		.irq_num = DT_INST_IRQN(n),                                                        \
+		.irq_priority = DT_INST_IRQ(n, priority),                                          \
+		.pin_irq_state = &gpio_b9x_pin_irq_state_##n,                                      \
+		.pirq_connect = gpio_b9x_irq_connect_##n};                                         \
+	static struct gpio_b9x_data gpio_b9x_data_##n;                                             \
+                                                                                                   \
+	DEVICE_DT_INST_DEFINE(n, gpio_b9x_init, PM_DEVICE_INST_GET(n), &gpio_b9x_data_##n,         \
+			      &gpio_b9x_config_##n, PRE_KERNEL_1, CONFIG_GPIO_INIT_PRIORITY,       \
 			      &gpio_b9x_driver_api);
 
-DT_INST_FOREACH_STATUS_OKAY(GPIO_B9X_INIT)
+DT_INST_FOREACH_STATUS_OKAY(GPIO_B9X_INIT);

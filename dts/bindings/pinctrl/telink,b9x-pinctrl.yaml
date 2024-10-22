@@ -83,7 +83,7 @@ properties:
 
 child-binding:
   description: |
-      This binding gives a base representation of the Telink B91 pins configration.
+      This binding gives a base representation of the Telink B91 pins configuration.
 
   include:
   - name: pincfg-node.yaml
