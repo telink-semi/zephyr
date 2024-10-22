@@ -847,7 +847,8 @@ static int usb_irq_init(void)
 	riscv_plic_irq_enable(USBD_B9X_IRQN_BY_IDX(4));
 	riscv_plic_set_priority(USBD_B9X_IRQN_BY_IDX(4), USBD_B9X_IRQ_PRIORITY_BY_IDX(4));
 
-	IRQ_CONNECT(USBD_B9X_IRQN_BY_IDX(5), USBD_B9X_IRQ_PRIORITY_BY_IDX(5), usb_irq_suspend, 0, 0);
+	IRQ_CONNECT(USBD_B9X_IRQN_BY_IDX(5), USBD_B9X_IRQ_PRIORITY_BY_IDX(5), usb_irq_suspend, 0,
+		    0);
 	riscv_plic_irq_enable(USBD_B9X_IRQN_BY_IDX(5));
 	riscv_plic_set_priority(USBD_B9X_IRQN_BY_IDX(5), USBD_B9X_IRQ_PRIORITY_BY_IDX(5));
 

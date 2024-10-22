@@ -397,19 +397,17 @@ static int soc_b9x_check_flash(void)
 	static const size_t dts_flash_size = DT_REG_SIZE(DT_CHOSEN(zephyr_flash));
 	size_t hw_flash_size = 0;
 	unsigned int  mid = flash_read_mid();
-	const flash_capacity_e hw_flash_cap =
-		(mid & FLASH_MID_SIZE_MASK) >> FLASH_MID_SIZE_OFFSET;
+
+	const flash_capacity_e hw_flash_cap = (mid & FLASH_MID_SIZE_MASK) >> FLASH_MID_SIZE_OFFSET;
 
 #if CONFIG_SOC_RISCV_TELINK_B92
 	/* Enable 4x SPI read and write */
-
 	if (flash_set_4line_read_write(mid) != 1) {
 
 	}
 
 #elif CONFIG_SOC_RISCV_TELINK_B95
 	/* Enable 4x SPI read and write */
-
 	if (flash_set_4line_read_write(SLAVE0, mid) != 1) {
 
 	}
