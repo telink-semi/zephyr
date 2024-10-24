@@ -128,7 +128,7 @@ config TELINK_B9X_MATTER_RETENTION_LAYOUT
 config COMPRESS_LZMA
 	bool "Support LZMA compression"
 	default n
-	depends on BOOTLOADER_MCUBOOT
+	depends on BOOTLOADER_MCUBOOT || MCUBOOT
 	help
 	  This option enables LZMA compression with MCUBoot
 
