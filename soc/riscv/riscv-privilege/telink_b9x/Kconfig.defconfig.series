@@ -55,6 +55,9 @@ config TEST_EXTRA_STACK_SIZE
 	int
 	default 1024
 
+config LZMA
+	default y if COMPRESS_LZMA
+
 config HAS_FLASH_LOAD_OFFSET
 	default y if BOOTLOADER_MCUBOOT
 

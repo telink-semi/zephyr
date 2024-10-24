@@ -7,9 +7,11 @@ if(CONFIG_LZMA)
 
   add_library(liblzma STATIC
     ${LZMA_DIR}/src/liblzma/common/common.c
+    ${LZMA_DIR}/src/liblzma/lzma/lzma_decoder.c
+    ${LZMA_DIR}/src/liblzma/lz/lz_decoder.c
+    ${LZMA_DIR}/src/liblzma/common/filter_decoder.c
+    ${LZMA_DIR}/src/liblzma/common/filter_common.c
   )
-
-  # target_compile_options(liblzma PRIVATE -nostdinc)
 
   zephyr_library_include_directories(
     ${LZMA_DIR}/
