@@ -1,0 +1,76 @@
+/*
+ * Copyright (c) 2024 Telink Semiconductor
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * RRAM (on-chip NVM) boot variant for TL3228x.
+ *
+ * Two storage media coexist:
+ *   - RRAM (0x00400000): Boot medium, code execution, runtime data storage
+ *   - Flash (0x20000000): External SPI flash, available for OTA and bulk storage
+ *
+ * The NVS subsystem can use either or both by specifying different
+ * flash_device handles (DEVICE_DT_GET(DT_NODELABEL(rram)) vs
+ * DEVICE_DT_GET(DT_NODELABEL(flash))).
+ */
+
+/dts-v1/;
+
+#include "tl3228x-common.dtsi"
+
+/ {
+	/*
+	 * Override chosen node: use RRAM as the primary flash device.
+	 * The Zephyr linker derives ROM_BASE from this node's reg.
+	 *
+	 * External SPI flash (&flash) is still available via its own
+	 * device handle for OTA and secondary storage.
+	 */
+	chosen {
+		zephyr,flash = &rram;
+		zephyr,code-partition = &rram_slot0_partition;
+	};
+};
+
+/*
+ * Enable the on-chip RRAM controller (disabled by default in SoC dtsi).
+ */
+&nvm {
+	status = "okay";
+};
+
+/*
+ * RRAM partitions for MCUBoot + application + NVS storage.
+ *
+ * Layout matching cstartup_nvm.S (SRAM_384K):
+ *   0x00000 - 0x0FFFF : MCUBoot (64KB)
+ *   0x10000 - 0x6FFFF : Application image (384KB)
+ *   0x70000 - 0x7FFFF : NVS storage area (64KB)
+ */
+&rram {
+	reg = <0x00400000 0x00080000>;
+
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		rram_boot_partition: partition@0 {
+			label = "rram-mcuboot";
+			reg = <0x00000000 0x10000>;
+		};
+		rram_slot0_partition: partition@10000 {
+			label = "rram-image-0";
+			reg = <0x10000 0x60000>;
+		};
+		rram_storage_partition: partition@70000 {
+			label = "rram-storage";
+			reg = <0x70000 0x10000>;
+		};
+	};
+};
+
+/*
+ * External SPI flash is kept available (via its own device handle)
+ * for OTA firmware storage and secondary data, but is NOT the boot medium.
+ */

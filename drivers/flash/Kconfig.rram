@@ -1,0 +1,18 @@
+# Copyright (c) 2024 Telink Semiconductor
+# SPDX-License-Identifier: Apache-2.0
+
+config SOC_RRAM_TELINK_TLX
+	bool "Telink TLx RRAM (NVM) driver"
+	default y
+	depends on DT_HAS_TELINK_TLX_RRAM_ENABLED
+	select FLASH_HAS_PAGE_LAYOUT
+	select FLASH_HAS_DRIVER_ENABLED
+	help
+	  Enables Telink TLx on-chip RRAM (Resistive RAM / NVM) driver.
+
+	  RRAM is the on-chip non-volatile memory on TLx series MCUs.
+	  Key differences from external SPI Flash:
+	    - No physical erasure needed (direct overwrite)
+	    - Minimum write granularity: 16 bytes
+	    - Empty state: all zeros (0x00)
+	    - Zero wear-leveling (byte-addressable overwrite)

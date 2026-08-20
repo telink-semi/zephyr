@@ -185,7 +185,15 @@ void soc_early_init_hook(void)
 	wd_32k_stop();
 
 #undef N22_FW_DOWNLOAD_FLASH_ADDR
+#if defined(CONFIG_BT_ID_FOR_KMD)
+	#ifdef CONFIG_SOC_RRAM_TELINK_TLX
+	#define N22_FW_DOWNLOAD_FLASH_ADDR          0x00540000
+	#else
+	#define N22_FW_DOWNLOAD_FLASH_ADDR          0x20048000
+	#endif
+#else
 #define N22_FW_DOWNLOAD_FLASH_ADDR CONFIG_FLASH_BASE_ADDRESS + 0x80000
+#endif
 	sys_n22_init(N22_FW_DOWNLOAD_FLASH_ADDR);
 #if !defined(TLK_ONLY_BLE_HOST)
 	rf_n22_dig_init();
@@ -295,6 +303,10 @@ unsigned char flash_set_4line_read_write(mspi_slave_device_num_e device_num, uns
  */
 static int soc_tlx_check_flash(void)
 {
+#ifdef CONFIG_SOC_RRAM_TELINK_TLX
+	/* RRAM board: no external SPI Flash to check, skip */
+	return 0;
+#else
 	static const size_t dts_flash_size = DT_REG_SIZE(DT_CHOSEN(zephyr_flash));
 	size_t hw_flash_size = 0;
 	flash_capacity_e hw_flash_cap;
@@ -338,6 +350,7 @@ static int soc_tlx_check_flash(void)
 	}
 
 	return 0;
+#endif /* CONFIG_SOC_RRAM_TELINK_TLX */
 }
 
 SYS_INIT(soc_tlx_check_flash, POST_KERNEL, 0);
