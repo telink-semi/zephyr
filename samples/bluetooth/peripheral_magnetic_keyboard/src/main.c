@@ -29,6 +29,15 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(main);
 
+/*
+ * Override the weak SOC hook to configure the LPC + PEM + DMA based flash
+ * protection used when running at CLK_192MHZ on TL322X.
+ */
+void tl322x_pem_flash_prot_config(void)
+{
+	lpc_pem_flash_prot_config(LPC_INPUT_PB5, PEM0, DMA7);
+}
+
 int main(void)
 {
 	keyboard_comm_init();

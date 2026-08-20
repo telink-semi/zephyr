@@ -1,0 +1,249 @@
+&cpu0 {
+	clock-frequency = <192000000>;		/* USB0 digital voltage must be 1.1V and HCLK min's 48M */
+	// clock-frequency = <96000000>;
+};
+
+&uart0 {
+	status = "okay";
+	pinctrl-0 = <&uart0_tx_pd4_default &uart0_rx_pd5_default>;
+	current-speed = <1000000>;			/* Baud rate for serial port logging */
+};
+
+&ram_ilm {
+	reg = <0x00000000 0x00028000>;
+};
+
+&ram_dlm {
+	reg = <0x00080000 0x00010000>;
+};
+
+
+&gpioa {
+       status = "okay";
+};
+
+
+/ {
+
+	aliases {
+
+		/delete-property/ led0;
+		/delete-property/ led1;
+		/delete-property/ led2;
+		/delete-property/ led3;
+
+		/delete-property/ mcuboot-button0;
+		/delete-property/ mcuboot-led0;
+
+		/delete-property/ sw0;
+		/delete-property/ sw1;
+		/delete-property/ sw2;
+		/delete-property/ sw3;
+
+		/delete-property/ pwm-led0;
+		/delete-property/ pwm0;
+
+		ledmode = &led_mode;
+		leddevicestatus = &led_device_status;
+		ledcap = &led_cap;
+		lednum = &led_num;
+
+		vbuscheck0 = &vbus_pin;
+		mode2p4 = &mode_2p4_pin;
+		modeble = &mode_ble_pin;
+
+	};
+
+	/delete-node/ leds;
+	/delete-node/ pwm_leds;
+
+	leds {
+		compatible = "gpio-leds";
+
+		led_mode: mode_io {
+			gpios = <&gpiof 4 GPIO_ACTIVE_LOW>;
+			label = "LED Mode";
+		};
+
+		led_device_status: device_status_io {
+			gpios = <&gpiof 5 GPIO_ACTIVE_LOW>;
+			label = "LED Device_Status";
+		};
+
+		led_cap: cap_io {
+			gpios = <&gpiof 6 GPIO_ACTIVE_LOW>;
+			label = "LED CAP";
+		};
+
+		led_num: num_io {
+			gpios = <&gpiof 7 GPIO_ACTIVE_LOW>;
+			label = "LED NUM";
+		};
+	};
+
+	/delete-node/ keys;
+
+	keys {
+		compatible = "gpio-keys";
+
+		vbus_pin: vbus_io {
+			gpios = <&gpioc 6 (GPIO_ACTIVE_HIGH)>;
+			label = "VBUS CHECK";
+		};
+
+		mode_2p4_pin: mode_2p4_io {
+			gpios = <&gpiob 7 (GPIO_ACTIVE_LOW)>;
+			label = "MODE 2P4 SLECT";
+		};
+		mode_ble_pin: mode_ble_io {
+			gpios = <&gpiob 4 (GPIO_ACTIVE_LOW)>;
+			label = "MODE BLE SLECT";
+		};
+	};
+
+	/delete-node/ key_pool;
+	/delete-node/ led_pool;
+	/delete-node/ pwm_pool;
+
+	zephyr,user {
+		/* adjust channel number according to pinmux in board.dts */
+		io-channels = <&adc 0>;
+	};
+};
+
+&adc {
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	channel@0 {
+		reg = <0>;
+		zephyr,gain = "ADC_GAIN_1";
+		zephyr,reference = "ADC_REF_INTERNAL";
+		zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+		zephyr,resolution = <12>;
+		zephyr,input-positive = <DT_ADC_GPIO_PC0>;
+	};
+};
+
+&adc {
+	status = "okay";
+	vref-internal-mv = <1200>;
+	sample-freq = <DT_FREQ_K(96)>;
+	pinctrl-0 = <&adc_pc0_default>;
+	pinctrl-names = "default";
+};
+
+/*
+ * RRAM partition layout (512KB total):
+ *   boot_partition:    0x00000 - 0x07FFF  (32KB)  MCUBoot
+ *   slot0_partition:   0x08000 - 0x47FFF  (256KB) D25F application (code)
+ *   n22_partition:     0x48000 - 0x67FFF  (128KB) N22 firmware image
+ *   user_app_partition:0x68000 - 0x77FFF  (64KB)  NVS user data
+ *   storage_partition: 0x78000 - 0x79FFF  (8KB)   BLE settings (bonding info)
+ *   vendor_partition:  0x7E000 - 0x7FFFF  (8KB)   Telink RF calibration data
+ *
+ * External SPI flash is available for OTA bulk storage (no DT partitions).
+ */
+&rram {
+	reg = <0x00400000 0x00080000>;
+	/delete-node/ partitions;
+
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		/* MCUBoot */
+		boot_partition: partition@0 {
+			label = "mcuboot";
+			reg = <0x00000000 0x8000>;
+		};
+		/* D25F application image */
+		slot0_partition: partition@8000 {
+			label = "image-0";
+			reg = <0x8000 0x40000>;
+		};
+		/* N22 firmware image */
+		n22_partition: partition@48000 {
+			label = "n22-image";
+			reg = <0x48000 0x20000>;
+		};
+		/* NVS user application data */
+		user_app_partition: partition@68000 {
+			label = "app-storage";
+			reg = <0x68000 0x10000>;
+		};
+		/* BLE settings / bonding info */
+		storage_partition: partition@78000 {
+			label = "storage";
+			reg = <0x78000 0x2000>;
+		};
+		/* Telink RF calibration parameters */
+		vendor_partition: partition@7e000 {
+			label = "vendor-data";
+			reg = <0x7e000 0x2000>;
+		};
+	};
+};
+
+/*
+ * External SPI flash: not used for code or NVS in this build.
+ * Keep it available as a raw block device for OTA storage.
+ */
+&flash {
+	/delete-node/ partitions;
+};
+
+/*
+ * Override chosen: point code-partition to the overlay's slot0 on &rram.
+ * The board dts already sets zephyr,flash = &rram.
+ */
+/ {
+	chosen {
+		zephyr,code-partition = &slot0_partition;
+	};
+};
+
+&pinctrl {
+	/* Set pad-mul-sel register value.
+	 * Note: Pins functions below (pinmux = <...>) depend on this value.
+	 */
+	pad-mul-sel = <1>;
+
+	/* UART0: TX(PA0), RX(PA1), RTS(PB4), CTS(PB6) */
+
+	/delete-node/ uart0_tx_pa0_default;
+	/delete-node/ uart0_rx_pa1_default;
+
+	uart0_tx_pd4_default: uart0_tx_pd4_default {
+		pinmux = <TLX_PINMUX_SET(TLX_PORT_D, TLX_PIN_4,
+			(TL322X_FUNC_UART0_TX))>;
+	};
+	uart0_rx_pd5_default: uart0_rx_pd5_default {
+		pinmux = <TLX_PINMUX_SET(TLX_PORT_D, TLX_PIN_5,
+			(TL322X_FUNC_UART0_RTX_IO))>;
+	};
+};
+
+&pwm0 {
+	status = "disabled";
+};
+
+&gspi {
+	status = "disabled";
+};
+
+&i2c {
+	status = "disabled";
+	clock-frequency = <I2C_BITRATE_FAST>;
+	pinctrl-0 = <&i2c_scl_pe0_default &i2c_sda_pe1_default>;
+	pinctrl-names = "default";
+};
+
+&adc {
+	status = "okay";
+	vref-internal-mv = <1200>;
+	sample-freq = <DT_FREQ_K(96)>;
+	pinctrl-0 = <&adc_pc0_default>;
+	pinctrl-names = "default";
+};

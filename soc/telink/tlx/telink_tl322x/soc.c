@@ -36,6 +36,19 @@ pm_retention_register_recover(void)
 {
 }
 
+/**
+ * @brief Weak hook for configuring PEM-based flash protection.
+ *
+ * The LPC + PEM + DMA based flash protection used at CLK_192MHZ requires the
+ * Telink BLE SDK drivers (lpc.h/pem.h/dma.h), which are only linked by
+ * applications that enable the corresponding HAL. To avoid breaking samples
+ * that do not use those drivers, the actual configuration is delegated to
+ * this weak function that applications may override.
+ */
+__weak void tl322x_pem_flash_prot_config(void)
+{
+}
+
 /* List of supported CCLK frequencies */
 #define CLK_48MHZ  48000000u
 #define CLK_64MHZ  64000000u
@@ -174,6 +187,8 @@ void soc_early_init_hook(void)
 	case CLK_192MHZ:
 		pm_set_dig_ldo(DIG_VOL_1V1_MODE, 1000);
 		PLL_192M_D25F_192M_HCLK_N22_96M_PCLK_96M_MSPI_48M;
+		/* Configure PEM flash protection with adjustable pin, PEM channel and DMA channel per hardware design */
+		tl322x_pem_flash_prot_config();
 		break;
 	}
 
@@ -262,6 +277,8 @@ void soc_tlx_restore(void)
 	case CLK_192MHZ:
 		pm_set_dig_ldo(DIG_VOL_1V1_MODE, 1000);
 		PLL_192M_D25F_192M_HCLK_N22_96M_PCLK_96M_MSPI_48M;
+		/* Configure PEM flash protection with adjustable pin, PEM channel and DMA channel per hardware design */
+		tl322x_pem_flash_prot_config();
 		break;
 	}
 
