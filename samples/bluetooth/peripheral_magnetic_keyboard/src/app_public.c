@@ -1,0 +1,825 @@
+/** @file app_public.c
+ *  @brief
+ */
+
+/*
+ * Copyright (c) 2025 Telink Semiconductor
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#include <zephyr/types.h>
+#include <stddef.h>
+#include <string.h>
+#include <errno.h>
+#include <zephyr/sys/printk.h>
+#include <zephyr/sys/byteorder.h>
+#include <zephyr/kernel.h>
+
+#include <zephyr/settings/settings.h>
+#include <inttypes.h>
+#include <zephyr/drivers/interrupt_controller/riscv_plic.h>
+#include <zephyr/drivers/flash.h>
+#include <zephyr/fs/nvs.h>
+#include <zephyr/storage/flash_map.h>
+#include <zephyr/sys/reboot.h>
+#include <zephyr/drivers/gpio.h>
+#include <zephyr/bluetooth/conn.h>
+#include <zephyr/drivers/uart.h>
+#include <zephyr/drivers/usb/usb_dc.h>
+
+#include "timer.h"
+#include "ble_flash.h"
+#include "app_public.h"
+#include "drivers.h"
+#include "app_kb_matrix.h"
+
+#define LOG_LEVEL LOG_LEVEL_DBG
+#include <zephyr/logging/log.h>
+LOG_MODULE_REGISTER(app_public);
+
+/*
+ * Devicetree node identifiers for the buttons and LED this sample
+ * supports.
+ */
+#define MODE_NODE   DT_ALIAS(ledmode)
+#define DEVICE_NODE DT_ALIAS(leddevicestatus)
+#define CAP_NODE    DT_ALIAS(ledcap)
+#define NUM_NODE    DT_ALIAS(lednum)
+
+#define VBUS_NODE   DT_ALIAS(vbuscheck0)
+#define D24G_NODE   DT_ALIAS(mode2p4)
+#define BLE_NODE    DT_ALIAS(modeble)
+/*
+ * Helper macro for initializing a gpio_dt_spec from the devicetree
+ * with fallback values when the nodes are missing.
+ */
+#define GPIO_SPEC(node_id) GPIO_DT_SPEC_GET_OR(node_id, gpios, {0})
+
+/*
+ * Create gpio_dt_spec structures from the devicetree.
+ */
+const struct gpio_dt_spec   mode_led_pin = GPIO_SPEC(MODE_NODE),
+                            device_status_led_pin = GPIO_SPEC(DEVICE_NODE),
+                            cap_led_pin = GPIO_SPEC(CAP_NODE),
+                            num_led_pin = GPIO_SPEC(NUM_NODE),
+                            vbus_check_pin = GPIO_SPEC(VBUS_NODE),
+                            mode_2p4_pin = GPIO_SPEC(D24G_NODE),
+                            mode_ble_pin = GPIO_SPEC(BLE_NODE);
+
+
+
+/* 定义NVS使用的Flash存储分区 */
+#define NVS_USER_PARTITION user_app_partition
+#define NVS_PARTITION_DEVICE FIXED_PARTITION_DEVICE(NVS_USER_PARTITION)
+#define NVS_PARTITION_OFFSET FIXED_PARTITION_OFFSET(NVS_USER_PARTITION)
+/* NVS扇区大小，需与Flash的擦除页大小匹配 */
+#define NVS_SECTOR_SIZE (4096)
+/* NVS扇区数量 */
+#define NVS_SECTOR_COUNT (2)
+/* 定义NVS实例 */
+struct nvs_fs user_fs;
+
+const struct uart_config uart_cfg = {
+		.baudrate = 1000000,
+		.parity = UART_CFG_PARITY_NONE,
+		.stop_bits = UART_CFG_STOP_BITS_1,
+		.data_bits = UART_CFG_DATA_BITS_8,
+		.flow_ctrl = UART_CFG_FLOW_CTRL_NONE
+	};
+
+const struct device *const uart_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
+
+ST_FLASH_DEV_INFO flash_dev_info  __attribute__ ((aligned (4)));
+int dev_info_idx;
+
+ST_FLASH_DEV_OTHER_INFO flash_dev_other_info  __attribute__ ((aligned (4)));
+int dev_other_info_idx;
+
+// _attribute_data_retention_ uint32_t flash_sector_2p4_inf=P24G_PAIR_INF_FLASH_ADDR_2M;
+// _attribute_data_retention_ uint32_t flash_sector_2p4_other_inf=P24G_OTHER_INF_FLASH_ADDR_2M;
+
+
+
+volatile unsigned char fun_mode = 0xff;
+static unsigned char last_mode_status=KB_MODE_USB;
+static unsigned char last_vbus_status=0xff;
+
+
+#define KB_TX_FIFO_SIZE 24
+#define KB_TX_FIFO_NUM 16
+
+_attribute_aligned_(4)  unsigned char kb_buf_txfifo[KB_TX_FIFO_SIZE * KB_TX_FIFO_NUM];
+pl_fifo_t d25fKbTxFifo = {
+    .size = KB_TX_FIFO_SIZE,
+    .num = KB_TX_FIFO_NUM,
+    .wptr = 0,
+    .rptr = 0,
+    .p = kb_buf_txfifo,
+};
+
+
+#define SPP_TX_FIFO_NUM 8
+_attribute_aligned_(4)  unsigned char spp_buf_txfifo[SPP_TX_FIFO_SIZE_KB * SPP_TX_FIFO_NUM];
+pl_fifo_t d25fSppTxFifo = {
+    .size = SPP_TX_FIFO_SIZE_KB,
+    .num = SPP_TX_FIFO_NUM,
+    .wptr = 0,
+    .rptr = 0,
+    .p = spp_buf_txfifo,
+};
+
+
+_attribute_ram_code_sec_ uint16_t tpsll_fnv1a_16(uint8_t *data, size_t len)
+{
+    uint16_t hash = 0x55AA;
+    
+    for (size_t i = 0; i < len; i++) {
+
+        hash ^= data[i];
+        hash = (hash << 5) | (hash >> 11);
+        
+        hash ^= (hash >> 8);
+    }
+
+    return hash;
+}
+
+static void p24g_pairing_info_check(void)
+{
+    uint8_t mac_public[6];
+    uint8_t mac_random_static[6];
+    extern unsigned int flash_sector_mac_address;
+    random_generator_init();
+    blc_initMacAddress(flash_sector_mac_address, mac_public, mac_random_static);
+
+    tmemcpy(app_ctx.mac, mac_public, MAC_ADDR_LEN);
+
+    uint16_t tag = tpsll_fnv1a_16(app_ctx.mac, MAC_ADDR_LEN);
+    tag = (tag & 0x3fff) | (DEVICE_TYPE_KB << 14);
+
+    dev_info_idx = nvs_read(&user_fs, APP_2P4G_PAIR_INFO_ID, (unsigned char *)&flash_dev_info.side_id, sizeof(ST_FLASH_DEV_INFO));
+    if (dev_info_idx == -ENOENT) {
+        LOG_INF("not paired");
+    } else {
+        LOG_INF("paired: %x", flash_dev_info.side_id);
+    }
+
+    dev_other_info_idx = nvs_read(&user_fs, APP_2P4G_APP_INFO_ID, (unsigned char *)&flash_dev_other_info.report_rate, sizeof(ST_FLASH_DEV_OTHER_INFO));
+    if (dev_other_info_idx == -ENOENT) {
+        flash_dev_other_info.report_rate = REPORT_RATE_8K;
+        LOG_INF("NVS report rate naver saved\n");
+    } else {
+        LOG_INF("NVS get report rate: %x", flash_dev_other_info.report_rate);
+    }
+
+    app_ctx.report_rate = flash_dev_other_info.report_rate;
+}
+
+
+_attribute_ram_code_sec_ uint8_t app_2p4g_set_stack_report_rate(uint8_t report_rate)
+{
+    uint8_t ret = TLK_SUCCESS;
+
+    if (app_d24p_get_state() == STATE_CONNECTED) 
+    {
+        ret = p24g_send_spp_data(TPSLL_SPP_REPORT_RATE, &report_rate, 1);
+        if (TLK_SUCCESS == ret) {
+            ret = p24g_send_sm_msg(P24G_SM_CMD_REPORT_RATE_CHANGE, report_rate, 0, 0);
+            // DBG_GPIO_TOGGLE(APP_IO_EN, GPIO_PH0);
+        }
+    } else {
+        ret = TLK_ERR_INVALID_STATE;
+    }
+
+    return ret;
+}
+
+
+void app_pc_kb_led_status(unsigned char status)
+{
+    static unsigned char last_status = 0xff;
+    if(last_status!=status)
+    {
+        last_status=status;
+        gpio_pin_set_dt(&num_led_pin, status&0x01);
+        gpio_pin_set_dt(&cap_led_pin, status&0x02);
+        //gpio_set_level(NUM_LED_PIN, !(status&0x01));
+        //gpio_set_level(CAP_LED_PIN, !(status&0x02));
+    }
+}
+
+
+_attribute_ram_code_sec_ void check_vbus(void)
+{
+    static int8_t vbus_cnt = 0;
+
+    if(gpio_pin_get_dt(&vbus_check_pin) == 1) {
+        if (vbus_cnt < APP_VBUS_CHECK_DE_JT_CNT) {
+            vbus_cnt ++;
+        } else {
+            vbus_status=1;
+        }
+    } else {
+        if (vbus_cnt > -APP_VBUS_CHECK_DE_JT_CNT) {
+            vbus_cnt --;
+        } else {
+            vbus_status=0;
+        }
+    }
+    if(last_vbus_status!=vbus_status)
+    {
+#if ALG_KEYSCAN_APP_FUN_ENABLE
+        ks_pwm_mode_disable();
+#endif
+        if(last_vbus_status == 0)
+        {
+            // TODO:app_usb_bus_reset_init();
+        }
+        else
+        {
+            usb_status = 0;
+        }
+        last_vbus_status = vbus_status;
+        LOG_INF("vbus_status = %d\r\n",vbus_status);
+        pp_fifo_reset(&d25fKbTxFifo);
+        // k_busy_wait(1000);
+#if ALG_KEYSCAN_APP_FUN_ENABLE
+        ks_pwm_mode_enable();
+#endif
+    }
+}
+
+
+_attribute_ram_code_sec_ void check_mode(u8 power_on)
+{
+#if (ALLOW_SWITCH_BLE_2P4G_MODE)
+    uint8_t mode_2p4_pin_level = gpio_pin_get_dt(&mode_2p4_pin);
+    uint8_t mode_ble_pin_level = gpio_pin_get_dt(&mode_ble_pin);
+
+    if(mode_2p4_pin_level == 0 && mode_ble_pin_level == 0)
+    {
+        fun_mode = KB_MODE_USB;
+    }
+    else if(mode_2p4_pin_level == 1 && mode_ble_pin_level == 0)
+    {
+        fun_mode = KB_MODE_2P4G;
+    }
+    else if(mode_2p4_pin_level == 0 && mode_ble_pin_level == 1)
+    {
+        fun_mode = KB_MODE_BLE;
+    }
+    if(last_mode_status!=fun_mode)
+    {
+        pp_fifo_reset(&d25fKbTxFifo);
+        last_mode_status=fun_mode;
+        LOG_INF("switch=%d", last_mode_status);
+        if(power_on==0)
+        {
+            sys_reboot(SYS_REBOOT_COLD);
+        }
+    }
+#else
+    fun_mode=KB_MODE_2P4G;
+    //fun_mode=KB_MODE_BLE;
+    //fun_mode=KB_MODE_USB;
+#endif
+}
+
+_attribute_ram_code_sec_ static void app_mode_pin_close_check(void)
+{
+    #if ALG_KEYSCAN_APP_FUN_ENABLE
+    if (((last_mode_status == KB_MODE_2P4G) || (last_mode_status == KB_MODE_BLE)) \
+        && ((gpio_pin_get_dt(&mode_2p4_pin)==0)&&(gpio_pin_get_dt(&mode_ble_pin)==0)) \
+        && (gpio_pin_get_dt(&vbus_check_pin) == 0))
+    {
+        ks_pwm_mode_disable();
+    }
+    #endif
+}
+
+#if USB_APP_FUN_ENABLE
+_attribute_ram_code_sec_ void usb_sof_callback(void)
+{
+    if (fun_mode == KB_MODE_USB)
+    {
+        if (usb_connected_ok && !usb_suspended)
+        {
+            #if ALG_KEYSCAN_APP_FUN_ENABLE
+            key_scan();
+            #endif
+            app_usb_main_loop();
+        }
+    }
+}
+#endif
+
+_attribute_ram_code_sec_ void pp_timer0_start(uint32_t sys_tick)
+{
+    unsigned int tick = sys_tick * sys_clk.pclk / SYSTEM_TIMER_TICK_1US;
+    timer_set_init_tick(TIMER0, 0);
+    timer_set_cap_tick(TIMER0, tick);
+    timer_start(TIMER0);
+}
+
+/* Timer0 interrupt handler */
+_attribute_ram_code_sec_ void timer0_isr(void)
+{
+    static uint8_t timer0_entry_count = 0;
+
+    if (timer_get_irq_status(FLD_TMR0_MODE_IRQ)) {
+        timer_clr_irq_status(FLD_TMR0_MODE_IRQ); //Clear IRQ status
+        if (app_ctx.report_rate & REPORT_RATE_8K) {
+            if (timer0_entry_count == 0) {
+                timer0_entry_count = 1;
+                pp_timer0_start(125 * SYSTEM_TIMER_TICK_1US);
+            } else {
+                timer0_entry_count = 0;
+                timer_stop(TIMER0);
+            }
+        } else {
+            timer_stop(TIMER0);
+        }
+        #if ALG_KEYSCAN_APP_FUN_ENABLE
+        key_scan();
+        #endif
+        app_mode_pin_close_check();
+    }
+}
+
+void user_timer_init(void)
+{
+     /* Timer0 configuration */
+    timer_set_init_tick(TIMER0, 0);
+    timer_set_cap_tick(TIMER0, 200000 * sys_clk.pclk * 1);	//200ms
+    timer_set_mode(TIMER0, TIMER_MODE_SYSCLK);
+    timer_set_irq_mask(FLD_TMR0_MODE_IRQ);
+    IRQ_CONNECT(CONFIG_2ND_LVL_ISR_TBL_OFFSET + IRQ_TIMER0, 3, timer0_isr, 0, 0);
+    riscv_plic_set_priority(IRQ_TIMER0, 3);
+    riscv_plic_irq_enable(IRQ_TIMER0);
+
+     /* Start timers */
+	timer_start(TIMER0);
+}
+
+static int peripheral_comm_init(void)
+{
+    int ret;
+
+    /* Initialize the NVS file system */
+    user_fs.flash_device = NVS_PARTITION_DEVICE;
+    user_fs.offset = NVS_PARTITION_OFFSET;
+    user_fs.sector_size = NVS_SECTOR_SIZE;
+    user_fs.sector_count = NVS_SECTOR_COUNT;
+
+    ret = nvs_mount(&user_fs);
+    if (ret) {
+        LOG_INF("Error: NVS init failed: %d\n", ret);
+        return -ENODEV;
+    }
+    LOG_INF("NVS initialized successfully.\n");
+
+
+    if (!gpio_is_ready_dt(&mode_led_pin)) {
+        LOG_ERR("mode_led_pin gpio not ready");
+        return -ENODEV;
+    }
+    ret = gpio_pin_configure_dt(&mode_led_pin, GPIO_OUTPUT);
+    if (ret != 0) {
+        LOG_ERR("Error: failed to configure mode_led_pin io \n");
+    }
+    LOG_INF("configure mode_led_pin io ok\n");
+
+
+    if (!gpio_is_ready_dt(&device_status_led_pin)) {
+        LOG_ERR("device_status_led_pin gpio not ready");
+        return -ENODEV;
+    }
+    ret = gpio_pin_configure_dt(&device_status_led_pin, GPIO_OUTPUT);
+    if (ret != 0) {
+        LOG_ERR("Error: failed to configure device_status_led_pin io \n");
+    }
+    LOG_INF("configure device_status_led_pin io ok\n");
+
+
+    if (!gpio_is_ready_dt(&cap_led_pin)) {
+        LOG_ERR("cap_led_pin gpio not ready");
+        return -ENODEV;
+    }
+    ret = gpio_pin_configure_dt(&cap_led_pin, GPIO_OUTPUT);
+    if (ret != 0) {
+        LOG_ERR("Error: failed to configure cap_led_pin io \n");
+    }
+    LOG_INF("configure cap_led_pin io ok\n");
+
+
+    if (!gpio_is_ready_dt(&num_led_pin)) {
+        LOG_ERR("num_led_pin gpio not ready");
+        return -ENODEV;
+    }
+    ret = gpio_pin_configure_dt(&num_led_pin, GPIO_OUTPUT);
+    if (ret != 0) {
+        LOG_ERR("Error: failed to configure num_led_pin io \n");
+    }
+    LOG_INF("configure num_led_pin io ok\n");
+
+
+    gpio_pin_set_dt(&mode_led_pin, 0);
+    gpio_pin_set_dt(&device_status_led_pin, 0);
+    gpio_pin_set_dt(&cap_led_pin, 0);
+    gpio_pin_set_dt(&num_led_pin, 0);
+
+
+    if (!gpio_is_ready_dt(&mode_2p4_pin)) {
+        LOG_ERR("mode_2p4_pin gpio not ready");
+        return -ENODEV;
+    }
+    ret = gpio_pin_configure_dt(&mode_2p4_pin, GPIO_INPUT);
+    if (ret != 0) {
+        LOG_ERR("Error: failed to configure mode_2p4_pin io \n");
+    }
+    LOG_INF("configure mode_2p4_pin io ok\n");    
+
+
+    if (!gpio_is_ready_dt(&mode_ble_pin)) {
+        LOG_ERR("mode_ble_pin gpio not ready");
+        return -ENODEV;
+    }
+    ret = gpio_pin_configure_dt(&mode_ble_pin, GPIO_INPUT);
+    if (ret != 0) {
+        LOG_ERR("Error: failed to configure mode_ble_pin io \n");
+    }
+    LOG_INF("configure mode_ble_pin io ok\n");    
+
+
+    if (!gpio_is_ready_dt(&vbus_check_pin)) {
+        LOG_ERR("Vbus check gpio not ready");
+        return -ENODEV;
+    }
+    ret = gpio_pin_configure_dt(&vbus_check_pin, GPIO_INPUT);
+    if (ret != 0) {
+        LOG_ERR("Error: failed to configure vbus check io \n");
+    }
+    LOG_INF("configure vbus_check_pin io ok\n");
+
+
+	if (!device_is_ready(uart_dev)) {
+		LOG_ERR("UART device not ready\n");
+		return -ENODEV;
+	}
+
+	/* Verify configure() - set device configuration using data in cfg */
+	ret = uart_configure(uart_dev, &uart_cfg);
+    if (ret != 0) {
+        LOG_ERR("Error: failed to configure uart \n");
+		return -ENODEV;
+    }
+    LOG_INF("configure uart ok\n");
+
+    return 0;
+}
+
+
+void keyboard_comm_init(void)
+{
+    peripheral_comm_init();
+
+    check_mode(1);
+
+    if (fun_mode == KB_MODE_2P4G)
+    {
+        p24g_pairing_info_check();
+    }
+
+    tlk_d25f_to_n22_mode_info(fun_mode);
+
+    if (fun_mode == KB_MODE_2P4G)
+    {
+	    p24g_user_init_normal();
+        user_timer_init();
+    } 
+    else if (fun_mode == KB_MODE_BLE)
+    {
+        // ble_init();
+    }
+    else
+    {
+        #if USB_APP_FUN_ENABLE
+	    /*usb init*/
+	    usb_hw_init();
+	    #endif
+    }
+
+#if ALG_KEYSCAN_APP_FUN_ENABLE
+    alg_keyscan_init(KEYSCAN_PWM_CLOCK_96M);
+#endif
+
+    pp_fifo_reset(&d25fKbTxFifo);
+}
+
+#if SPP_TEST_EN
+void app_spp_cb(unsigned char *data, unsigned char len, bool success, void *user_arg)
+{
+    uint32_t *data_id = (uint32_t *)user_arg;
+
+    if(success)
+    {
+        // LOG_INF("spp send success(len %d)", len);
+        printk("spp send success(len %d)\n", len);
+    }else{
+        LOG_ERR("spp send fail(len %d)\n", len);
+    }
+}
+
+extern uint8_t app_send_spp_data(uint8_t *data, uint8_t len, uint8_t retry_num, spp_cb_t cb, void *user_arg);
+static void app_spp_test(void)
+{
+    int ret = 0;
+
+    #define RETRY_NUM   5
+    static uint8_t spp_b[64] = {TPSLL_SPP_TEST_DATA, 0};
+    static uint32_t data_id = 0x1234;
+    static uint8_t len = sizeof(spp_b);
+    void *user_arg = &data_id;
+
+    ret = app_send_spp_data(spp_b, len, RETRY_NUM, app_spp_cb, user_arg);
+
+    if (ret == 0) {
+        spp_b[1]++;
+
+        #if 1
+        if (len < sizeof(spp_b)) {
+            len++;
+        } else {
+            len = 2;
+        }
+
+        for (uint32_t i = 2; i < len; i++)
+        {
+            spp_b[i] = spp_b[1] + (i - 1);
+        }
+        #endif
+        // LOG_INF("push spp(%d) success\n", len);
+        // printk("push spp(%d) success cb:%X\n", len, &app_spp_cb);
+    } else {
+        // LOG_INF("push spp(%d) fail(%d)\n", len, ret);
+        printk("push spp(%d) fail(%d)\n", len, ret);
+    }
+}
+#endif
+
+// static unsigned char nk_buffer[8]={7, 0}; 
+// static unsigned char zero_buffer[8]={0}; 
+
+#if REPORT_RATE_TEST_EN
+static void report_rate_test_loop(void)
+{
+    static uint32_t last_switch_time = 0;
+    static uint8_t rr_index = 0;
+
+    static const report_rate_t rr_table[] = {
+        REPORT_RATE_8K,
+        REPORT_RATE_4K,
+        REPORT_RATE_2K,
+        REPORT_RATE_1K,
+        REPORT_RATE_500,
+        REPORT_RATE_250,
+        REPORT_RATE_125,
+    };
+    static const uint8_t rr_count = sizeof(rr_table) / sizeof(rr_table[0]);
+
+    if (app_ctx.dev_status != STATE_CONNECTED || fun_mode != KB_MODE_2P4G) {
+        return;
+    }
+
+    if (k_uptime_get_32() - last_switch_time > 1000) {
+        last_switch_time = k_uptime_get_32();
+
+        report_rate_t rr = rr_table[rr_index];
+        LOG_INF("report rate test: switching to 0x%02X", rr);
+        p24g_change_report_rate(rr);
+
+        rr_index++;
+        if (rr_index >= rr_count) {
+            rr_index = 0;
+        }
+    }
+}
+#endif
+
+ _attribute_ram_code_sec_ void public_loop(void)
+{
+    static uint32_t last_time = 0;
+    static uint32_t led_time = 0;
+
+    if(k_uptime_get_32() - last_time > 50)//50ms
+    {
+        last_time = k_uptime_get_32();
+        check_mode(0);
+
+        // static unsigned char flag = 0;
+
+        // flag = 1 - flag;
+        // if (flag)
+        // {
+        //     // tpsll_send_keyboard_data(&nk_buffer[0], 8, NORMAL_KB_DATA_CMD, NULL, NULL);
+        //     pp_fifo_push(&d25fKbTxFifo, NORMAL_KB_DATA_CMD, &nk_buffer[0], 8);
+        // }
+        // else
+        // {
+        //     // tpsll_send_keyboard_data(&zero_buffer[0], 8, NORMAL_KB_DATA_CMD, NULL, NULL);
+        //     pp_fifo_push(&d25fKbTxFifo, NORMAL_KB_DATA_CMD, &zero_buffer[0], 8);
+        // }
+
+        #if SPP_TEST_EN
+        app_spp_test();
+        #endif
+
+        #if REPORT_RATE_TEST_EN
+        report_rate_test_loop();
+        #endif
+        if(app_d24p_get_state() == STATE_PAIRING)
+        {
+            if(last_time - led_time > 100)
+            {
+                gpio_pin_toggle_dt(&device_status_led_pin);
+                led_time = k_uptime_get_32();
+            }
+        }
+    }
+
+
+#if USB_APP_FUN_ENABLE
+    app_usb_status_check();
+#endif
+
+    if (fun_mode == KB_MODE_2P4G)
+    {
+        app_2p4g_main_loop();
+    }
+    else if (fun_mode == KB_MODE_BLE)
+    {
+        //TODO
+    }
+    else if (fun_mode == KB_MODE_USB)
+    {
+        #if USB_APP_FUN_ENABLE
+        if (usb_connected_ok && usb_suspended)  // No SOF interrupt after USB suspend, key scan processed in main loop
+        {
+            #if ALG_KEYSCAN_APP_FUN_ENABLE
+            key_scan();
+            #endif
+            app_usb_main_loop();
+        }
+        #endif
+    }
+}
+
+_attribute_ram_code_sec_ unsigned char special_key_press_flag_set(unsigned char key_code)
+{
+     unsigned char real_key_code=key_code;
+
+     if(key_code==T_FN)
+     {
+        app_key_buf.special_key_press_f|=PRESS_T_FN_FLAG;
+        fn_flag=1;
+     }
+     else if(fn_flag)
+     {
+        real_key_code=0;
+        switch (key_code)
+        {
+            case KB_M:
+                app_key_buf.special_key_press_f|=PRESS_KB_M_FLAG;
+                break;
+            case KB_P:
+                app_key_buf.special_key_press_f|=PRESS_KB_P_FLAG;
+                break;
+            case KB_F1:
+                real_key_code=C_mute;
+                break;
+             case KB_R:
+                app_key_buf.special_key_press_f|=PRESS_KB_R_FLAG;
+                break;
+              case KB_1:
+                app_key_buf.special_key_press_f|=PRESS_KB_1_FLAG;
+                break;
+              case KB_2:
+                app_key_buf.special_key_press_f|=PRESS_KB_2_FLAG;
+                break;
+              case KB_3:
+                app_key_buf.special_key_press_f|=PRESS_KB_3_FLAG;
+                break;
+              case KB_4:
+                app_key_buf.special_key_press_f|=PRESS_KB_4_FLAG;
+                break;
+              case KB_5:
+                app_key_buf.special_key_press_f|=PRESS_KB_5_FLAG;
+                break;
+              case KB_6:
+                app_key_buf.special_key_press_f|=PRESS_KB_6_FLAG;
+                break;
+              case KB_7:
+                app_key_buf.special_key_press_f|=PRESS_KB_7_FLAG;
+                break;
+            default:
+                break;
+            
+        }
+     }
+    
+    return real_key_code;
+}
+
+_attribute_ram_code_sec_ void special_key_event_handle(void)
+{
+     if(app_key_buf.special_key_press_f==0)
+     {
+        fn_flag=0;
+        return;
+     }
+
+    switch (app_key_buf.special_key_press_f)
+    {
+        case (PRESS_T_FN_FLAG|PRESS_KB_P_FLAG):
+            if(usb_connected_ok==0)
+            {
+                if(fun_mode==KB_MODE_2P4G)
+                {
+                    LOG_INF("pairing\n");
+                    p24g_enable_pairing(true);
+                }
+                else
+                {
+                    // app_ble_enable_pairing(1);
+                }
+            }
+            break;
+        case (PRESS_T_FN_FLAG|PRESS_KB_R_FLAG):
+            if(usb_connected_ok)
+            {
+                // app_usb_report_change();
+            }
+            break;
+        case (PRESS_T_FN_FLAG|PRESS_KB_1_FLAG):
+            if(fun_mode==KB_MODE_BLE)
+            {
+                // app_ble_change_pipe(0);
+            }
+            else if (fun_mode==KB_MODE_2P4G)
+            {
+                p24g_change_report_rate(REPORT_RATE_8K);
+            }
+            break;
+        case (PRESS_T_FN_FLAG|PRESS_KB_2_FLAG):
+            if(fun_mode==KB_MODE_BLE)
+            {
+                // app_ble_change_pipe(1);
+            }
+            else if (fun_mode==KB_MODE_2P4G)
+            {
+                p24g_change_report_rate(REPORT_RATE_4K);
+            }
+            break;
+        case (PRESS_T_FN_FLAG|PRESS_KB_3_FLAG):
+            if(fun_mode==KB_MODE_BLE)
+            {
+                // app_ble_change_pipe(2);
+            }
+            else if (fun_mode==KB_MODE_2P4G)
+            {
+                p24g_change_report_rate(REPORT_RATE_2K);
+            }
+            break;
+        case (PRESS_T_FN_FLAG|PRESS_KB_4_FLAG):
+            if(fun_mode==KB_MODE_BLE)
+            {
+                // app_ble_change_pipe(3);
+            }
+            else if (fun_mode==KB_MODE_2P4G)
+            {
+                p24g_change_report_rate(REPORT_RATE_1K);
+            }
+            break;
+        case (PRESS_T_FN_FLAG|PRESS_KB_5_FLAG):
+            if (fun_mode==KB_MODE_2P4G)
+            {
+                p24g_change_report_rate(REPORT_RATE_500);
+            }
+            break;
+        case (PRESS_T_FN_FLAG|PRESS_KB_6_FLAG):
+            if (fun_mode==KB_MODE_2P4G)
+            {
+                p24g_change_report_rate(REPORT_RATE_250);
+            }
+            break;
+        case (PRESS_T_FN_FLAG|PRESS_KB_7_FLAG):
+            if (fun_mode==KB_MODE_2P4G)
+            {
+                p24g_change_report_rate(REPORT_RATE_125);
+            }
+            break;
+        default:
+            break;
+    }
+}
