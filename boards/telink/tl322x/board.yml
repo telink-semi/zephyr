@@ -8,3 +8,8 @@ boards:
   vendor: telink
   socs:
   - name: telink_tl322x
+
+- name: tl3228x_rram
+  vendor: telink
+  socs:
+  - name: telink_tl322x

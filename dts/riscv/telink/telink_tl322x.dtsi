@@ -88,6 +88,30 @@
 			};
 		};
 
+		/*
+		 * On-chip RRAM (NVM) controller and memory.
+		 *
+		 * Controller registers at 0x80101000 (NVM_BASE_ADDR).
+		 * Memory accessible via AHB0 at 0x00400000 (NVM_AHB0_BASE_ADDR).
+		 * Size: 512KB (0x80000).
+		 *
+		 * Disabled by default; enabled in RRAM board variants.
+		 */
+		nvm: nvm@80101000 {
+			compatible = "telink,tlx-rram";
+			reg = <0x80101000 0x100>;
+			status = "disabled";
+
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			rram: rram@400000 {
+				compatible = "soc-nv-flash";
+				write-block-size = <16>;
+				reg = <0x00400000 0x00080000>;
+			};
+		};
+
 		power: power@80140180 {
 			compatible = "telink,tl322x-power";
 			reg = <0x80140180 0x40>;
