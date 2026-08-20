@@ -355,8 +355,8 @@ void user_timer_init(void)
     timer_set_mode(TIMER0, TIMER_MODE_SYSCLK);
     timer_set_irq_mask(FLD_TMR0_MODE_IRQ);
     IRQ_CONNECT(CONFIG_2ND_LVL_ISR_TBL_OFFSET + IRQ_TIMER0, 3, timer0_isr, 0, 0);
-    riscv_plic_set_priority(IRQ_TIMER0, 3);
-    riscv_plic_irq_enable(IRQ_TIMER0);
+    riscv_plic_set_priority(IRQ_TO_L2(IRQ_TIMER0), 3);
+    riscv_plic_irq_enable(IRQ_TO_L2(IRQ_TIMER0));
 
      /* Start timers */
 	timer_start(TIMER0);
