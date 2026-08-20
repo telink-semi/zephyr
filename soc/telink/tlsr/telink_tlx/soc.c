@@ -509,11 +509,12 @@ void soc_early_init_hook(void)
 
 #if CONFIG_SOC_RISCV_TELINK_TL322X
 #undef N22_FW_DOWNLOAD_FLASH_ADDR
-#define N22_FW_DOWNLOAD_FLASH_ADDR CONFIG_FLASH_BASE_ADDRESS + 0x80000 + 0x13040
+#define N22_FW_DOWNLOAD_FLASH_ADDR  0x20048000//CONFIG_FLASH_BASE_ADDRESS + 0x80000 + 0x13040
 	sys_n22_init(N22_FW_DOWNLOAD_FLASH_ADDR);
 #if !defined(TLK_ONLY_BLE_HOST)
 	rf_n22_dig_init();
 #endif
+
 #endif
 
 	/* MCU deep retention wakeUp */
@@ -831,7 +832,7 @@ static int soc_tlx_check_flash(void)
 
 SYS_INIT(soc_tlx_check_flash, POST_KERNEL, 0);
 
-#ifdef CONFIG_TELINK_TL322X_ENABLE_N22
+#if CONFIG_TELINK_TL322X_ENABLE_N22
 static int soc_tlx_mcc_init(void)
 {
 	extern void mb_irq_handler(void);
