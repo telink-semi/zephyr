@@ -308,7 +308,7 @@
 		usbd: usbd@80280000 {
 			compatible = "telink,tl322x-usbd";
 			reg = <0x80280000 0x6000c>;
-			interrupts = <26 1>;
+			interrupts = <14 1>;
 			interrupt-parent = <&plic0>;
 			num-bidir-endpoints = <9>;
 			status = "disabled";
