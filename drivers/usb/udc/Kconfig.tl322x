@@ -1,0 +1,35 @@
+
+# Copyright (c) 2026 Telink Semiconductor
+
+# SPDX-License-Identifier: Apache-2.0
+
+config UDC_TELINK_TLX
+	bool "Telink TL322X USB device controller driver"
+	default y
+	depends on DT_HAS_TELINK_TL322X_USBD_ENABLED
+	help
+	  Telink TL322X USB device controller (UDC) driver for the new
+	  USB device stack.
+
+config UDC_TELINK_TLX_HIGH_SPEED
+	bool "Enable USB high-speed mode"
+	depends on UDC_TELINK_TLX
+	help
+	  Enable USB high-speed (480 Mbit/s) mode. USB requires HCLK of at
+	  least 48 MHz, which corresponds to a CPU clock of 96 MHz or more.
+	  When disabled, the controller operates in full-speed mode.
+
+config UDC_TLX_MSG_QUEUE_SIZE
+	int "TL322X UDC driver message queue size"
+	depends on UDC_TELINK_TLX
+	default 32
+	help
+	  Number of driver events that can be queued between the interrupt
+	  handler and the driver thread.
+
+config UDC_TLX_THREAD_STACK_SIZE
+	int "TL322X UDC driver thread stack size"
+	depends on UDC_TELINK_TLX
+	default 1024
+	help
+	  Stack size of the dedicated thread used to process UDC events.
