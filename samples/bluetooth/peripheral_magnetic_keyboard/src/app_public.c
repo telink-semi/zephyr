@@ -81,7 +81,7 @@ const struct gpio_dt_spec   mode_led_pin = GPIO_SPEC(MODE_NODE),
 struct nvs_fs user_fs;
 
 const struct uart_config uart_cfg = {
-		.baudrate = 1000000,
+		.baudrate = DT_PROP(DT_CHOSEN(zephyr_console), current_speed),
 		.parity = UART_CFG_PARITY_NONE,
 		.stop_bits = UART_CFG_STOP_BITS_1,
 		.data_bits = UART_CFG_DATA_BITS_8,
