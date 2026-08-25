@@ -14,6 +14,7 @@ config UDC_TELINK_TLX
 config UDC_TELINK_TLX_HIGH_SPEED
 	bool "Enable USB high-speed mode"
 	depends on UDC_TELINK_TLX
+	default y
 	help
 	  Enable USB high-speed (480 Mbit/s) mode. USB requires HCLK of at
 	  least 48 MHz, which corresponds to a CPU clock of 96 MHz or more.

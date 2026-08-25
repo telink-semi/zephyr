@@ -1,3 +1,5 @@
+#include <zephyr/dt-bindings/input/input-event-codes.h>
+
 &cpu0 {
 	/* USB0 digital voltage must be 1.1V and HCLK min's 48M */
 	clock-frequency = <192000000>;
@@ -8,3 +10,27 @@
 	/* Baud rate for serial port logging */
 	current-speed = <2000000>;
 };
+
+&usbd {
+	status = "okay";
+};
+
+/ {
+	/delete-node/ key_pool;
+	/delete-node/ key_matrix;
+
+	hid_dev_0: hid_dev_0 {
+		compatible = "zephyr,hid-device";
+		interface-name = "HID0";
+		protocol-code = "keyboard";
+		in-report-size = <64>;
+		in-polling-period-us = <1000>;
+	};
+};
+
+&key_1 { zephyr,code = <INPUT_KEY_0>; };  /* Num Lock  */
+&key_2 { zephyr,code = <INPUT_KEY_1>; };  /* Caps Lock */
+&key_3 { zephyr,code = <INPUT_KEY_2>; };  /* Scroll Lock */
+&key_4 { zephyr,code = <INPUT_KEY_3>; };  /* HID 1/2/3 + 右 Alt */
+&key_dfu { status = "disabled"; };
+
