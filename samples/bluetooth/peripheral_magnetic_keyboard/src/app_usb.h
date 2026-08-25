@@ -68,9 +68,14 @@ extern "C" {
         HID_END_COLLECTION,                                                \
 }
 
+enum usb_conn_status {
+	USB_DISCONNECTED = 0,
+	USB_CONFIGURED,
+};
+
 extern volatile unsigned int vbus_status;
 extern volatile  unsigned int usb_connected_ok;
-extern enum usb_dc_status_code usb_status;
+extern enum usb_conn_status usb_status;
 extern volatile unsigned int usb_suspended;
 
 int usb_hw_init(void);

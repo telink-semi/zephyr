@@ -16,9 +16,9 @@
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/settings/settings.h>
 
-#include <zephyr/usb/usb_device.h>
+#include <zephyr/usb/usbd.h>
 #include <zephyr/usb/class/hid.h>
-#include <zephyr/usb/class/usb_hid.h>
+#include <zephyr/usb/class/usbd_hid.h>
 
 
 #include "app_public.h"
@@ -27,6 +27,22 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(app_usb);
 
+/* USB device context with Telink VID/PID */
+USBD_DEVICE_DEFINE(app_usbd,
+		   DEVICE_DT_GET(DT_NODELABEL(zephyr_udc0)),
+		   0x248A, 0x3228);
+
+USBD_DESC_LANG_DEFINE(app_lang);
+USBD_DESC_MANUFACTURER_DEFINE(app_mfr, "Telink");
+USBD_DESC_PRODUCT_DEFINE(app_product, "Telink HID Keyboard");
+USBD_DESC_SERIAL_NUMBER_DEFINE(app_sn);
+USBD_DESC_CONFIG_DEFINE(fs_cfg_desc, "FS Configuration");
+USBD_DESC_CONFIG_DEFINE(hs_cfg_desc, "HS Configuration");
+
+static const uint8_t attributes = USB_SCD_REMOTE_WAKEUP;
+
+USBD_CONFIGURATION_DEFINE(app_fs_config, attributes, 100, &fs_cfg_desc);
+USBD_CONFIGURATION_DEFINE(app_hs_config, attributes, 100, &hs_cfg_desc);
 
 volatile unsigned int vbus_status = 0;
 volatile unsigned int usb_connected_ok = 0;
@@ -41,67 +57,94 @@ static const uint8_t hid_report_n_keys_desc[] = HID_N_KEY_REPORT_DESC();
 static const uint8_t hid_report_vendor_defined[] = HID_MOUSE_REPORT_DESC(5);
 
 
-enum usb_dc_status_code usb_status;
+enum usb_conn_status usb_status;
 
 // static K_SEM_DEFINE(usb_sem, 1, 1); /* starts off "available" */
-static void in_ready_cb(const struct device *dev)
+static void kbd_led_set(uint8_t report)
+{
+	extern struct gpio_dt_spec cap_led_pin;
+	extern struct gpio_dt_spec num_led_pin;
+
+	gpio_pin_set_dt(&cap_led_pin, (report & HID_KBD_LED_CAPS_LOCK));
+	gpio_pin_set_dt(&num_led_pin, (report & HID_KBD_LED_NUM_LOCK));
+}
+
+/* LED control handler implementation (control pipe SET_REPORT) */
+static int kb_set_report(const struct device *dev,
+			 const uint8_t type, const uint8_t id,
+			 const uint16_t len, const uint8_t *const buf)
 {
 	ARG_UNUSED(dev);
-	// k_sem_give(&usb_sem);
-}
+	ARG_UNUSED(type);
+	ARG_UNUSED(id);
 
-static void out_ready_cb(const struct device *dev)
-{
-	uint8_t buf[CONFIG_HID_INTERRUPT_EP_MPS];
-	uint32_t len = 0;
-	int ret;
+	LOG_INF("set report len %u", len);
 
-	ret = hid_int_ep_read(dev, buf, sizeof(buf), &len);
-
-	if (ret == 0 && len > 0) {
-		LOG_HEXDUMP_INF(buf, len, "OUT ep received");
-        if (len == 1) {
-            extern struct gpio_dt_spec cap_led_pin;
-            extern struct gpio_dt_spec num_led_pin;
-
-            gpio_pin_set_dt(&cap_led_pin, (*buf & HID_KBD_LED_CAPS_LOCK));
-            gpio_pin_set_dt(&num_led_pin, (*buf & HID_KBD_LED_NUM_LOCK));
-        }
+	if (len > 0) {
+		kbd_led_set(buf[0]);
 	}
-}
-
-/* LED control handler implementation */
-int kbd_set_report(const struct device *dev, struct usb_setup_packet *setup, int32_t *len,
-			uint8_t **data)
-{
-	LOG_INF("kb_out: %x, len %d", **data, *len);
-
-    extern struct gpio_dt_spec cap_led_pin;
-    extern struct gpio_dt_spec num_led_pin;
-
-    gpio_pin_set_dt(&cap_led_pin, (**data & HID_KBD_LED_CAPS_LOCK));
-    gpio_pin_set_dt(&num_led_pin, (**data & HID_KBD_LED_NUM_LOCK));
 
 	return 0;
 }
 
-struct hid_ops kbd_ops = {
-	.set_report = kbd_set_report,
-	.int_in_ready = in_ready_cb,
-    #ifdef CONFIG_ENABLE_HID_INT_OUT_EP
-	.int_out_ready = out_ready_cb,
-    #endif
+/* Output report received through the interrupt OUT pipe */
+static void kb_output_report(const struct device *dev,
+			     const uint16_t len, const uint8_t *const buf)
+{
+	ARG_UNUSED(dev);
+
+	LOG_HEXDUMP_INF(buf, len, "OUT ep received");
+
+	if (len > 0) {
+		kbd_led_set(buf[0]);
+	}
+}
+
+static int kb_get_report(const struct device *dev,
+			 const uint8_t type, const uint8_t id,
+			 const uint16_t len, uint8_t *const buf)
+{
+	ARG_UNUSED(dev);
+	ARG_UNUSED(type);
+	ARG_UNUSED(id);
+	ARG_UNUSED(len);
+	ARG_UNUSED(buf);
+
+	return 0;
+}
+
+static void kb_set_protocol(const struct device *dev, const uint8_t proto)
+{
+	ARG_UNUSED(dev);
+
+	LOG_INF("protocol changed to %s", proto == 0U ? "Boot" : "Report");
+}
+
+static struct hid_device_ops kbd_ops = {
+	.get_report = kb_get_report,
+	.set_report = kb_set_report,
+	.set_protocol = kb_set_protocol,
+	.output_report = kb_output_report,
 };
 
-static void status_cb(enum usb_dc_status_code status, const uint8_t *param)
+static void app_usb_msg_cb(struct usbd_context *const uds_ctx,
+			   const struct usbd_msg *const msg)
 {
-	usb_status = status;
-	LOG_INF("usb_status: %d", usb_status);
+	ARG_UNUSED(uds_ctx);
 
-	if (status == USB_DC_SUSPEND) {
+	if (msg->type == USBD_MSG_CONFIGURATION) {
+		usb_status = USB_CONFIGURED;
+		LOG_INF("USB configured");
+	} else if (msg->type == USBD_MSG_RESET ||
+		   msg->type == USBD_MSG_VBUS_REMOVED) {
+		usb_status = USB_DISCONNECTED;
+		LOG_INF("USB disconnected");
+	}
+
+	if (msg->type == USBD_MSG_SUSPEND) {
 		usb_suspended = 1;
 		LOG_INF("USB suspended by host");
-	} else if (status == USB_DC_RESUME) {
+	} else if (msg->type == USBD_MSG_RESUME) {
 		usb_suspended = 0;
 		LOG_INF("USB resumed by host");
 	}
@@ -111,67 +154,90 @@ const struct device *hid_dev_kb;
 const struct device *hid_dev_n_key;
 const struct device *hid_vendor;
 
-const struct device *hid_vendor_4;
-const struct device *hid_vendor_5;
-const struct device *hid_vendor_6;
 int usb_hw_init(void)
 {
 	int ret;
 
-	hid_dev_kb = device_get_binding("HID_0");
-	if (hid_dev_kb == NULL) {
+	hid_dev_kb = DEVICE_DT_GET(DT_NODELABEL(hid_dev_0));
+	if (!device_is_ready(hid_dev_kb)) {
 		LOG_ERR("Cannot get USB HID Device");
-        return -ENODEV;
+		return -ENODEV;
 	}
 
-	hid_dev_n_key = device_get_binding("HID_1");
-	if (hid_dev_n_key == NULL) {
+	hid_dev_n_key = DEVICE_DT_GET(DT_NODELABEL(hid_dev_1));
+	if (!device_is_ready(hid_dev_n_key)) {
 		LOG_ERR("Cannot get USB HID 1 Device");
-        return -ENODEV;
+		return -ENODEV;
 	}
 
-    hid_vendor = device_get_binding("HID_2");
-	if (hid_vendor == NULL) {
+	hid_vendor = DEVICE_DT_GET(DT_NODELABEL(hid_dev_2));
+	if (!device_is_ready(hid_vendor)) {
 		LOG_ERR("Cannot get USB HID 2 Device");
-        return -ENODEV;
+		return -ENODEV;
 	}
 
-	usb_hid_register_device(hid_dev_kb, hid_report_kb_desc, sizeof(hid_report_kb_desc), &kbd_ops);
-	usb_hid_register_device(hid_dev_n_key, hid_report_n_keys_desc, sizeof(hid_report_n_keys_desc), &kbd_ops);
-	usb_hid_register_device(hid_vendor, hid_report_vendor_defined, sizeof(hid_report_vendor_defined), &kbd_ops);
-
-    ret = usb_hid_set_proto_code(hid_dev_kb, HID_BOOT_IFACE_CODE_KEYBOARD);
-    if (ret) {
-        LOG_WRN("Failed to set HID proto code for HID_0 (%d)", ret);
-    }
-
-    ret = usb_hid_set_proto_code(hid_dev_n_key, HID_BOOT_IFACE_CODE_NONE);
-    if (ret) {
-        LOG_WRN("Failed to set HID proto code for HID_1 (%d)", ret);
-    }
-
-    ret = usb_hid_set_proto_code(hid_vendor, HID_BOOT_IFACE_CODE_NONE);
-    if (ret) {
-        LOG_WRN("Failed to set HID proto code for HID_2 (%d)", ret);
-    }
-
-	usb_hid_init(hid_dev_kb);
-	usb_hid_init(hid_dev_n_key);
-	usb_hid_init(hid_vendor);
-
-	ret = usb_enable(status_cb);
-	if (ret != 0) {
-		LOG_ERR("Failed to enable USB");
+	ret = hid_device_register(hid_dev_kb, hid_report_kb_desc,
+				  sizeof(hid_report_kb_desc), &kbd_ops);
+	if (ret) {
+		LOG_ERR("Failed to register HID_0 (%d)", ret);
 		return ret;
 	}
 
+	ret = hid_device_register(hid_dev_n_key, hid_report_n_keys_desc,
+				  sizeof(hid_report_n_keys_desc), &kbd_ops);
+	if (ret) {
+		LOG_ERR("Failed to register HID_1 (%d)", ret);
+		return ret;
+	}
+
+	ret = hid_device_register(hid_vendor, hid_report_vendor_defined,
+				  sizeof(hid_report_vendor_defined), &kbd_ops);
+	if (ret) {
+		LOG_ERR("Failed to register HID_2 (%d)", ret);
+		return ret;
+	}
+
+	/* String descriptors */
+	usbd_add_descriptor(&app_usbd, &app_lang);
+	usbd_add_descriptor(&app_usbd, &app_mfr);
+	usbd_add_descriptor(&app_usbd, &app_product);
+	usbd_add_descriptor(&app_usbd, &app_sn);
+
+	/* Configurations */
+	usbd_add_configuration(&app_usbd, USBD_SPEED_FS, &app_fs_config);
+	if (usbd_caps_speed(&app_usbd) == USBD_SPEED_HS) {
+		usbd_add_configuration(&app_usbd, USBD_SPEED_HS, &app_hs_config);
+	}
+
+	/* Register class instances */
+	usbd_register_all_classes(&app_usbd, USBD_SPEED_FS, 1, NULL);
+	if (usbd_caps_speed(&app_usbd) == USBD_SPEED_HS) {
+		usbd_register_all_classes(&app_usbd, USBD_SPEED_HS, 1, NULL);
+	}
+
+	usbd_msg_register_cb(&app_usbd, app_usb_msg_cb);
+
+	ret = usbd_init(&app_usbd);
+	if (ret) {
+		LOG_ERR("Failed to init USB (%d)", ret);
+		return ret;
+	}
+
+	if (!usbd_can_detect_vbus(&app_usbd)) {
+		ret = usbd_enable(&app_usbd);
+		if (ret) {
+			LOG_ERR("Failed to enable USB (%d)", ret);
+			return ret;
+		}
+	}
+
 	LOG_INF("Enable USB, usb hw init");
-    return 0;
+	return 0;
 }
 
 void app_usb_mode_exit(void)
 {
-    usb_disable();
+    usbd_disable(&app_usbd);
     usb_connected_ok = 0;
     LOG_ERR("usb mode exit\r\n");
 }
@@ -189,7 +255,7 @@ _attribute_ram_code_sec_ int app_normal_key_report_to_usb(unsigned char *buf)
 	#endif
     tmemcpy(&kb[0], &buf[0], 8);
     //return app_usb_epin_send(HID_KEYBOARD_IN_ENDPOINT_ADDRESS, tmp, 8);
-	return hid_int_ep_write(hid_dev_kb, kb, sizeof(kb), NULL);
+	return hid_device_submit_report(hid_dev_kb, sizeof(kb), kb);
 }
 
 
@@ -206,7 +272,7 @@ _attribute_ram_code_sec_ int app_all_key_report_to_usb(unsigned char *buf)
 	#endif
     tmemcpy(&kb[1], &buf[0], 16);
     //return app_usb_epin_send(HID_KEYBOARD_IN_ENDPOINT_ADDRESS, tmp, 8);
-	return hid_int_ep_write(hid_dev_n_key, kb, sizeof(kb), NULL);
+	return hid_device_submit_report(hid_dev_n_key, sizeof(kb), kb);
 }
 
 _attribute_ram_code_sec_ int app_consume_key_report_to_usb(unsigned char *buf)
@@ -222,7 +288,7 @@ _attribute_ram_code_sec_ int app_consume_key_report_to_usb(unsigned char *buf)
 	#endif
     tmemcpy(&kb[1],&buf[0],2);
     //return app_usb_epin_send(HID_KEYBOARD_IN_ENDPOINT_ADDRESS, tmp, 8);
-	return hid_int_ep_write(hid_dev_n_key, kb, sizeof(kb), NULL);
+	return hid_device_submit_report(hid_dev_n_key, sizeof(kb), kb);
 }
 
 _attribute_ram_code_sec_ unsigned char app_system_key_report_to_usb(unsigned char *buf)
@@ -238,18 +304,14 @@ _attribute_ram_code_sec_ unsigned char app_system_key_report_to_usb(unsigned cha
 	#endif
     tmemcpy(&kb[1],&buf[0],1);
     //return app_usb_epin_send(HID_KEYBOARD_IN_ENDPOINT_ADDRESS, tmp, 8);
-	return hid_int_ep_write(hid_dev_n_key, kb, sizeof(kb), NULL);
+	return hid_device_submit_report(hid_dev_n_key, sizeof(kb), kb);
 }
 
 _attribute_ram_code_sec_ void app_usb_try_wakeup(void)
 {
 	if (usb_suspended == 1) {
-		if (usb_get_remote_wakeup_status()) {
-			usb_wakeup_request();
-			LOG_INF("Request remote wakeup");
-		} else {
-			LOG_WRN("Remote wakeup not enabled by host");
-		}
+		usbd_wakeup_request(&app_usbd);
+		LOG_INF("Request remote wakeup");
 	}
 }
 
@@ -306,7 +368,7 @@ _attribute_ram_code_sec_ void app_usb_status_check(void)
 
     if(last_usb_status != usb_status)
     {
-        if(usb_status == USB_DC_CONFIGURED)
+        if(usb_status == USB_CONFIGURED)
         {
             LOG_INF("mode is usb mode\r\n");
             // TODO:gpio_set_level(MODE_LED_PIN, LED_IS_ON);
@@ -322,7 +384,7 @@ _attribute_ram_code_sec_ void app_usb_status_check(void)
                 // TODO:ble_mode_enter_idle();
             }
         }
-        else if(usb_status == USB_DC_DISCONNECTED)
+        else if(usb_status == USB_DISCONNECTED)
         {
             // TODO:gpio_set_level(MODE_LED_PIN, LED_IS_OFF);
             usb_connected_ok = 0;
