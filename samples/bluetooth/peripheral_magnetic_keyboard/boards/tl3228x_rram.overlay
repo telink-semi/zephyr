@@ -247,3 +247,39 @@
 	pinctrl-0 = <&adc_pc0_default>;
 	pinctrl-names = "default";
 };
+
+/* USB device support (new UDC stack) */
+&usbd {
+	status = "okay";
+};
+
+/ {
+	/* HID_0: standard keyboard (8-byte input report + LED output report) */
+	hid_dev_0: hid_dev_0 {
+		compatible = "zephyr,hid-device";
+		interface-name = "HID0";
+		protocol-code = "keyboard";
+		in-report-size = <8>;
+		in-polling-period-us = <1000>;
+		out-report-size = <1>;
+		out-polling-period-us = <1000>;
+	};
+
+	/* HID_1: N-key keyboard (17-byte input report) */
+	hid_dev_1: hid_dev_1 {
+		compatible = "zephyr,hid-device";
+		interface-name = "HID1";
+		protocol-code = "none";
+		in-report-size = <17>;
+		in-polling-period-us = <1000>;
+	};
+
+	/* HID_2: vendor defined, 5-button mouse style (4-byte input report) */
+	hid_dev_2: hid_dev_2 {
+		compatible = "zephyr,hid-device";
+		interface-name = "HID2";
+		protocol-code = "none";
+		in-report-size = <4>;
+		in-polling-period-us = <1000>;
+	};
+};
