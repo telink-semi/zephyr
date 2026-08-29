@@ -40,6 +40,11 @@ extern "C" {
 
 #define APP_WDT_ENABLE              0
 
+#ifdef CONFIG_SOC_RRAM_TELINK_TLX
+#define CFG_ADR_MAC_512K_RRAM           0x7F000
+#define CFG_ADR_CALIBRATION_512K_RRAM   0x7E000
+#endif
+
 #ifdef __cplusplus
 }
 #endif

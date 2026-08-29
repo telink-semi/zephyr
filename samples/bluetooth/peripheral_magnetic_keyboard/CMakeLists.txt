@@ -6,3 +6,10 @@ project(peripheral_magnetic_keyboard)
 
 FILE(GLOB app_sources src/*.c)
 target_sources(app PRIVATE ${app_sources})
+
+if(CONFIG_BOARD_TL3228X_RRAM)
+	zephyr_compile_definitions(
+		-DMCU_STARTUP_NVM=1
+        -DAPP_NVM_PROTECTION_ENABLE=1
+	)
+endif()
