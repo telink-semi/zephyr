@@ -33,6 +33,7 @@
 #include "app_public.h"
 #include "drivers.h"
 #include "app_kb_matrix.h"
+#include "nvm.h"
 
 #define LOG_LEVEL LOG_LEVEL_DBG
 #include <zephyr/logging/log.h>
@@ -69,15 +70,15 @@ const struct gpio_dt_spec   mode_led_pin = GPIO_SPEC(MODE_NODE),
 
 
 
-/* 定义NVS使用的Flash存储分区 */
+/* Define the flash partition used by NVS */
 #define NVS_USER_PARTITION user_app_partition
 #define NVS_PARTITION_DEVICE FIXED_PARTITION_DEVICE(NVS_USER_PARTITION)
 #define NVS_PARTITION_OFFSET FIXED_PARTITION_OFFSET(NVS_USER_PARTITION)
-/* NVS扇区大小，需与Flash的擦除页大小匹配 */
+/* NVS sector size, must match the flash erase page size */
 #define NVS_SECTOR_SIZE (4096)
-/* NVS扇区数量 */
+/* NVS sector count */
 #define NVS_SECTOR_COUNT (2)
-/* 定义NVS实例 */
+/* Define NVS instance */
 struct nvs_fs user_fs;
 
 const struct uart_config uart_cfg = {
@@ -96,15 +97,13 @@ int dev_info_idx;
 ST_FLASH_DEV_OTHER_INFO flash_dev_other_info  __attribute__ ((aligned (4)));
 int dev_other_info_idx;
 
-// _attribute_data_retention_ uint32_t flash_sector_2p4_inf=P24G_PAIR_INF_FLASH_ADDR_2M;
-// _attribute_data_retention_ uint32_t flash_sector_2p4_other_inf=P24G_OTHER_INF_FLASH_ADDR_2M;
-
-
+#define RRAM_READ_WRITE_MIN_SIZE 16
 
 volatile unsigned char fun_mode = 0xff;
 static unsigned char last_mode_status=KB_MODE_USB;
 static unsigned char last_vbus_status=0xff;
 
+volatile bool g_nvm_bulk_write = false;
 
 #define KB_TX_FIFO_SIZE 24
 #define KB_TX_FIFO_NUM 16
@@ -145,11 +144,108 @@ _attribute_ram_code_sec_ uint16_t tpsll_fnv1a_16(uint8_t *data, size_t len)
     return hash;
 }
 
+volatile  u32 debugRAddr=0,debugRLen=0,debugRData=0,debugRFlag=0;
+void read_storage_to_ram(unsigned int addr, unsigned int len, unsigned char *data)
+{
+#if MCU_RUN_IN_NVM
+
+    debugRAddr=addr;
+    debugRLen=len;
+    debugRData=(u32)data;
+    debugRFlag = 1;
+
+    u8 readDat[RRAM_READ_WRITE_MIN_SIZE] = {0};
+    u32 length = len;
+    u32 *ptr=(u32 *)data;
+    if(len<RRAM_READ_WRITE_MIN_SIZE)
+    {
+        length = RRAM_READ_WRITE_MIN_SIZE;
+        ptr = (u32 *)&readDat[0];
+    }
+    while (reg_nvm_state & BIT(1))
+    {
+    }
+    nvm_reg_read(addr,length,ptr);
+    if(len<RRAM_READ_WRITE_MIN_SIZE)
+    {
+        memcpy((u8 *)data,(u8 *)readDat,len);
+    }
+    debugRFlag = 0;
+#else
+    flash_read_page(addr,len,(u8 *)data);
+#endif
+}
+
+volatile u32 debugWAddr=0,debugWLen=0,debugWData=0,debugWFlag=0;
+void write_storage_from_ram(unsigned int addr, unsigned int len, unsigned int *data)
+{
+#if MCU_RUN_IN_NVM
+    debugWAddr=addr;
+    debugWLen=len;
+    debugWData=(u32)data;
+    debugWFlag = 1;
+
+    u8 readDat[RRAM_READ_WRITE_MIN_SIZE] = {0};
+    u32 length = len;
+    u32 *ptr=(u32 *)data;
+    while (reg_nvm_state & BIT(1))
+    {
+    }
+    if(len<RRAM_READ_WRITE_MIN_SIZE)
+    {
+        length = RRAM_READ_WRITE_MIN_SIZE;
+        ptr = (u32 *)&readDat[0];
+
+        nvm_reg_read(addr,length,ptr);
+        memcpy((u8 *)ptr,(u8 *)data,len);
+    }
+
+#if APP_NVM_PROTECTION_ENABLE
+    if (!g_nvm_bulk_write) {
+        if (nvm_read_reg(NVM_READ_MP_CMD) == NVM_MTP_LOCK_ALL_512K) {
+            nvm_mtp_lock_set(NVM_MTP_LOCK_NONE);
+        }
+    }
+#endif
+    nvm_reg_write(addr,length,ptr);
+#if APP_NVM_PROTECTION_ENABLE
+    if (!g_nvm_bulk_write) {
+        nvm_mtp_lock_set(NVM_MTP_LOCK_ALL_512K);
+    }
+#endif
+    debugWFlag = 0;
+#else
+    flash_write_page(addr,len,(u8 *)data);
+#endif
+}
+
+
 static void p24g_pairing_info_check(void)
 {
     uint8_t mac_public[6];
     uint8_t mac_random_static[6];
     extern unsigned int flash_sector_mac_address;
+
+#ifdef CONFIG_SOC_RRAM_TELINK_TLX
+    /* RRAM: always 512KB, addresses are fixed */
+    blc_flash_capacity = FLASH_SIZE_512K;
+    flash_sector_mac_address = CFG_ADR_MAC_512K_RRAM;
+    flash_sector_calibration = CFG_ADR_CALIBRATION_512K_RRAM;
+#else
+    /* Flash: determine size from device tree */
+    #if (DT_REG_SIZE(DT_CHOSEN(zephyr_flash)) == 0x100000)
+        blc_flash_capacity = FLASH_SIZE_1M;
+        flash_sector_mac_address = CFG_ADR_MAC_1M_FLASH;
+        flash_sector_calibration = CFG_ADR_CALIBRATION_1M_FLASH;
+    #elif (DT_REG_SIZE(DT_CHOSEN(zephyr_flash)) == 0x200000)
+        blc_flash_capacity = FLASH_SIZE_2M;
+        flash_sector_mac_address = CFG_ADR_MAC_2M_FLASH;
+        flash_sector_calibration = CFG_ADR_CALIBRATION_2M_FLASH;
+    #else
+        #error "flash size not supported by MAC address config"
+    #endif
+#endif
+
     random_generator_init();
     blc_initMacAddress(flash_sector_mac_address, mac_public, mac_random_static);
 
@@ -512,6 +608,8 @@ void keyboard_comm_init(void)
 
 #if ALG_KEYSCAN_APP_FUN_ENABLE
     alg_keyscan_init(KEYSCAN_PWM_CLOCK_96M);
+#else
+    gpio_set_up_down_res(GPIO_PF3, GPIO_PIN_PULLUP_1M);
 #endif
 
     pp_fifo_reset(&d25fKbTxFifo);

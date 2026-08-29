@@ -30,6 +30,8 @@ LOG_MODULE_REGISTER(app_2p4g);
 #include "stack/multicore_comm/service/mcc.h"
 #include "stack/multicore_comm/service/service_d25f.h"
 
+#define PLL_192M_D25F_192M_HCLK_N22_96M_PCLK_96M_MSPI_48M \
+	clock_init(CLK_BASEBAND_PLL_192M, CLK_DIV1, CCLK_DIV2_TO_HCLK_DIV2_TO_PCLK, CLK_DIV4)
 
 #define WDT_INTV_MS     (300)
 
@@ -94,8 +96,7 @@ static inline void app_wdt_init()
     {
         case CLOCK_CONFIG_1V1_192_192:
             pm_set_dig_ldo(DIG_VOL_1V1_MODE, 1000);
-            //PLL_192M_D25F_192M_HCLK_N22_96M_PCLK_96M_MSPI_48M;
-            PLL_192M_D25F_96M_HCLK_N22_96M_PCLK_96M_MSPI_48M;
+            PLL_192M_D25F_192M_HCLK_N22_96M_PCLK_96M_MSPI_48M;
             // k_busy_wait(100);
             mcc_d25f_to_n22_set_clk_info();
 
@@ -565,7 +566,9 @@ void mcc_d25f_to_n22_set_clk_info(void)
  */
 void p24g_user_init_normal(void)
 {
+    #if APP_WDT_ENABLE
     app_wdt_init();
+    #endif
 
     app_2p4g_dual_core_comm_init();
 
@@ -586,7 +589,9 @@ void p24g_user_init_normal(void)
  */
 _attribute_no_inline_ void app_2p4g_main_loop(void)
 {
-    mcc_d25f_loop();
-
+    #if APP_WDT_ENABLE
     wd_clear();
+    #endif
+
+    mcc_d25f_loop();
 }
