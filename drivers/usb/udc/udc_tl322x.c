@@ -554,6 +554,11 @@ static void udc_tlx_irq_in(void)
 	}
 }
 
+void __attribute__((weak)) usb_sof_callback(void)
+{
+    /* Default empty implementation */
+}
+
 __attribute__((section(".ram_code"))) static void udc_tlx_isr(const void *arg)
 {
 	ARG_UNUSED(arg);
@@ -591,6 +596,7 @@ __attribute__((section(".ram_code"))) static void udc_tlx_isr(const void *arg)
 
 	if (status & FLD_USB_GINTSTS_SOF) {
 		usb0hw_clear_gintsts(FLD_USB_GINTSTS_SOF);
+		usb_sof_callback();
 		/* Do NOT queue SOF events to the driver thread. In high-speed
 		 * mode SOF fires every 125 us, which floods drv_msgq and can
 		 * silently drop critical SETUP/XFERCOMPL events (K_NO_WAIT),
