@@ -42,19 +42,10 @@ int main(void)
 {
 	keyboard_comm_init();
 
-	gpio_function_en(GPIO_PD5 | GPIO_PD6 | GPIO_PD7);
-	gpio_output_en(GPIO_PD5 | GPIO_PD6 | GPIO_PD7);
-	gpio_input_dis(GPIO_PD5 | GPIO_PD6 | GPIO_PD7);
-
-
-    gpio_function_en(GPIO_PA1 | GPIO_PA2);
-    gpio_output_en(GPIO_PA1 | GPIO_PA2);
-    gpio_input_dis(GPIO_PA1 | GPIO_PA2);
-
-
 	while(1) {
 		public_loop();
-		k_sleep(K_MSEC(3));
+
+		public_sleep();
 	}
 
 	return 0;

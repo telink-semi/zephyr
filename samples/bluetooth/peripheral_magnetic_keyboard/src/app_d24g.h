@@ -181,6 +181,25 @@ void app_2p4g_main_loop(void);
  */
 void app_2p4g_mb_km_data_cb(uint8_t* data);
 
+/**
+ * @brief     2.4G low-power (suspend) info: defined by D25F, written by N22,
+ *            read by D25F.
+ *
+ * D25F passes the address of g_p24g_pm_info to N22 via mailbox
+ * (TLK_MB_D25F_TO_N22_2P4G_PM_INFO_ADDRESS); N22 writes it directly and
+ * tl_app_suspend() reads it as needed. Single writer / single reader,
+ * lock-free.
+ *
+ * @note next_wakeup_tick is valid only when suspend_allowed == true.
+ *       Write order: N22 must write next_wakeup_tick before suspend_allowed.
+ */
+typedef struct {
+    bool     suspend_allowed;   /* whether D25F may enter suspend */
+    uint32_t next_wakeup_tick;  /* absolute stimer tick N22 must wake at */
+} p24g_pm_info_t;
+
+extern volatile p24g_pm_info_t g_p24g_pm_info;
+
 
 /**
  * @brief     Get the current 2.4GHz device state

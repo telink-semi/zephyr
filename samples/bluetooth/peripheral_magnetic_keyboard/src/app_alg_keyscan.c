@@ -53,7 +53,7 @@ ks_ana_gpio_pin_t ks_ana_gpio_pin = {
     // .ana_switch_channel_pin = {GPIO_PC7, GPIO_PD0, GPIO_PD1, GPIO_PD2},
 };
 
-void alg_keyscan_init(ks_ana_clock_e ks_ana_clock)
+_attribute_ram_code_sec_ void alg_keyscan_init(ks_ana_clock_e ks_ana_clock)
 {
     gpio_function_en(GPIO_PE3); //short press KEY3 to generate an edge signal.
     gpio_output_en(GPIO_PE3);
@@ -154,7 +154,7 @@ void alg_keyscan_init(ks_ana_clock_e ks_ana_clock)
     g_keyscan_enable = true;
 }
 
-void ks_pwm_mode_disable(void)
+_attribute_ram_code_sec_ void ks_pwm_mode_disable(void)
 {
     if (g_keyscan_enable) {
         pwm_stop(FLD_PWM0_EN|FLD_PWM1_EN|FLD_PWM2_EN|FLD_PWM3_EN);
@@ -167,7 +167,7 @@ void ks_pwm_mode_disable(void)
     }
 }
 
-void ks_pwm_mode_enable(void)
+_attribute_ram_code_sec_ void ks_pwm_mode_enable(void)
 {
     if (!g_keyscan_enable) {
         gpio_set_low_level(ks_ana_gpio_pin.ana_switch_enable_pin);//low level disable
