@@ -79,7 +79,6 @@ extern enum usb_conn_status usb_status;
 extern volatile unsigned int usb_suspended;
 
 int usb_hw_init(void);
-void usb_test_loop(void);
 void app_usb_main_loop(void);
 void app_usb_try_wakeup(void);
 void app_usb_status_check(void);

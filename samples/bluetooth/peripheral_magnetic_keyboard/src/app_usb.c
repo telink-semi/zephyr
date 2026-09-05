@@ -135,13 +135,13 @@ static void app_usb_msg_cb(struct usbd_context *const uds_ctx,
 	if (msg->type == USBD_MSG_CONFIGURATION) {
 		usb_status = USB_CONFIGURED;
 		LOG_INF("USB configured");
-	} else if (msg->type == USBD_MSG_RESET ||
-		   msg->type == USBD_MSG_VBUS_REMOVED) {
+	} else if (msg->type == USBD_MSG_VBUS_REMOVED) {
 		usb_status = USB_DISCONNECTED;
 		LOG_INF("USB disconnected");
-	}
-
-	if (msg->type == USBD_MSG_SUSPEND) {
+	} else if (msg->type == USBD_MSG_RESET) {
+		usb_suspended = 0;
+		LOG_INF("USB reset");
+	} else if (msg->type == USBD_MSG_SUSPEND) {
 		usb_suspended = 1;
 		LOG_INF("USB suspended by host");
 	} else if (msg->type == USBD_MSG_RESUME) {
@@ -358,7 +358,6 @@ _attribute_ram_code_sec_ void app_usb_main_loop(void)
 	    app_usb_report_to_pc();
     }
 }
-
 
 _attribute_ram_code_sec_ void app_usb_status_check(void)
 {
