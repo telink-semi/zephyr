@@ -445,7 +445,7 @@ _attribute_ram_code_sec_ void timer0_isr(void)
 
 void user_timer_init(void)
 {
-     /* Timer0 configuration */
+    /* Timer0 configuration */
     timer_set_init_tick(TIMER0, 0);
     timer_set_cap_tick(TIMER0, 200000 * sys_clk.pclk * 1);	//200ms
     timer_set_mode(TIMER0, TIMER_MODE_SYSCLK);
@@ -770,6 +770,34 @@ static void report_rate_test_loop(void)
             app_usb_main_loop();
         }
         #endif
+    }
+}
+
+/**
+ * @brief Main-thread sleep dispatcher, symmetric to public_loop()'s mode
+ *        dispatch. Each mode evolves its sleep policy independently:
+ *  - KB_MODE_2P4G: app_p24g_sleep_until_n22_tick(), dynamic window from
+ *    N22 (125/250 and future keep-alive), 3ms WFI tick when no window;
+ *  - KB_MODE_USB : app_usb_sleep(), fixed 3ms tick, no N22 involved;
+ *  - KB_MODE_BLE : not implemented yet, fixed 3ms fallback tick.
+ *
+ * Mode switching always goes through sys_reboot() cold restart, so fun_mode
+ * is static within one power cycle: no mid-sleep mode-change race.
+ */
+void public_sleep(void)
+{
+    if (fun_mode == KB_MODE_2P4G)
+    {
+        app_p24g_sleep_until_n22_tick();
+    }
+    else if (fun_mode == KB_MODE_USB)
+    {
+        app_usb_sleep();
+    }
+    else
+    {
+        /* KB_MODE_BLE : 3ms fallback tick */
+        k_sleep(K_MSEC(3));
     }
 }
 

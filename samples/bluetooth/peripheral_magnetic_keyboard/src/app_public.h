@@ -15,6 +15,7 @@ extern "C" {
 #include "compiler.h"
 #include "app_d24g.h"
 #include "app_usb.h"
+#include "app_pm.h"
 #include "app_fifo.h"
 #include "app_alg_keyscan.h"
 #include "driver.h"
@@ -129,6 +130,7 @@ void keyboard_comm_init(void);
 void app_pc_kb_led_status(unsigned char status);
 
 void public_loop(void);
+void public_sleep(void);
 
 void special_key_event_handle(void);
 unsigned char special_key_press_flag_set(unsigned char key_code);

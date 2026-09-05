@@ -15,6 +15,8 @@
 #include <zephyr/sys/printk.h>
 #include <zephyr/sys/byteorder.h>
 #include <zephyr/kernel.h>
+#include <zephyr/pm/pm.h>
+#include <zephyr/pm/policy.h>
 #include <zephyr/drivers/uart.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/settings/settings.h>
@@ -34,6 +36,11 @@ LOG_MODULE_REGISTER(app_2p4g);
 	clock_init(CLK_BASEBAND_PLL_192M, CLK_DIV1, CCLK_DIV2_TO_HCLK_DIV2_TO_PCLK, CLK_DIV4)
 
 #define WDT_INTV_MS     (300)
+
+/*
+ * 2.4G low-power info: defined by D25F, volatile to prevent caching.
+ */
+volatile p24g_pm_info_t g_p24g_pm_info;
 
 _attribute_aligned_(4) app_ctx_t app_ctx;
 _attribute_aligned_(4) app_dual_core_flag_ctx_t app_dual_core_flag_ctx;
@@ -216,7 +223,7 @@ _attribute_ram_code_sec_ void app_2p4g_d25f_sm_rx_cb(uint8_t *data, uint16_t len
 /**
  * @brief resister a command handler for a specific command type
  */
-uint8_t p24g_register_sm_cmd_handler(p24g_sm_cmd_e cmd, p24g_sm_cmd_handler_t handler) 
+_attribute_ram_code_sec_ uint8_t p24g_register_sm_cmd_handler(p24g_sm_cmd_e cmd, p24g_sm_cmd_handler_t handler) 
 {
     uint8_t ret = TLK_ERR_INVALID_PARAM;
 
@@ -232,7 +239,7 @@ uint8_t p24g_register_sm_cmd_handler(p24g_sm_cmd_e cmd, p24g_sm_cmd_handler_t ha
 
 
 
-void app_2p4g_dual_core_comm_init(void)
+_attribute_ram_code_sec_ void app_2p4g_dual_core_comm_init(void)
 {
     mcc_mb_register_cb(TLK_MB_N22_TO_D25F_KM_DATA, (mb_recv_cb_t)app_2p4g_mb_km_data_cb);
     mcc_shm_register_cb(TLK_SHM_MSG_2P4G, app_2p4g_d25f_sm_rx_cb);
@@ -262,8 +269,14 @@ void app_2p4g_dual_core_comm_init(void)
 
     mcc_d25f_mb_send_data(TLK_MB_D25F_TO_N22_2P4G_APP_CTX_ADDRESS, cmd);
 
-    printk("d25fKbTxFifo: %p\nd25fSppTxFifo: %p\napp_dual_core_flag_ctx: %p\n",
-       &d25fKbTxFifo, &d25fSppTxFifo, &app_dual_core_flag_ctx);
+    /* Pass g_p24g_pm_info address to N22 so it can write the shared struct */
+    address = (u32)&g_p24g_pm_info;
+    cmd[3] = (uint8_t)(address & 0xff);
+    cmd[4] = (uint8_t)(address >> 8 & 0xff);
+    cmd[5] = (uint8_t)(address >> 16 & 0xff);
+    cmd[6] = (uint8_t)(address >> 24 & 0xff);
+
+    mcc_d25f_mb_send_data(TLK_MB_D25F_TO_N22_2P4G_PM_INFO_ADDRESS, cmd);
 }
 
 
@@ -471,7 +484,7 @@ _attribute_ram_code_sec_ static void app_2p4g_handle_misc(uint8_t *data, uint16_
 }
 
 
-static void app_p24g_sm_cmd_hanlder_init(void)
+_attribute_ram_code_sec_ static void app_p24g_sm_cmd_hanlder_init(void)
 {
     p24g_register_sm_cmd_handler(P24G_SM_CMD_SAVE_PAIR_INFO,           app_2p4g_handle_save_pairing_info);
     p24g_register_sm_cmd_handler(P24G_SM_CMD_SET_STATE,                app_2p4g_handle_set_state);
@@ -480,7 +493,7 @@ static void app_p24g_sm_cmd_hanlder_init(void)
     p24g_register_sm_cmd_handler(P24G_SM_CMD_MISC,                     app_2p4g_handle_misc);
 }
 
-static void app_p24g_send_info_2_n22(void)
+_attribute_ram_code_sec_ static void app_p24g_send_info_2_n22(void)
 {
     p24g_send_sm_msg(P24G_SM_CMD_MISC, P24G_SM_OP_MISC_TRANS_MAC, app_ctx.mac, MAC_ADDR_LEN);
 
@@ -546,7 +559,7 @@ _attribute_ram_code_sec_ uint8_t app_send_spp_data(uint8_t *data, uint8_t len, u
     return ret;
 }
 
-void mcc_d25f_to_n22_set_clk_info(void)
+_attribute_ram_code_sec_ void mcc_d25f_to_n22_set_clk_info(void)
 {
     uint8_t cmd[8] = {0};
     uint32_t address = (uint32_t)(&sys_clk);
@@ -564,7 +577,7 @@ void mcc_d25f_to_n22_set_clk_info(void)
  * @param[in]   none
  * @return      none
  */
-void p24g_user_init_normal(void)
+_attribute_ram_code_sec_ void p24g_user_init_normal(void)
 {
     #if APP_WDT_ENABLE
     app_wdt_init();
@@ -581,13 +594,12 @@ void p24g_user_init_normal(void)
     LOG_INF("d25f kb_p24g_init end\n");
 }
 
-
 /**
- * @brief     BLE main loop
+ * @brief     2.4G main loop
  * @param[in]  none.
  * @return     none.
  */
-_attribute_no_inline_ void app_2p4g_main_loop(void)
+_attribute_ram_code_sec_ void app_2p4g_main_loop(void)
 {
     #if APP_WDT_ENABLE
     wd_clear();
