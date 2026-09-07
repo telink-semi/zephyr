@@ -201,6 +201,22 @@ _attribute_ram_code_ void app_2p4g_mb_km_data_cb(uint8_t* data)
     }
 }
 
+_attribute_ram_code_sec_ void app_2p4g_clock_reinit_cb(uint8_t* data)
+{
+    report_rate_t report_rate = data[0];
+    app_2p4g_clock_reinit(report_rate);
+}
+
+_attribute_ram_code_sec_ void app_2p4g_ks_enable_cb(uint8_t* data)
+{
+    ks_pwm_mode_enable();
+}
+
+_attribute_ram_code_sec_ void app_2p4g_ks_disable_cb(uint8_t* data)
+{
+    ks_pwm_mode_disable();
+}
+
 _attribute_ram_code_sec_ void app_2p4g_d25f_sm_rx_cb(uint8_t *data, uint16_t len)
 {
 
@@ -242,6 +258,10 @@ _attribute_ram_code_sec_ uint8_t p24g_register_sm_cmd_handler(p24g_sm_cmd_e cmd,
 _attribute_ram_code_sec_ void app_2p4g_dual_core_comm_init(void)
 {
     mcc_mb_register_cb(TLK_MB_N22_TO_D25F_KM_DATA, (mb_recv_cb_t)app_2p4g_mb_km_data_cb);
+    mcc_mb_register_cb(TLK_MB_D25F_TO_N22_CLK_REINIT_TRIGGER, (mb_recv_cb_t)app_2p4g_clock_reinit_cb);
+    mcc_mb_register_cb(TLK_MB_D25F_TO_N22_KS_ENABLE_TRIGGER, (mb_recv_cb_t)app_2p4g_ks_enable_cb);
+    mcc_mb_register_cb(TLK_MB_D25F_TO_N22_KS_DISABLE_TRIGGER, (mb_recv_cb_t)app_2p4g_ks_disable_cb);
+
     mcc_shm_register_cb(TLK_SHM_MSG_2P4G, app_2p4g_d25f_sm_rx_cb);
 
     uint8_t cmd[7] = {0};
@@ -463,34 +483,12 @@ _attribute_ram_code_sec_ static void app_2p4g_handle_spp_data(uint8_t *data, uin
 
 }
 
-
-
-_attribute_ram_code_sec_ static void app_2p4g_handle_misc(uint8_t *data, uint16_t len)
-{
-    p24g_evt_t *p_evt = (p24g_evt_t *)data;
-    switch (p_evt->opcode) {
-        case P24G_SM_OP_MISC_REPORT_RATE: //report rate changed
-
-            unsigned int key = irq_lock();
-            app_2p4g_clock_reinit((report_rate_t)p_evt->data[0]);
-            timer_clr_irq_status(FLD_TMR0_MODE_IRQ); //Clear IRQ status
-            irq_unlock(key);
-
-            LOG_INF("report rate changed %d", p_evt->data[0]);
-            break;
-        default:
-            break;
-    }
-}
-
-
 _attribute_ram_code_sec_ static void app_p24g_sm_cmd_hanlder_init(void)
 {
     p24g_register_sm_cmd_handler(P24G_SM_CMD_SAVE_PAIR_INFO,           app_2p4g_handle_save_pairing_info);
     p24g_register_sm_cmd_handler(P24G_SM_CMD_SET_STATE,                app_2p4g_handle_set_state);
     p24g_register_sm_cmd_handler(P24G_SM_CMD_DATA_TYPE_SPP,            app_2p4g_handle_spp_data);
     p24g_register_sm_cmd_handler(P24G_SM_CMD_SPP_SEND_COMP,            app_2p4g_handle_spp_data);
-    p24g_register_sm_cmd_handler(P24G_SM_CMD_MISC,                     app_2p4g_handle_misc);
 }
 
 _attribute_ram_code_sec_ static void app_p24g_send_info_2_n22(void)
