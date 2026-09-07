@@ -11,9 +11,9 @@
 #define PLIC_PRI_SIZE                ((CONFIG_NUM_IRQS - CONFIG_2ND_LVL_ISR_TBL_OFFSET) << 2)
 #if CONFIG_SOC_RISCV_TELINK_TL322X
 #if CONFIG_TELINK_TL322X_ENABLE_N22
-        .equ __D25F_IRAM_SIZE,   5 //224KB
-        .equ __D25F_DRAM_SIZE,   2 //160KB
-        .equ __N22_IRAM_SIZE,    3
+        .equ __D25F_IRAM_SIZE,   4 //128KB
+        .equ __D25F_DRAM_SIZE,   2 //64KB
+        .equ __N22_IRAM_SIZE,    4
         .equ __N22_DRAM_SIZE,    2
 #else
         .equ __D25F_IRAM_SIZE,   7 //224KB
