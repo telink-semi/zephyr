@@ -1,8 +1,9 @@
-# SDK 介绍
+# Telink Zephyr SDK (tl_zephyr) 介绍
 
 * [英文 README](README.md)
 
-Telink Zephyr SDK 是基于 Zephyr Project 构建的面向 Telink RISC-V SoC 平台的软件开发平台。通过 Telink Zephyr SDK，开发者可以基于 Zephyr RTOS 标准开发框架，在 Telink SoC 平台上快速开发嵌入式应用。
+Telink Zephyr SDK (tl_zephyr) 是基于 Zephyr Project 构建的面向 Telink RISC-V SoC 平台的软件开发平台。
+通过 Telink Zephyr SDK，开发者可以基于 Zephyr RTOS 标准开发框架，在 Telink SoC 平台上快速开发嵌入式应用。
 
 该 SDK 在 Zephyr RTOS 开源生态基础上，提供 Telink SoC 平台适配支持，包括：
 
@@ -37,7 +38,7 @@ Telink Zephyr SDK 在保持与 Zephyr 生态兼容的基础上，增加了 Telin
 
 **支持信息**
 
-关于完整、准确的芯片型号、对应的开发板、开发平台、工具链以及 SDK 版本的详细信息，请参阅 [Release Notes](http://./doc/telink/releases/release-notes-tl_v1.0.1.md)。打开 Release Notes 页面后，通过左侧下拉列表，选择与您当前使用的 SDK 版本对应的 Release Notes 查看。
+关于完整、准确的芯片型号、对应的开发板、开发平台、工具链以及 SDK 版本的详细信息，请参阅 [Release Notes](doc/telink/releases/release-notes.md)。
 
 # 文档与资源
 
@@ -97,7 +98,5 @@ You may obtain a copy of the License at:
 [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-
-See the License for the specific language governing permissions and limitations under the License.
 
 See the License for the specific language governing permissions and limitations under the License.

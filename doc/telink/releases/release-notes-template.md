@@ -1,7 +1,7 @@
 # Telink Zephyr SDK Release Note
 
-[![Version](https://img.shields.io/badge/Version-{{VERSION}}--beta--v4.1.0-blue?style=flat-square)](https://github.com/telink-semi/zephyr/releases/tag/{{VERSION}}-beta-v4.1.0)
-[![License](https://img.shields.io/badge/License-Apache%202.0-red?style=flat-square)](LICENSE)
+[![Version](https://img.shields.io/badge/Version-{{VERSION}}--beta--v4.1.0-blue?style=flat-square)](https://github.com/telink-semi/tl_zephyr/releases/tag/{{VERSION}}-beta-v4.1.0)
+[![License](https://img.shields.io/badge/License-Apache%202.0-red?style=flat-square)](../../../LICENSE)
 [![Zephyr](https://img.shields.io/badge/Zephyr-v4.1.0-green?style=flat-square)](https://github.com/zephyrproject-rtos/zephyr/releases/tag/v4.1.0)
 
 ---
@@ -20,7 +20,7 @@ This release is based on the `dev-tlk_v4.1` branch. _TODO: add a one-sentence su
 This release is based on upstream Zephyr **v4.1.0** (tag [`v4.1.0`](https://github.com/zephyrproject-rtos/zephyr/releases/tag/v4.1.0)). For the full list of upstream changes, see:
 
 - [Zephyr v4.1.0 Release Notes](https://docs.zephyrproject.org/latest/releases/release-notes-4.1.html)
-- [Zephyr v4.1.0 Migration Guide](https://docs.zephyrproject.org/latest/migration/migration-4.1.html) — recommended reading when upgrading from a previous Zephyr version.
+- [Zephyr v4.1.0 Migration Guide](https://docs.zephyrproject.org/latest/releases/migration-guide-4.1.html) — recommended reading when upgrading from a previous Zephyr version.
 
 For environment setup, see the [Telink Zephyr SDK Getting Started Guide](../getting_started/index.md).
 
@@ -77,7 +77,7 @@ More detailed information can be found in the [Zephyr Security Vulnerabilities](
 
 This release inherits all upstream Zephyr v4.1.0 API and Kconfig changes.
 
-For the complete list, see the upstream [Zephyr v4.1.0 Release Notes — API Changes](https://docs.zephyrproject.org/latest/releases/release-notes-4.1.html#api-changes) and the [Migration Guide](https://docs.zephyrproject.org/latest/migration/migration-4.1.html).
+For the complete list, see the upstream [Zephyr v4.1.0 Release Notes — API Changes](https://docs.zephyrproject.org/latest/releases/release-notes-4.1.html#api-changes) and the [Migration Guide](https://docs.zephyrproject.org/latest/releases/migration-guide-4.1.html).
 
 ---
 
@@ -87,9 +87,9 @@ For the complete list, see the upstream [Zephyr v4.1.0 Release Notes — API Cha
 |-----------|------------|--------|-------|
 | **Telink BLE SDK** | [telink-semi/tl_ble_sdk_zephyr](https://github.com/telink-semi/tl_ble_sdk_zephyr) | _TODO_ | Required by all Telink SoCs; fetch via `./hal_v2/fetch_sdk.sh` (hal_v2) or `west blobs fetch hal_telink` (hal_v1) |
 | **Telink HAL Zephyr** | [telink-semi/hal_telink](https://github.com/telink-semi/hal_telink) | _TODO_ | Contains both hal_v1 and hal_v2 sources |
-| **MCUBoot** | [telink-semi/mcuboot](https://github.com/telink-semi/mcuboot) | _TODO_ | Bootloader; required for OTA/DFU |
-| **OpenThread Telink** | [telink-semi/openthread](https://github.com/telink-semi/openthread) | _TODO_ | OpenThread source adapted for Telink |
-| **OpenThread Telink Lib** | [telink-semi/openthread_telink_lib](https://github.com/telink-semi/openthread_telink_lib) | _TODO_ | Pre-built OpenThread library for Telink |
+| **MCUBoot** | [telink-semi/tl_mcuboot](https://github.com/telink-semi/tl_mcuboot) | _TODO_ | Bootloader; required for OTA/DFU |
+| **OpenThread Telink** | [telink-semi/tl_openthread](https://github.com/telink-semi/tl_openthread) | _TODO_ | OpenThread source adapted for Telink |
+| **OpenThread Telink Lib** | [telink-semi/tl_openthread_libs](https://github.com/telink-semi/tl_openthread_libs) | _TODO_ | Pre-built OpenThread library for Telink |
 
 ---
 
