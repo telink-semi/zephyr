@@ -15,6 +15,10 @@
 #include <zephyr/device.h>
 #include <zephyr/storage/flash_map.h>
 
+#if (!CONFIG_PM && !CONFIG_MCUBOOT)
+#include "tlx_bt.h"
+#endif
+
 #if DEBUG_GPIO_ENABLE
 #include "gpio_default.h"
 #endif
@@ -126,6 +130,18 @@ void soc_early_init_hook(void)
 
 	/* system init */
 	sys_init(POWER_MODE, VBAT_TYPE, INTERNAL_CAP_XTAL24M);
+
+	/* Only need for lighting to switch from zigbee to matter */
+#if (!CONFIG_PM && !CONFIG_MCUBOOT)
+	/* Enable clock before operate rf register */
+	rf_mode_init();
+	/* Reset Radio */
+	rf_radio_reset();
+	rf_reset_dma();
+	rf_baseband_reset();
+
+	rf_clr_irq_status(FLD_RF_IRQ_ALL);
+#endif
 
 /* note: only the 3.3uH, need to set this value , user open by yourself. 6.8uH just ignore. */
 #if CONFIG_SOC_PMOS_SWITCH_TIME_CTL
