@@ -1,13 +1,13 @@
 # Telink Zephyr SDK Release Note
 
-[![Version](https://img.shields.io/badge/Version-tl_v1.4.0--v4.1.0-blue?style=flat-square)](https://github.com/telink-semi/tl_zephyr/releases/tag/tl_v1.4.0-v4.1.0)
+[![Version](https://img.shields.io/badge/Version-tl_v1.4.0--beta--v4.1.0-blue?style=flat-square)](https://github.com/telink-semi/tl_zephyr/releases/tag/tl_v1.4.0-beta-v4.1.0)
 [![License](https://img.shields.io/badge/License-Apache%202.0-red?style=flat-square)](../../../LICENSE)
 [![Zephyr](https://img.shields.io/badge/Zephyr-v4.1.0-green?style=flat-square)](https://github.com/zephyrproject-rtos/zephyr/releases/tag/v4.1.0)
 
 ***
 
 - **Release Type:** Public-Release
-- **Tag Version:** tl\_v1.4.0-v4.1.0
+- **Tag Version:** tl\_v1.4.0-beta-v4.1.0
 
 <!-- - **Branch:** dev-tlk_v4.1 -->
 <!-- - **Target Commit:** 0858e43f05a91d84ab2fed77f3849ff589510b24 -->
@@ -46,7 +46,7 @@ For environment setup, see the [Telink Zephyr SDK Getting Started Guide](../gett
 
 | Property         | Value                    |
 | ---------------- | ------------------------ |
-| **Tag Name**     | tl\_v1.4.0-v4.1.0        |
+| **Tag Name**     | tl\_v1.4.0-beta-v4.1.0   |
 | **Release Type** | Public-Release           |
 
 ### Chip & Hardware Versions
@@ -95,6 +95,7 @@ This release adds support for the new TL521X (TL5218X) chip series.
 | #802  | Serial    | Fix a splitting issue found during the TL521X driver split |
 | #802  | MCUBoot   | Re-add `MCUBOOT_START_OFFSET` for B9X/W9X, which was lost during the shared TLX Kconfig move |
 | #832  | SoC       | Pull up the SWS pin after startup and retention reset |
+| #836  | SoC       | Reset the radio at boot to support switching from Zigbee to Matter |
 
 ***
 
