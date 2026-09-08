@@ -1,4 +1,4 @@
-# Telink Zephyr SDK
+# Telink Zephyr SDK (tl_zephyr) README
 
 * [Chinese README](README_cn.md)
 
@@ -10,10 +10,7 @@
 
 ## 📖 SDK Introduction
 
-<!-- Telink Zephyr SDK is a software development platform for Telink RISC-V SoC platforms (such as TL721x, TL321x, TL322x, TLSR921x, TLSR922x, TLSR952x series) and is based on Zephyr Project.
-It is designed for developing a wide range of wireless IoT products including smart home, wearables, lighting products, etc. -->
-
-Telink Zephyr SDK is a software development platform for Telink RISC-V SoC platforms (such as TL521x, TL721x, TL323x series) and is based on Zephyr Project.
+Telink Zephyr SDK (tl_zephyr) is a software development platform for Telink RISC-V SoC platforms (such as TL323x, TL521x, TL721x series) and is based on Zephyr Project.
 It is designed for developing a wide range of wireless IoT products including smart home, wearables, lighting products, etc.
 
 ### Core Capabilities
@@ -37,7 +34,6 @@ It is designed for developing a wide range of wireless IoT products including sm
 | **Thread / Matter** | Lights, switches, sensors, door locks, and Matter over Thread devices |
 | **BLE + Thread Concurrent** | Hub/gateway devices running BLE and Thread simultaneously (TL323X, TL721X) |
 | **Channel Sounding** | High-accuracy distance measurement for positioning and fine-ranging (TL721X) |
-| **Wi-Fi enabled IoT devices** | Gateways, Lights, and cloud-connected edge devices |
 
 ---
 
@@ -110,7 +106,7 @@ Historical release notes are available under [`doc/telink/releases/`](doc/telink
 
 ## Contribution Guide
 
-For contribution guidelines, refer to the [Contribution Guide](CONTRIBUTING.md).
+For contribution guidelines, refer to the [Contribution Guide](CONTRIBUTING.rst).
 
 ---
 
