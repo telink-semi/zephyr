@@ -91,11 +91,11 @@ This release adds support for the new TL521X (TL5218X) chip series.
 
 | Issue | Component | Description |
 | ----- | --------- | ----------- |
-| #802  | Bluetooth | Fix Matter commissioning failure after the BLE to Thread switch |
-| #802  | Serial    | Fix a splitting issue found during the TL521X driver split |
-| #802  | MCUBoot   | Re-add `MCUBOOT_START_OFFSET` for B9X/W9X, which was lost during the shared TLX Kconfig move |
-| #832  | SoC       | Pull up the SWS pin after startup and retention reset |
-| #836  | SoC       | Reset the radio at boot to support switching from Zigbee to Matter |
+| [#802](https://github.com/telink-semi/tl_zephyr/pull/802) | Bluetooth | Fix Matter commissioning failure after the BLE to Thread switch |
+| [#802](https://github.com/telink-semi/tl_zephyr/pull/802) | Serial    | Fix a splitting issue found during the TL521X driver split |
+| [#802](https://github.com/telink-semi/tl_zephyr/pull/802) | MCUBoot   | Re-add `MCUBOOT_START_OFFSET` for B9X/W9X, which was lost during the shared TLX Kconfig move |
+| [#832](https://github.com/telink-semi/tl_zephyr/pull/832) | SoC       | Pull up the SWS pin after startup and retention reset |
+| [#836](https://github.com/telink-semi/tl_zephyr/pull/836) | SoC       | Reset the radio at boot to support switching from Zigbee to Matter |
 
 ***
 
@@ -107,11 +107,11 @@ The following Telink-specific Kconfig changes may affect existing applications w
 
 | Change | Impact | Migration |
 | ------ | ------ | --------- |
-| BLE controller library naming changed from SoC-based (`_dual_core`/`_single_core`/`_general`) to role-based (`_peripheral`/`_central`/`_multirole`), selected via the new `TL_BLE_CTRL_VARIANT` Kconfig choice (#830) | **BREAKING** — existing BLE applications must choose a role-based variant | Select the `TL_BLE_CTRL_VARIANT` value that matches the application role |
-| Removed the per-SoC hardcoded `SUSPEND_EXIT_LATENCY_US` macros; suspend-exit latency is now set dynamically by the BLE library at runtime (#830) | Applications relying on the removed macros break | Rely on the BLE library's runtime suspend-exit latency handling |
-| Restructured the SoC layout: TL321X/TL322X/TL323X/TL521X/TL721X/TL5X moved to the new `soc/telink/tlx/` family with dedicated Kconfig and linker scripts, and TL521X got independent drivers (#802) | Out-of-tree Kconfigs referencing the legacy family symbol may break | Update to the new SoC Kconfig symbols; a hidden `SOC_RISCV_TELINK_TLX` alias is kept for compatibility |
-| Changed the `tl5218x` board devicetree to the new `telink,tl521x-*` compatibles (#802) | Out-of-tree board dts/overlays using the old `telink,tlx-*` compatibles break | Update devicetree compatibles to `telink,tl521x-*` |
-| Added a TL521X retention Kconfig and scoped `HWINFO_TELINK_TLX` to TL321X/TL322X/TL323X/TL721X (#802) | TL521X now uses its own retention option; the tlx hwinfo driver is not built for TL521X | Select the TL521X retention option as needed; no change for TL321X/TL322X/TL323X/TL721X |
+| BLE controller library naming changed from SoC-based (`_dual_core`/`_single_core`/`_general`) to role-based (`_peripheral`/`_central`/`_multirole`), selected via the new `TL_BLE_CTRL_VARIANT` Kconfig choice ([#830](https://github.com/telink-semi/tl_zephyr/pull/830)) | **BREAKING** — existing BLE applications must choose a role-based variant | Select the `TL_BLE_CTRL_VARIANT` value that matches the application role |
+| Removed the per-SoC hardcoded `SUSPEND_EXIT_LATENCY_US` macros; suspend-exit latency is now set dynamically by the BLE library at runtime ([#830](https://github.com/telink-semi/tl_zephyr/pull/830)) | Applications relying on the removed macros break | Rely on the BLE library's runtime suspend-exit latency handling |
+| Restructured the SoC layout: TL321X/TL322X/TL323X/TL521X/TL721X/TL5X moved to the new `soc/telink/tlx/` family with dedicated Kconfig and linker scripts, and TL521X got independent drivers ([#802](https://github.com/telink-semi/tl_zephyr/pull/802)) | Out-of-tree Kconfigs referencing the legacy family symbol may break | Update to the new SoC Kconfig symbols; a hidden `SOC_RISCV_TELINK_TLX` alias is kept for compatibility |
+| Changed the `tl5218x` board devicetree to the new `telink,tl521x-*` compatibles ([#802](https://github.com/telink-semi/tl_zephyr/pull/802)) | Out-of-tree board dts/overlays using the old `telink,tlx-*` compatibles break | Update devicetree compatibles to `telink,tl521x-*` |
+| Added a TL521X retention Kconfig and scoped `HWINFO_TELINK_TLX` to TL321X/TL322X/TL323X/TL721X ([#802](https://github.com/telink-semi/tl_zephyr/pull/802)) | TL521X now uses its own retention option; the tlx hwinfo driver is not built for TL521X | Select the TL521X retention option as needed; no change for TL321X/TL322X/TL323X/TL721X |
 
 ### Upstream Inherited Changes
 
@@ -131,6 +131,17 @@ For the complete list, see the upstream [Zephyr v4.1.0 Release Notes — API Cha
 | **OpenThread Telink**     | [telink-semi/tl\_openthread](https://github.com/telink-semi/tl_openthread) | [`542aaab`](https://github.com/telink-semi/tl_openthread/commit/542aaab44e1308e1a8a24573dfbd413fade342ee) | OpenThread source adapted for Telink                         |
 | **OpenThread Telink Lib** | [telink-semi/tl\_openthread\_libs](https://github.com/telink-semi/tl_openthread_libs) | [`f69c186`](https://github.com/telink-semi/tl_openthread_libs/commit/f69c186d65a41259480e87ccf9d2a7f665249778) | Pre-built OpenThread library for Telink                      |
 | **Telink XZ (LZMA)**      | [telink-semi/tl\_xz](https://github.com/telink-semi/tl_xz) | [`831f338`](https://github.com/telink-semi/tl_xz/commit/831f338fd6784661d3bec62fd01060ee4d7d373d) | LZMA compression library module (modules/lib/lzma)           |
+
+### Telink HAL Zephyr (hal\_telink) `tl_v1.4.0-v4.0.4.8`
+
+The HAL module is pinned at tag `tl_v1.4.0-v4.0.4.8` (commit [`bd870dc`](https://github.com/telink-semi/hal_telink/commit/bd870dc273989756f908077761a5e3adbd7d108f)). Compared with the previous release tag (`tl_v1.3.0-v4.0.4.8`), it includes the following changes:
+
+| Change | Description |
+| ------ | ----------- |
+| Support the new `tlx` SoC family ([#203](https://github.com/telink-semi/hal_telink/pull/203)) | Adapt the CMake build system for `CONFIG_SOC_FAMILY_TELINK_TLX`: `SOC_FAMILY` is set to `tlx` so the controller driver path resolves correctly; update the mbedtls ECP acceleration and IEEE802.15.4 include conditionals; keep the legacy TLX Kconfig symbols working for backward compatibility |
+| Role-based BLE controller library variants ([#205](https://github.com/telink-semi/hal_telink/pull/205)) | Replace the `COMPILE_TL_LIB_GENERAL` option with the `TL_BLE_CTRL_VARIANT` Kconfig choice (`TL_BLE_CTRL_PERIPHERAL` / `TL_BLE_CTRL_CENTRAL` / `TL_BLE_CTRL_MULTIROLE`), auto-selected from the BLE role configs; controller library names change from SoC-based (`_dual_core` / `_single_core` / `_general` / `_concurrent`) to role-based (`_peripheral` / `_central` / `_multirole`) |
+| Dynamic suspend-exit latency ([#205](https://github.com/telink-semi/hal_telink/pull/205)) | Remove the per-SoC hardcoded `SUSPEND_EXIT_LATENCY_US` macros from `tlx_bt_init.c`; the BLE library now records the suspend-exit start tick (`blc_ll_get_suspend_exit_start_tick`) for more accurate runtime latency handling |
+| Driver source sync ([#202](https://github.com/telink-semi/hal_telink/pull/202)) | Sync the hal_v2 wrapper with the latest Telink BLE SDK driver source changes (e.g. RF power control in `tl_rf_power.c`) |
 
 ***
 
