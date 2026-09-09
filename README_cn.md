@@ -19,10 +19,12 @@ Telink Zephyr SDK (tl_zephyr) 是基于 Zephyr Project 构建的面向 Telink RI
 | 类别 | 能力说明 |
 | --- | --- |
 | 芯片平台支持 | Telink RISC-V SoC 支持、启动配置、内存及链接配置、开发板支持 |
+| 无线连接能力 | Telink BLE 协议栈、OpenThread 协议栈、BLE + Thread 并发模式（TL323X、TL721X） |
 | 硬件驱动支持 | 基于 Zephyr Driver Model 的 GPIO、UART、SPI、I²C、PWM、ADC、Timer、Flash 等外设支持 |
 | 软件框架支持 | Zephyr Kernel、Device Model、Driver Framework、Kconfig、West 构建系统 |
 | 系统服务 | 电源管理、日志系统、存储管理、系统配置 |
 | 安全能力 | MCUboot、安全启动、加密框架支持 |
+| 定位能力 | Bluetooth 6.0 Channel Sounding（CS）距离测量（TL721X） |
 | 生态支持 | 基于 Zephyr 生态支持 Bluetooth® LE、Thread、Matter 等应用开发 |
 | 示例支持 | Zephyr Samples 及 Telink reference examples |
 
@@ -33,6 +35,8 @@ Telink Zephyr SDK 在保持与 Zephyr 生态兼容的基础上，增加了 Telin
 - Bluetooth® LE 设备（HID、传感器、Beacon、可穿戴设备等）
 - Thread 智能家居设备（智能照明、传感器、控制设备等）
 - Matter 智能家居设备（灯具、插座、门锁、温控器等）
+- BLE + Thread 并发设备（同时运行 BLE 与 Thread 的网关/集线器设备，TL323X、TL721X）
+- 基于 Bluetooth 6.0 Channel Sounding（CS）的高精度定位/测距设备（TL721X）
 - 低功耗 IoT 终端设备（环境监测、资产管理、工业传感节点等）
 - 消费电子及复杂嵌入式设备（无线外设、智能控制器等）
 
@@ -46,9 +50,9 @@ Telink Zephyr SDK 在保持与 Zephyr 生态兼容的基础上，增加了 Telin
 
 | 文档 | 说明 |
 | --- | --- |
-| 快速入门 | 开发环境配置、SDK获取及快速上手方法 |
+| [快速入门](https://doc.telink-semi.cn/doc/zh/software/res/sdk/zephyr/get_started/telink_zephyr_sdk_get_started_cn/) | 开发环境配置、SDK获取及快速上手方法 |
 | [Telink Matter 开发手册](https://doc.telink-semi.cn/doc/zh/software/res/sdk/matter/telink_matter_developer_guide_cn/) | Telink Matter SDK 的软件架构、仓库结构及功能模块说明 |
-| Release Notes | 支持平台、版本说明及详细变化 |
+| [Release Notes](doc/telink/releases/release-notes.md) | 支持平台、版本说明及详细变化 |
 
 **社区与资源**
 

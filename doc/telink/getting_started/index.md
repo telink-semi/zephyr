@@ -233,7 +233,7 @@ chmod +x fetch_sdk.sh
 > arguments:
 >
 > ```bash
-> ./fetch_sdk.sh https://github.com/telink-semi/tl_ble_sdk_zephyr.git 3bddf885c0a1e4342393b7c6b668ece104c12102
+> ./fetch_sdk.sh https://github.com/telink-semi/tl_ble_sdk_zephyr.git de6f125c8ae6d29c4a640ab3526b40ff8c3f0a20
 > ```
 
 ### Switch branches or commits
