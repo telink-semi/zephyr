@@ -143,6 +143,14 @@ The HAL module is pinned at tag `tl_v1.4.0-v4.0.4.8` (commit [`bd870dc`](https:/
 | Dynamic suspend-exit latency ([#205](https://github.com/telink-semi/hal_telink/pull/205)) | Remove the per-SoC hardcoded `SUSPEND_EXIT_LATENCY_US` macros from `tlx_bt_init.c`; the BLE library now records the suspend-exit start tick (`blc_ll_get_suspend_exit_start_tick`) for more accurate runtime latency handling |
 | Driver source sync ([#202](https://github.com/telink-semi/hal_telink/pull/202)) | Sync the hal_v2 wrapper with the latest Telink BLE SDK driver source changes (e.g. RF power control in `tl_rf_power.c`) |
 
+### Telink Zephyr OpenThread (tl_openthread) `tl_v1.4.0-v1.4`
+
+The Telink OpenThread module for Zephyr, not a mirror of the offical OpenThread repository. The OpenThread module is pinned at tag `tl_v1.4.0-v1.4` (commit [`542aaab`](https://github.com/telink-semi/tl_openthread/commit/542aaab44e1308e1a8a24573dfbd413fade342ee)). For Zephyr 4.1, the corresponding OpenThread module is commit [`3ae741f`](https://github.com/telink-semi/tl_openthread/commit/3ae741f95e7dfb391dec35c48742862049eb62e8).Relative to the base version, this release tag includes the following changes:
+
+| Change | Description |
+| ------ | ----------- |
+| Add openthread sed code into ramcode ([#2](https://github.com/telink-semi/tl_openthread/pull/2)) | Put OpenThread SED proc call-tree into ramcode on chips with enough RAM (e.g., `TL721X`) to reduce wake‑up runtime and lower power consumption. This only applies when `CONFIG_PM` is enabled. |
+
 ***
 
 ## ⚠️ Known Issues and Limitations
