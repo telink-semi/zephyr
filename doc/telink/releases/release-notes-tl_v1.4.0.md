@@ -125,7 +125,7 @@ For the complete list, see the upstream [Zephyr v4.1.0 Release Notes — API Cha
 
 | Component                 | Repository                                                   | Commit                                                       | Notes                                                        |
 | ------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| **Telink BLE SDK**        | [telink-semi/tl\_ble\_sdk\_zephyr](https://github.com/telink-semi/tl_ble_sdk_zephyr) | [`3bddf88`](https://github.com/telink-semi/tl_ble_sdk_zephyr/commit/3bddf885c0a1e4342393b7c6b668ece104c12102) | Required by TL521X; fetch via `./hal_v2/fetch_sdk.sh` (hal\_v2) or `west blobs fetch hal_telink` (hal\_v1) |
+| **Telink BLE SDK**        | [telink-semi/tl\_ble\_sdk\_zephyr](https://github.com/telink-semi/tl_ble_sdk_zephyr) | [`de6f125`](https://github.com/telink-semi/tl_ble_sdk_zephyr/commit/de6f125c8ae6d29c4a640ab3526b40ff8c3f0a20) | Required by TL521X; fetch via `./hal_v2/fetch_sdk.sh` (hal\_v2) or `west blobs fetch hal_telink` (hal\_v1) |
 | **Telink HAL Zephyr**     | [telink-semi/hal\_telink](https://github.com/telink-semi/hal_telink) | [`bd870dc`](https://github.com/telink-semi/hal_telink/commit/bd870dc273989756f908077761a5e3adbd7d108f) | Contains both hal\_v1 and hal\_v2 sources                    |
 | **MCUBoot**               | [telink-semi/tl\_mcuboot](https://github.com/telink-semi/tl_mcuboot) | [`ce0da85`](https://github.com/telink-semi/tl_mcuboot/commit/ce0da85c39c749df49b0ec62b33d2ecdea24c927) | Bootloader; required for OTA/DFU                             |
 | **OpenThread Telink**     | [telink-semi/tl\_openthread](https://github.com/telink-semi/tl_openthread) | [`542aaab`](https://github.com/telink-semi/tl_openthread/commit/542aaab44e1308e1a8a24573dfbd413fade342ee) | OpenThread source adapted for Telink                         |
@@ -162,7 +162,7 @@ The Telink OpenThread module for Zephyr, not a mirror of the offical OpenThread 
 ## 📌 Important Notes
 
 - Use `west update` to automatically pull `telink_ble_sdk` along with other modules.
-- Alternatively, manually fetch `telink_ble_sdk` by running `./hal_v2/fetch_sdk.sh {REPO_URL} {COMMIT_HASH}` inside `modules/hal/telink/` to pull or update the BLE stack to the version pinned by this release, where `{COMMIT_HASH}` is the `telink_ble_sdk` revision in `west.yml`. For this release, that is: `./hal_v2/fetch_sdk.sh https://github.com/telink-semi/tl_ble_sdk_zephyr.git 3bddf885c0a1e4342393b7c6b668ece104c12102`
+- Alternatively, manually fetch `telink_ble_sdk` by running `./hal_v2/fetch_sdk.sh {REPO_URL} {COMMIT_HASH}` inside `modules/hal/telink/` to pull or update the BLE stack to the version pinned by this release, where `{COMMIT_HASH}` is the `telink_ble_sdk` revision in `west.yml`. For this release, that is: `./hal_v2/fetch_sdk.sh https://github.com/telink-semi/tl_ble_sdk_zephyr.git de6f125c8ae6d29c4a640ab3526b40ff8c3f0a20`
 - For full environment setup instructions, refer to the [Telink Zephyr SDK Getting Started Guide](../getting_started/index.md) or the [Telink Matter Developer Guide](https://doc.telink-semi.cn/doc/en/software/res/sdk/matter/telink_matter_developer_guide_en/).
 
 ***
