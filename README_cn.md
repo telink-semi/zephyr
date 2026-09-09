@@ -50,7 +50,7 @@ Telink Zephyr SDK 在保持与 Zephyr 生态兼容的基础上，增加了 Telin
 
 | 文档 | 说明 |
 | --- | --- |
-| [快速入门](doc/telink/getting_started/index.md) | 开发环境配置、SDK获取及快速上手方法 |
+| [快速入门](https://doc.telink-semi.cn/doc/zh/software/res/sdk/zephyr/get_started/telink_zephyr_sdk_get_started_cn/) | 开发环境配置、SDK获取及快速上手方法 |
 | [Telink Matter 开发手册](https://doc.telink-semi.cn/doc/zh/software/res/sdk/matter/telink_matter_developer_guide_cn/) | Telink Matter SDK 的软件架构、仓库结构及功能模块说明 |
 | [Release Notes](doc/telink/releases/release-notes.md) | 支持平台、版本说明及详细变化 |
 
