@@ -1,0 +1,16 @@
+identifier: tl3228x_dc
+name: Telink TL3228X Dual Core
+type: mcu
+arch: riscv
+toolchain:
+  - cross-compile
+  - zephyr
+ram: 384
+flash: 2048
+supported:
+  - gpio
+  - i2c
+  - pwm
+  - spi
+  - netif:openthread
+vendor: telink

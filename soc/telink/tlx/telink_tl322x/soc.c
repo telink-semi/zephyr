@@ -185,7 +185,7 @@ void soc_early_init_hook(void)
 	wd_32k_stop();
 
 #undef N22_FW_DOWNLOAD_FLASH_ADDR
-#define N22_FW_DOWNLOAD_FLASH_ADDR CONFIG_FLASH_BASE_ADDRESS + 0x80000 + 0x13040
+#define N22_FW_DOWNLOAD_FLASH_ADDR CONFIG_FLASH_BASE_ADDRESS + 0x80000
 	sys_n22_init(N22_FW_DOWNLOAD_FLASH_ADDR);
 #if !defined(TLK_ONLY_BLE_HOST)
 	rf_n22_dig_init();

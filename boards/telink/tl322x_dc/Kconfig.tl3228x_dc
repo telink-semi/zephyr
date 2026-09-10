@@ -1,0 +1,6 @@
+# Copyright (c) 2025 Telink Semiconductor
+# SPDX-License-Identifier: Apache-2.0
+
+config BOARD_TL3228X_DC
+	help
+		Telink TL322X Dual Core Platform (D25F application core + N22 BLE controller)

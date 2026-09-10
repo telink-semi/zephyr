@@ -162,9 +162,11 @@ void pm_state_exit_post_ops(enum pm_state state, uint8_t substate_id)
 	}
 #else
 	{
+# ifndef CONFIG_TELINK_TL322X_ENABLE_N22
 		extern void blc_ll_set_suspend_exit_latency(void);
 
 		blc_ll_set_suspend_exit_latency();
+# endif /* CONFIG_TELINK_TL322X_ENABLE_N22 */
 	}
 #endif
 

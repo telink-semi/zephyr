@@ -13,30 +13,29 @@
 #define PLIC_BASE_ADDRESS            DT_REG_ADDR(DT_NODELABEL(plic0))
 #define PLIC_PRI_SIZE                ((CONFIG_NUM_IRQS - CONFIG_2ND_LVL_ISR_TBL_OFFSET) << 2)
 
-#if CONFIG_SOC_RISCV_TELINK_TL322X
-    /* @breif ILM/DLM partition size in 32KB units, taken from the
-     * ram_ilm / ram_dlm reg size in the devicetree.
-     */
-    .equ __D25F_IRAM_SIZE,   (DT_REG_SIZE(DT_NODELABEL(ram_ilm)) >> 15)
-    .equ __D25F_DRAM_SIZE,   (DT_REG_SIZE(DT_NODELABEL(ram_dlm)) >> 15)
-    .equ __N22_IRAM_SIZE,    (DT_REG_SIZE(DT_NODELABEL(n22_ram_ilm)) >> 15)
-    .equ __N22_DRAM_SIZE,    (DT_REG_SIZE(DT_NODELABEL(n22_ram_dlm)) >> 15)
+/* @breif ILM/DLM partition size in 32KB units, taken from the
+	* ram_ilm / ram_dlm reg size in the devicetree.
+	*/
+.equ __D25F_IRAM_SIZE,   (DT_REG_SIZE(DT_NODELABEL(ram_ilm)) >> 15)
+.equ __D25F_DRAM_SIZE,   (DT_REG_SIZE(DT_NODELABEL(ram_dlm)) >> 15)
+.equ __N22_IRAM_SIZE,    (DT_REG_SIZE(DT_NODELABEL(n22_ram_ilm)) >> 15)
+.equ __N22_DRAM_SIZE,    (DT_REG_SIZE(DT_NODELABEL(n22_ram_dlm)) >> 15)
 
 
-    .equ __D25F_N22_RAM_REG,    ((__N22_DRAM_SIZE+__N22_IRAM_SIZE)<<12) | \
-                                 (__N22_DRAM_SIZE<<8) | \
-                                 (__D25F_DRAM_SIZE)
+.equ __D25F_N22_RAM_REG,    ((__N22_DRAM_SIZE+__N22_IRAM_SIZE)<<12) | \
+								(__N22_DRAM_SIZE<<8) | \
+								(__D25F_DRAM_SIZE)
 
-    .section .vectors, "ax"
+.section .vectors, "ax"
 
-    .global     __D25F_IRAM_SIZE
-    .global     __D25F_DRAM_SIZE
-    .global     __N22_IRAM_SIZE
-    .global     __N22_DRAM_SIZE
-    .global     __D25F_N22_RAM_REG
+.global     __D25F_IRAM_SIZE
+.global     __D25F_DRAM_SIZE
+.global     __N22_IRAM_SIZE
+.global     __N22_DRAM_SIZE
+.global     __D25F_N22_RAM_REG
 
-	.option push
-	.option norelax
+.option push
+.option norelax
 
 /* exports */
 GTEXT(entry)

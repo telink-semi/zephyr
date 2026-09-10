@@ -1,0 +1,5 @@
+boards:
+- name: tl3228x_dc
+  vendor: telink
+  socs:
+  - name: telink_tl3228x
