@@ -1,0 +1,62 @@
+boards/telink/tl322x_dc/board.yml
+  h_12ef4c25fb166d 5
+  s_068d088aa97224::t_4740b72b15b433 1-4
+boards/telink/tl322x_dc/tl3228x_dc.yaml
+  h_12ef4c25fb166d 8
+  s_068d088aa97224::t_dff53a04a1ced3 1-7,9-16
+soc/telink/tlx/telink_tl322x/start.S
+  h_12ef4c25fb166d 23-24,28,30,36
+boards/telink/tl322x_dc/Kconfig.defconfig
+  s_068d088aa97224::t_f63f62c2235f4a 1-53
+boards/telink/tl322x_dc/tl3228x_dc.dts
+  s_068d088aa97224::t_c05e2074c1380c 1-51
+boards/telink/tl322x_dc/board.cmake
+  s_068d088aa97224::t_19cd933dedef7b 1-4
+soc/telink/tlx/telink_tl322x/soc.c
+  h_12ef4c25fb166d 188
+kernel/idle.c
+  h_12ef4c25fb166d 87
+boards/telink/tl322x_dc/Kconfig.tl3228x_dc
+  s_068d088aa97224::t_e89ff55108520b 1-6
+soc/telink/tlx/telink_tl322x/power.c
+  h_12ef4c25fb166d 165,169
+boards/telink/tl322x_dc/tl3228x_dc-common.dtsi
+  s_068d088aa97224::t_d3d67cbc40d934 1-130,135,137-139,141-142,149-285
+  s_068d088aa97224::t_ac8b6d14a5bd3a 131-134,136,140,143-148
+boards/telink/tl322x_dc/tl3228x_dc_defconfig
+  s_068d088aa97224::t_7ac85608d28507 1-15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.2",
+  "base_commit_sha": "ad144e650787c101029ec664e644d135afcc22cf",
+  "prompts": {},
+  "humans": {
+    "h_12ef4c25fb166d": {
+      "author": "Zhihan Tao <zhihan.tao@telink-semi.com>"
+    }
+  },
+  "sessions": {
+    "s_068d088aa97224": {
+      "agent_id": {
+        "tool": "trae",
+        "id": "6a8594de43853ac4091ed24c",
+        "model": "glm-5-2-260617"
+      },
+      "human_author": "Zhihan Tao <zhihan.tao@telink-semi.com>",
+      "custom_attributes": {
+        "session_id": "6a8594de43853ac4091ed24c",
+        "external_session_id": "6a8594de43853ac4091ed24c",
+        "runtime_client": "trae-tob-git-ai",
+        "source_scene": "unknown",
+        "tool_type": "agent",
+        "client_type": "ide",
+        "operation_id": "6aa2209c39a43fdc6e14735f",
+        "tool_use_id": "6aa2209c39a43fdc6e14735f",
+        "edit_kind": "file_edit",
+        "dedupe_key": "6a8594de43853ac4091ed24c:6aa2209c39a43fdc6e14735f:afterEdit:75b484d1",
+        "tool_id": "SearchReplace"
+      }
+    }
+  }
+}
