@@ -209,12 +209,16 @@ _attribute_ram_code_sec_ void app_2p4g_clock_reinit_cb(uint8_t* data)
 
 _attribute_ram_code_sec_ void app_2p4g_ks_enable_cb(uint8_t* data)
 {
+    #if ALG_KEYSCAN_APP_FUN_ENABLE
     ks_pwm_mode_enable();
+    #endif
 }
 
 _attribute_ram_code_sec_ void app_2p4g_ks_disable_cb(uint8_t* data)
 {
+    #if ALG_KEYSCAN_APP_FUN_ENABLE
     ks_pwm_mode_disable();
+    #endif
 }
 
 _attribute_ram_code_sec_ void app_2p4g_d25f_sm_rx_cb(uint8_t *data, uint16_t len)
