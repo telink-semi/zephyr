@@ -1,0 +1,14 @@
+boards/telink/tl322x_dc/tl3228x_dc-common.dtsi
+  h_12ef4c25fb166d 132,136,144,148
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.2",
+  "base_commit_sha": "2b0ab417bc7c010f831a4f97dd8318458895033d",
+  "prompts": {},
+  "humans": {
+    "h_12ef4c25fb166d": {
+      "author": "Zhihan Tao <zhihan.tao@telink-semi.com>"
+    }
+  }
+}
