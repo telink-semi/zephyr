@@ -1,0 +1,14 @@
+west.yml
+  h_12ef4c25fb166d 263
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.2",
+  "base_commit_sha": "42754e1fbdf8329305cfac9b18c85fe4fcce1cc3",
+  "prompts": {},
+  "humans": {
+    "h_12ef4c25fb166d": {
+      "author": "Zhihan Tao <zhihan.tao@telink-semi.com>"
+    }
+  }
+}
