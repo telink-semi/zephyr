@@ -1,0 +1,26 @@
+/*
+ * Copyright (c) 2026 Telink Semiconductor
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#include <zephyr/dt-bindings/pinctrl/tl322x-pinctrl.h>
+
+/ {
+	chosen {
+		/* UART0: console/debug log, UART1: HCI transport */
+		uart1 = &uart1;
+	};
+};
+
+&power {
+	power-mode = "LDO_1P25_LDO_1P8";
+};
+
+/* UART1 on PC6(TX)/PC7(RX) for HCI transport */
+&uart1 {
+	status = "okay";
+	current-speed = <115200>;
+	pinctrl-0 = <&uart1_tx_pc6_default &uart1_rx_pc7_default>;
+	pinctrl-names = "default";
+};
