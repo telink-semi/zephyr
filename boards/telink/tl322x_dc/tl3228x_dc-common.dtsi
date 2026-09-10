@@ -129,11 +129,11 @@
 };
 
 /* Dual-core RAM partitioning: D25F and N22 share the SRAM banks.
- * ILM bank (512KB total): D25F 384KB + N22 128KB
+ * ILM bank (512KB total): D25F 64KB + N22 128KB
  * DLM bank (128KB total): D25F 96KB + N22 32KB
  */
 &ram_ilm {
-	reg = <0x00000000 0x00060000>;
+	reg = <0x00000000 0x00010000>;
 };
 
 &ram_dlm {
@@ -141,11 +141,11 @@
 };
 
 &n22_ram_ilm {
-	reg = <0x50000000 0x00020000>;
+	reg = <0x50000000 0x00028000>;
 };
 
 &n22_ram_dlm {
-	reg = <0x50080000 0x00008000>;
+	reg = <0x50080000 0x00010000>;
 };
 
 &flash {
