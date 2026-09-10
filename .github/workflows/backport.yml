@@ -8,6 +8,8 @@ on:
       - main
       - develop
       - dev-tlk_v*
+      - release-v*
+      - pre_release-v*
 
 jobs:
   backport:
