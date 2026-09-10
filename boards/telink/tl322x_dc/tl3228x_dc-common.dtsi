@@ -133,15 +133,15 @@
  * DLM bank (128KB total): D25F 96KB + N22 32KB
  */
 &ram_ilm {
-	reg = <0x00000000 0x00010000>;
+	reg = <0x00000000 0x00020000>;
 };
 
 &ram_dlm {
-	reg = <0x00080000 0x00018000>;
+	reg = <0x00080000 0x00010000>;
 };
 
 &n22_ram_ilm {
-	reg = <0x50000000 0x00028000>;
+	reg = <0x50000000 0x00020000>;
 };
 
 &n22_ram_dlm {
@@ -272,7 +272,7 @@
 };
 
 zephyr_udc0: &usbd {
-	compatible = "telink,tlx-usbd";
+	compatible = "telink,tl322x-usbd";
 	status = "okay";
 };
 
