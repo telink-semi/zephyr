@@ -1,0 +1,37 @@
+samples/bluetooth/direct_test_mode_hci/boards/tl3228x_dc.overlay
+  s_068d088aa97224::t_39ede8c37aa32b 11,20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.2",
+  "base_commit_sha": "5f809d9a6351eb1cc98c8d16dc5bc262f93b2c35",
+  "prompts": {},
+  "humans": {
+    "h_12ef4c25fb166d": {
+      "author": "Zhihan Tao <zhihan.tao@telink-semi.com>"
+    }
+  },
+  "sessions": {
+    "s_068d088aa97224": {
+      "agent_id": {
+        "tool": "trae",
+        "id": "6a8594de43853ac4091ed24c",
+        "model": "glm-5-2-260617"
+      },
+      "human_author": "Zhihan Tao <zhihan.tao@telink-semi.com>",
+      "custom_attributes": {
+        "tool_id": "SearchReplace",
+        "runtime_client": "trae-tob-git-ai",
+        "edit_kind": "file_edit",
+        "external_session_id": "6a8594de43853ac4091ed24c",
+        "dedupe_key": "6a8594de43853ac4091ed24c:6aa26b740897dca99288437d:afterEdit:98b68e34",
+        "tool_use_id": "6aa26b740897dca99288437d",
+        "client_type": "ide",
+        "session_id": "6a8594de43853ac4091ed24c",
+        "tool_type": "agent",
+        "source_scene": "unknown",
+        "operation_id": "6aa26b740897dca99288437d"
+      }
+    }
+  }
+}
