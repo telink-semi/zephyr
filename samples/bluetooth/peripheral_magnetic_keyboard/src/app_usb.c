@@ -120,11 +120,71 @@ static void kb_set_protocol(const struct device *dev, const uint8_t proto)
 	LOG_INF("protocol changed to %s", proto == 0U ? "Boot" : "Report");
 }
 
+#define KB_REPORT_BUF_CNT 2
+
+static unsigned char kb_buf[KB_REPORT_BUF_CNT][8] = {
+	{0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 0, 0, 0, 0, 0, 0},
+};
+static volatile bool kb_inflight[KB_REPORT_BUF_CNT];
+
+static unsigned char ak_buf[KB_REPORT_BUF_CNT][17] = {
+	{8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+	{8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+};
+static volatile bool ak_inflight[KB_REPORT_BUF_CNT];
+
+static unsigned char ck_buf[KB_REPORT_BUF_CNT][3] = {{2,0,0}, {2,0,0}};
+static volatile bool ck_inflight[KB_REPORT_BUF_CNT];
+
+static unsigned char sk_buf[KB_REPORT_BUF_CNT][2] = {{3,0}, {3,0}};
+static volatile bool sk_inflight[KB_REPORT_BUF_CNT];
+
+static int kb_get_free_slot(const volatile bool *inflight)
+{
+	for (int i = 0; i < KB_REPORT_BUF_CNT; i++) {
+		if (!inflight[i]) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+static void kb_input_report_done(const struct device *dev,
+				 const uint8_t *const report)
+{
+	ARG_UNUSED(dev);
+
+	for (int i = 0; i < KB_REPORT_BUF_CNT; i++) {
+		if (report == kb_buf[i])
+		{ 
+			kb_inflight[i] = false;
+			return;
+		}
+		if (report == ak_buf[i])
+		{
+			ak_inflight[i] = false;
+			return;
+		}
+		if (report == ck_buf[i])
+		{
+			ck_inflight[i] = false;
+			return;
+		}
+		if (report == sk_buf[i])
+		{
+			sk_inflight[i] = false;
+			return;
+		}
+	}
+}
+
 static struct hid_device_ops kbd_ops = {
 	.get_report = kb_get_report,
 	.set_report = kb_set_report,
 	.set_protocol = kb_set_protocol,
 	.output_report = kb_output_report,
+	.input_report_done = kb_input_report_done,
 };
 
 static void app_usb_msg_cb(struct usbd_context *const uds_ctx,
@@ -244,7 +304,6 @@ void app_usb_mode_exit(void)
 
 _attribute_ram_code_sec_ int app_normal_key_report_to_usb(unsigned char *buf)
 {
-    static unsigned char kb[8] = {0, 0, 1, 0, 0, 0, 0, 0};
 	#if 0
     unsigned char  status = 0;
     status=app_usb_ep_is_idle(HID_KEYBOARD_IN_ENDPOINT_NUM);
@@ -253,15 +312,24 @@ _attribute_ram_code_sec_ int app_normal_key_report_to_usb(unsigned char *buf)
         return status;
     }
 	#endif
-    tmemcpy(&kb[0], &buf[0], 8);
-    //return app_usb_epin_send(HID_KEYBOARD_IN_ENDPOINT_ADDRESS, tmp, 8);
-	return hid_device_submit_report(hid_dev_kb, sizeof(kb), kb);
+    int idx = kb_get_free_slot(kb_inflight);
+    if (idx < 0)
+    {
+        return -EBUSY;
+    }
+
+    tmemcpy(&kb_buf[idx][0], &buf[0], 8);
+    int ret = hid_device_submit_report(hid_dev_kb, sizeof(kb_buf[idx]), kb_buf[idx]);
+    if (ret == 0)
+    {
+        kb_inflight[idx] = true;
+    }
+    return ret;
 }
 
 
 _attribute_ram_code_sec_ int app_all_key_report_to_usb(unsigned char *buf)
 {
-    static unsigned char kb[17] ={8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 	#if 0
     unsigned char  status = 0;
     status=app_usb_ep_is_idle(HID_KEYBOARD_IN_ENDPOINT_NUM);
@@ -270,14 +338,23 @@ _attribute_ram_code_sec_ int app_all_key_report_to_usb(unsigned char *buf)
         return status;
     }
 	#endif
-    tmemcpy(&kb[1], &buf[0], 16);
-    //return app_usb_epin_send(HID_KEYBOARD_IN_ENDPOINT_ADDRESS, tmp, 8);
-	return hid_device_submit_report(hid_dev_n_key, sizeof(kb), kb);
+    int idx = kb_get_free_slot(ak_inflight);
+    if (idx < 0)
+    {
+        return -EBUSY;
+    }
+
+    tmemcpy(&ak_buf[idx][1], &buf[0], 16);
+    int ret = hid_device_submit_report(hid_dev_n_key, sizeof(ak_buf[idx]), ak_buf[idx]);
+    if (ret == 0)
+    {
+        ak_inflight[idx] = true;
+    }
+    return ret;
 }
 
 _attribute_ram_code_sec_ int app_consume_key_report_to_usb(unsigned char *buf)
 {
-    static unsigned char kb[3]={2,0,0}; // first is report id
 	#if 0
     unsigned char  status = 0;
     status=app_usb_ep_is_idle(HID_KEYBOARD_IN_ENDPOINT_NUM);
@@ -286,14 +363,23 @@ _attribute_ram_code_sec_ int app_consume_key_report_to_usb(unsigned char *buf)
         return status;
     }
 	#endif
-    tmemcpy(&kb[1],&buf[0],2);
-    //return app_usb_epin_send(HID_KEYBOARD_IN_ENDPOINT_ADDRESS, tmp, 8);
-	return hid_device_submit_report(hid_dev_n_key, sizeof(kb), kb);
+    int idx = kb_get_free_slot(ck_inflight);
+    if (idx < 0)
+    {
+        return -EBUSY;
+    }
+
+    tmemcpy(&ck_buf[idx][1], &buf[0], 2);
+    int ret = hid_device_submit_report(hid_dev_n_key, sizeof(ck_buf[idx]), ck_buf[idx]);
+    if (ret == 0)
+    {
+        ck_inflight[idx] = true;
+    }
+    return ret;
 }
 
 _attribute_ram_code_sec_ unsigned char app_system_key_report_to_usb(unsigned char *buf)
 {
-    static unsigned char kb[2]={3,0}; // first is report id
 	#if 0
     unsigned char  status = 0;
     status=app_usb_ep_is_idle(HID_KEYBOARD_IN_ENDPOINT_NUM);
@@ -302,9 +388,19 @@ _attribute_ram_code_sec_ unsigned char app_system_key_report_to_usb(unsigned cha
         return status;
     }
 	#endif
-    tmemcpy(&kb[1],&buf[0],1);
-    //return app_usb_epin_send(HID_KEYBOARD_IN_ENDPOINT_ADDRESS, tmp, 8);
-	return hid_device_submit_report(hid_dev_n_key, sizeof(kb), kb);
+    int idx = kb_get_free_slot(sk_inflight);
+    if (idx < 0)
+    {
+        return -EBUSY;
+    }
+
+    tmemcpy(&sk_buf[idx][1], &buf[0], 1);
+    int ret = hid_device_submit_report(hid_dev_n_key, sizeof(sk_buf[idx]), sk_buf[idx]);
+    if (ret == 0)
+    {
+        sk_inflight[idx] = true;
+    }
+    return ret;
 }
 
 _attribute_ram_code_sec_ void app_usb_try_wakeup(void)
