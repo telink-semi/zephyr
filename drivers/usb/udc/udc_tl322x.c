@@ -784,8 +784,16 @@ static int udc_tlx_set_address(const struct device *dev, const uint8_t addr)
 
 static int udc_tlx_host_wakeup(const struct device *dev)
 {
-	usb0hw_remote_wakeup();
-	return 0;
+    if (!udc_is_suspended(dev)) {
+        return 0;
+    }
+
+    usb0hw_remote_wakeup();
+
+    udc_set_suspended(dev, false);
+    udc_submit_event(dev, UDC_EVT_RESUME, 0);
+
+    return 0;
 }
 
 static enum udc_bus_speed udc_tlx_device_speed(const struct device *dev)
